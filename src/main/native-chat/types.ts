@@ -39,4 +39,6 @@ export type Turn = {
 export type AgentAdapter = {
   agent: AgentId
   startTurn: (options: TurnOptions) => Turn
+  /** Rebuild a chat's events from the agent's own transcript (after a restart). */
+  readHistory?: (configDir: string, sessionId: string) => AdapterEvent[]
 }

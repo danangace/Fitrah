@@ -1,6 +1,7 @@
 import { query } from '@anthropic-ai/claude-agent-sdk'
 import { claudeEnv } from '../../accounts/env'
 import type { AgentAdapter, Turn, TurnOptions } from '../types'
+import { readClaudeHistory } from './history'
 import { type SdkLike, mapClaudeMessage } from './map'
 
 /**
@@ -10,6 +11,7 @@ import { type SdkLike, mapClaudeMessage } from './map'
  */
 export const claudeAdapter: AgentAdapter = {
   agent: 'claude',
+  readHistory: readClaudeHistory,
   startTurn(options: TurnOptions): Turn {
     const abortController = new AbortController()
     const run = query({

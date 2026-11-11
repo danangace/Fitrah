@@ -51,7 +51,10 @@ export class ChatService {
     private adapters: Partial<Record<AgentId, AgentAdapter>>,
     /** Decides tool requests (approval rules + cards, T23). Default: ask is not wired → deny. */
     private decide: ToolDecider = async () => 'deny',
-  ) {}
+  ) {
+    // A restart ends any running turn: those chats wait for the next message.
+    this.db.prepare("UPDATE chats SET status = 'waiting' WHERE status IN ('working', 'needs_approval')").run()
+  }
 
   setDecider(decide: ToolDecider): void {
     this.decide = decide
@@ -94,7 +97,13 @@ export class ChatService {
   }
 
   events(chatId: string): ChatEvent[] {
-    this.get(chatId)
+    const chat = this.get(chatId)
+    if (!this.history.has(chatId) && chat.sessionId && chat.accountId) {
+      // After a restart: read the conversation back from the agent's transcript (AC-C7).
+      const account = getAccount(this.db, chat.accountId)
+      const past = this.adapters[chat.agent]?.readHistory?.(account.configDir, chat.sessionId) ?? []
+      this.history.set(chatId, past.map((e) => ({ ...e, chatId }) as ChatEvent))
+    }
     return this.history.get(chatId) ?? []
   }
 

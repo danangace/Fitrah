@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { ChatService } from './service'
 import { chatFixture, fakeAdapter } from './testing'
 
 const settle = () => new Promise((r) => setTimeout(r, 10))
@@ -34,6 +35,24 @@ describe('ChatService', () => {
     service.send(chat.id, 'one')
     expect(() => service.send(chat.id, 'two')).toThrow(/still working/)
     release?.()
+  })
+
+  it('rebuilds history from the adapter after a restart and resets stale status (AC-C7)', async () => {
+    const { db, service, chat, adapter } = await chatFixture()
+    service.send(chat.id, 'hi')
+    await settle()
+    db.prepare("UPDATE chats SET status = 'working' WHERE id = ?").run(chat.id)
+    const withHistory = { ...adapter, readHistory: () => [{ type: 'message.text' as const, text: 'from transcript' }] }
+    const restarted = new ChatService(db, { claude: withHistory })
+    expect(restarted.get(chat.id).status).toBe('waiting')
+    expect(restarted.events(chat.id)).toEqual([{ type: 'message.text', text: 'from transcript', chatId: chat.id }])
+  })
+
+  it('keeps several chats per workspace (multiple chats)', async () => {
+    const { service, chat, account, ws } = await chatFixture()
+    const second = service.create({ workspaceId: ws.id, agent: 'claude', accountId: account.id, model: 'opus', title: 'plan' })
+    expect(service.list(ws.id).map((c) => c.id)).toEqual([chat.id, second.id])
+    expect(second.title).toBe('plan')
   })
 
   it('marks the chat as error when the turn fails', async () => {
