@@ -50,7 +50,7 @@ export function Sidebar({ workspaces }: { workspaces?: ReactNode }) {
         <span className="text-[13px] font-semibold tracking-tight text-foreground">{APP_INFO.name}</span>
       </div>
       <nav className="flex flex-col gap-0.5 px-2 pb-1">
-        <NavRow strong icon={<Plus />} label="New workspace" hint="⌘N" onClick={() => open({ kind: 'create-workspace' })} />
+        <NavRow strong icon={<Plus />} label="New workspace" onClick={() => open({ kind: 'create-workspace' })} />
         <NavRow icon={<FolderPlus />} label="Add project" onClick={() => open({ kind: 'add-project' })} />
         <NavRow active={is('docs')} icon={<BookOpen />} label="Docs" onClick={() => navigate({ name: 'docs', path: '' })} />
       </nav>

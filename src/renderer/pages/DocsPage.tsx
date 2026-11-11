@@ -57,7 +57,7 @@ export function DocsPage({ path }: { path: string }) {
 
   return (
     <div className="flex h-full">
-      <div className="w-72 shrink-0 overflow-y-auto border-r border-border p-2">
+      <div className="w-72 shrink-0 overflow-y-auto border-r border-border bg-sidebar/50 p-2">
         <DocTree nodes={tree} active={path} onOpen={open} />
       </div>
       <div className="min-w-0 flex-1 overflow-y-auto">

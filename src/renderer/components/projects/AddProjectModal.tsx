@@ -72,7 +72,7 @@ export function AddProjectModal({ onClose }: { onClose: () => void }) {
       {step.kind === 'choose' && (
         <>
           <Option primary icon={<FolderOpen size={18} />} title="Browse folder" text="An existing git repo on this Mac" onClick={() => setStep({ kind: 'browse' })} />
-          <div className="pt-1 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">Other ways to add</div>
+          <div className="pt-1 text-xs font-semibold text-muted-foreground/80">Other ways to add</div>
           <div className="divide-y divide-neutral-800 overflow-hidden rounded-lg border border-border">
             <Option icon={<Globe size={16} />} title="Clone from URL" text="Clone a remote git repository" onClick={() => setStep({ kind: 'clone' })} />
             <Option icon={<Plus size={16} />} title="Create new project" text="Start from an empty folder" onClick={() => setStep({ kind: 'create' })} />

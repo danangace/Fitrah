@@ -85,7 +85,7 @@ export function AccountSettings() {
       {error && <Notice tone="error">{error}</Notice>}
       {found.length > 0 && (
         <div className="space-y-2">
-          <div className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Found existing logins</div>
+          <div className="text-xs font-semibold text-muted-foreground/80">Found existing logins</div>
           <ul className="space-y-1">
             {found.map((f) => (
               <li key={f.configDir} className="flex items-center justify-between rounded-md bg-card px-3 py-1.5 text-sm">
@@ -97,7 +97,7 @@ export function AccountSettings() {
         </div>
       )}
       <div className="space-y-2">
-        <div className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Accounts</div>
+        <div className="text-xs font-semibold text-muted-foreground/80">Accounts</div>
         {accounts.length === 0 ? (
           <p className="text-sm text-muted-foreground">No account yet. Attach a login above or sign in a new account.</p>
         ) : (
