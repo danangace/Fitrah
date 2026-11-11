@@ -20,11 +20,11 @@ export function Modal({
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 p-4 pt-[10vh]" onMouseDown={onClose}>
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 p-4 pt-[8vh]" onMouseDown={onClose}>
       <div
         role="dialog"
         aria-label={title}
-        className={cn('w-full rounded-xl border border-neutral-800 bg-neutral-900 shadow-2xl', width)}
+        className={cn('mb-[8vh] w-full rounded-xl border border-neutral-800 bg-neutral-900 shadow-2xl', width)}
         onMouseDown={(e) => e.stopPropagation()}
       >
         <header className="flex items-center justify-between px-5 pt-4 pb-2">

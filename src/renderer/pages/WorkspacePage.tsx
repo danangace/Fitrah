@@ -1,5 +1,5 @@
 import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
-import type { Workspace } from '../../shared/schemas'
+import type { Workflow, Workspace } from '../../shared/schemas'
 import { api } from '../api/fitrah'
 import { ArchiveButton } from '../components/workspace/ArchiveButton'
 import { STATUS_LABEL, StatusDot } from '../components/workspace/StatusDot'
@@ -8,23 +8,31 @@ import { errorText } from '../lib/errors'
 import { useAppEvents } from '../store/events'
 
 function TaskLink({ label, value }: { label: string; value: string }) {
+  if (!value) return <span className="rounded bg-neutral-900 px-2 py-0.5 text-neutral-600">{label}: —</span>
   return /^https?:\/\//.test(value) ? (
     <a href={value} target="_blank" rel="noreferrer" className="rounded bg-neutral-800 px-2 py-0.5 text-emerald-400 hover:underline">
       {label} ↗
     </a>
   ) : (
-    <span className="rounded bg-neutral-800 px-2 py-0.5 text-neutral-300">{value}</span>
+    <span className="rounded bg-neutral-800 px-2 py-0.5 text-neutral-300">
+      <span className="text-neutral-500">{label}:</span> {value}
+    </span>
   )
 }
 
 /** The workflow values Claude receives in every chat of this workspace (workspace context). */
 function TaskDetails({ workspace }: { workspace: Workspace }) {
-  const entries = Object.entries(workspace.values).filter(([, v]) => v)
+  const [workflow, setWorkflow] = useState<Workflow | null>(null)
+  useEffect(() => {
+    if (!workspace.workflowId) return setWorkflow(null)
+    api.listWorkflows().then((list) => setWorkflow(list.find((w) => w.id === workspace.workflowId) ?? null), () => setWorkflow(null))
+  }, [workspace.workflowId])
   if (!workspace.workflowId) return <div className="mt-2 text-xs text-neutral-500">Free chat</div>
   return (
     <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs" title="Claude gets these in every chat of this workspace">
-      {entries.map(([key, value]) => (
-        <TaskLink key={key} label={key} value={value} />
+      <span className="rounded bg-sky-950 px-2 py-0.5 font-medium text-sky-300">{workflow?.name ?? 'Workflow'}</span>
+      {(workflow?.fields ?? []).map((f) => (
+        <TaskLink key={f.key} label={f.label} value={workspace.values[f.key] ?? ''} />
       ))}
     </div>
   )

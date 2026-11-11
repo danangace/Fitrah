@@ -1,14 +1,25 @@
-import { NewWorkspaceForm } from '../components/workspace/NewWorkspaceForm'
+import { FolderPlus, Plus } from 'lucide-react'
+import { Button } from '../components/ui/Button'
+import { useModal } from '../store/ui'
 
 export function HomePage() {
+  const open = useModal((s) => s.open)
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="mx-auto max-w-4xl space-y-4 p-6">
-        <h1 className="text-xl font-semibold text-white">Workspaces</h1>
+    <div className="flex h-full items-center justify-center p-6">
+      <div className="max-w-md space-y-4 text-center">
+        <h1 className="text-xl font-semibold text-white">Start working</h1>
         <p className="text-sm text-neutral-400">
-          One workspace = one piece of work: a git worktree on its own branch, with its chats.
+          A workspace is a git worktree on its own branch, with its chats. Start with a free chat, or pick a workflow so Claude
+          gets your PRD, Figma and other references every turn.
         </p>
-        <NewWorkspaceForm />
+        <div className="flex justify-center gap-2">
+          <Button variant="primary" onClick={() => open({ kind: 'create-workspace' })}>
+            <Plus size={14} /> New workspace
+          </Button>
+          <Button onClick={() => open({ kind: 'add-project' })}>
+            <FolderPlus size={14} /> Add project
+          </Button>
+        </div>
       </div>
     </div>
   )

@@ -1,6 +1,7 @@
 import { WorkspaceNotifier } from './components/layout/Attention'
 import { Sidebar } from './components/layout/Sidebar'
 import { ChatsPanel } from './components/native-chat/ChatsPanel'
+import { CreateWorkspaceModal } from './components/workspace/CreateWorkspaceModal'
 import { WorkspaceList } from './components/workspace/WorkspaceList'
 import { AddProjectModal } from './components/projects/AddProjectModal'
 import { DocsPage } from './pages/DocsPage'
@@ -32,13 +33,8 @@ function Page() {
 
 function Modals() {
   const { modal, close } = useModal()
-  const navigate = useRouter((s) => s.navigate)
   if (modal?.kind === 'add-project') return <AddProjectModal onClose={close} />
-  if (modal?.kind === 'create-workspace') {
-    // Until the Create workspace modal lands (phase D): the old form on the home page.
-    close()
-    navigate({ name: 'home' })
-  }
+  if (modal?.kind === 'create-workspace') return <CreateWorkspaceModal projectId={modal.projectId} onClose={close} />
   return null
 }
 

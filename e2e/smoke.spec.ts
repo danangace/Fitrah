@@ -28,15 +28,18 @@ test('start, accounts, docs, workspace and chat (AC-B1 smoke)', async ({ page })
   await page.getByRole('link', { name: 'Second note' }).click()
   await expect(page.getByRole('heading', { name: 'Second note' })).toBeVisible()
 
-  // Workspace
+  // Workspace: the small modal, Free chat, default agent → the first chat is ready
   await page.locator('aside').getByRole('button', { name: 'New workspace', exact: true }).click()
-  await page.getByPlaceholder('kelola-xyz').fill('smoke-feature')
-  await page.getByRole('button', { name: 'Create workspace' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Create workspace' })
+  await dialog.getByLabel('Workspace name').fill('smoke-feature')
+  await expect(dialog.getByText('Branch feat/tribe-2/smoke-feature from origin/dev/tribe-2')).toBeVisible()
+  await page.screenshot({ path: 'test-results/screens/create-workspace.png' })
+  await dialog.getByRole('button', { name: /Create workspace/ }).click()
   await expect(page.getByRole('heading', { name: 'smoke-feature' })).toBeVisible({ timeout: 20_000 })
   await expect(page.getByText('feat/tribe-2/smoke-feature ← origin/dev/tribe-2')).toBeVisible()
+  await expect(page.getByText('Free chat')).toBeVisible()
 
   // Chat with the fake agent: approval card → deny
-  await page.getByRole('button', { name: 'New chat' }).click()
   await page.getByPlaceholder(/Message Claude/).fill('please touch a file')
   await page.getByRole('button', { name: 'Send' }).click()
   await expect(page.getByText('Claude wants to use Bash')).toBeVisible()
@@ -105,4 +108,29 @@ test('Settings → Workflows: create a workflow with fields (AC-F1)', async ({ p
   await expect(page.getByText('Saved', { exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: /Defect fix/ })).toBeVisible()
   await page.screenshot({ path: 'test-results/screens/workflows.png', fullPage: true })
+})
+
+test('Planning workflow: required fields, values shown, chat waits (AC-F2, AC-F4)', async ({ page }) => {
+  await page.goto(`/?token=${TOKEN}`)
+  await page.locator('aside').getByRole('button', { name: 'New workspace', exact: true }).click()
+  const dialog = page.getByRole('dialog', { name: 'Create workspace' })
+  await dialog.getByLabel('Project').selectOption({ label: 'repo' })
+  await dialog.getByLabel('Workspace name').fill('plan-kelola')
+  await dialog.getByLabel('Type').selectOption({ label: 'Planning' })
+  await expect(dialog.getByText('Fill in: PRD, Figma, Iteration, Module')).toBeVisible()
+  await expect(dialog.getByRole('button', { name: /Create workspace/ })).toBeDisabled()
+  await dialog.getByLabel('PRD').fill('https://prd.example/kelola')
+  await dialog.getByLabel('Figma').fill('https://www.figma.com/design/abc?node-id=1-2')
+  await dialog.getByLabel('Iteration').fill('i-16')
+  await dialog.getByLabel('Module').fill('kelola')
+  await page.screenshot({ path: 'test-results/screens/create-workspace-planning.png' })
+  await dialog.getByRole('button', { name: /Create workspace/ }).click()
+
+  await expect(page.getByRole('heading', { name: 'plan-kelola' })).toBeVisible({ timeout: 20_000 })
+  await expect(page.locator('main header').getByText('Planning', { exact: true })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'PRD ↗' })).toHaveAttribute('href', 'https://prd.example/kelola')
+  await expect(page.getByText('i-16')).toBeVisible()
+  // The chat is ready and waits for my first message (nothing sent).
+  await expect(page.getByText('Say what Claude should do in this workspace.')).toBeVisible()
+  await page.screenshot({ path: 'test-results/screens/workspace-planning.png' })
 })
