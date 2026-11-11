@@ -3,11 +3,12 @@ import { cn } from '../../lib/cn'
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger'
 
+/** Orca / shadcn neutral: a light primary button, quiet secondary and ghost. */
 const variants: Record<Variant, string> = {
-  primary: 'bg-emerald-600 text-white hover:bg-emerald-500',
-  secondary: 'bg-neutral-800 text-neutral-100 hover:bg-neutral-700',
-  ghost: 'text-neutral-300 hover:bg-neutral-800',
-  danger: 'bg-red-700 text-white hover:bg-red-600',
+  primary: 'bg-primary text-primary-foreground hover:bg-primary/90',
+  secondary: 'bg-secondary text-foreground hover:bg-accent',
+  ghost: 'text-muted-foreground hover:bg-secondary hover:text-foreground',
+  danger: 'bg-destructive text-white hover:bg-destructive/90',
 }
 
 export function Button({
@@ -19,7 +20,7 @@ export function Button({
     <button
       type="button"
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50',
+        'inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-md px-3 text-[13px] font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:pointer-events-none disabled:opacity-40',
         variants[variant],
         className,
       )}

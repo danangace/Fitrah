@@ -22,8 +22,8 @@ export function Mermaid({ code }: { code: string }) {
       alive = false
     }
   }, [code, id])
-  if (error) return <pre className="text-xs text-red-400">Mermaid error: {error}</pre>
-  if (!svg) return <div className="text-xs text-neutral-500">Rendering diagram…</div>
+  if (error) return <pre className="text-xs text-destructive">Mermaid error: {error}</pre>
+  if (!svg) return <div className="text-xs text-muted-foreground">Rendering diagram…</div>
   // biome-ignore lint/security/noDangerouslySetInnerHtml: mermaid output with securityLevel strict
   return <div className="my-4 overflow-x-auto" dangerouslySetInnerHTML={{ __html: svg }} />
 }

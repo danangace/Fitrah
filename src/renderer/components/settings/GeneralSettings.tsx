@@ -58,7 +58,7 @@ export function GeneralSettings() {
               openIn: e.target.value === 'default' ? { kind: 'default' } : { kind: 'chrome', profile: e.target.value.slice('chrome:'.length) },
             })
           }
-          className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-2.5 py-1.5 text-sm"
+          className="w-full rounded-md border border-input bg-card px-2.5 py-1.5 text-sm"
         >
           <option value="default">Default browser</option>
           {profiles.map((p) => (

@@ -42,8 +42,8 @@ export function ClaudeSignIn({ onDone }: { onDone: () => void }) {
   }
 
   return (
-    <div className="space-y-3 rounded-md border border-dashed border-neutral-700 p-3">
-      <div className="text-sm font-semibold text-neutral-200">Sign in a new Claude account</div>
+    <div className="space-y-3 rounded-md border border-dashed border-input p-3">
+      <div className="text-sm font-semibold text-foreground">Sign in a new Claude account</div>
       {error && <Notice tone="error">{error}</Notice>}
       {!login && (
         <div className="flex items-end gap-2">

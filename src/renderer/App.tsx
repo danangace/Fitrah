@@ -40,7 +40,7 @@ function Modals() {
 
 export function App() {
   return (
-    <div className="flex h-screen bg-neutral-950 text-neutral-100">
+    <div className="flex h-screen bg-background text-foreground">
       <WorkspaceNotifier />
       <Modals />
       <Sidebar workspaces={<WorkspaceList />} />

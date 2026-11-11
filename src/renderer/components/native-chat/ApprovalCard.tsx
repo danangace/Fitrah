@@ -13,8 +13,8 @@ export function ApprovalCard({ item }: { item: ApprovalItem }) {
   if (item.decision) {
     const allowed = item.decision === 'allow'
     return (
-      <div className="flex items-center gap-2 text-xs text-neutral-500">
-        {allowed ? <ShieldCheck size={13} className="text-emerald-500" /> : <ShieldX size={13} className="text-red-500" />}
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        {allowed ? <ShieldCheck size={13} className="text-success" /> : <ShieldX size={13} className="text-destructive" />}
         {allowed ? 'Allowed' : 'Denied'}: {item.tool} · <span className="truncate">{item.summary}</span>
       </div>
     )
@@ -23,10 +23,10 @@ export function ApprovalCard({ item }: { item: ApprovalItem }) {
     <div className="space-y-2 rounded-md border border-amber-700 bg-amber-950/40 p-3">
       <div className="flex items-center gap-2 text-sm font-medium text-amber-200">
         <ShieldAlert size={15} /> Claude wants to use {item.tool}
-        <span className="text-xs font-normal text-amber-400/80">· {item.reason}</span>
+        <span className="text-xs font-normal text-warning/80">· {item.reason}</span>
       </div>
-      <pre className="overflow-x-auto rounded bg-neutral-950 px-2 py-1.5 text-xs whitespace-pre-wrap text-neutral-200">{item.summary}</pre>
-      {error && <div className="text-xs text-red-400">{error}</div>}
+      <pre className="overflow-x-auto rounded bg-background px-2 py-1.5 text-xs whitespace-pre-wrap text-foreground">{item.summary}</pre>
+      {error && <div className="text-xs text-destructive">{error}</div>}
       <div className="flex gap-2">
         <Button variant="primary" onClick={() => void answer('allow')}>
           Approve

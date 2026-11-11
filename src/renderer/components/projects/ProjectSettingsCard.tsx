@@ -14,10 +14,10 @@ const SETUP_PLACEHOLDER = 'cp ~/path/to/repo/.env .env\npnpm install\npnpm setup
 
 function Badge({ tone, children }: { tone: 'ok' | 'warn' | 'muted' | 'info'; children: ReactNode }) {
   const tones = {
-    ok: 'bg-emerald-950 text-emerald-300',
-    warn: 'bg-amber-950 text-amber-300',
-    muted: 'bg-neutral-800 text-neutral-400',
-    info: 'bg-sky-950 text-sky-300',
+    ok: 'bg-success/10 text-success',
+    warn: 'bg-warning/10 text-warning',
+    muted: 'bg-secondary text-muted-foreground',
+    info: 'bg-info/10 text-info',
   }
   return <span className={cn('rounded px-1.5 py-0.5 text-[11px]', tones[tone])}>{children}</span>
 }
@@ -62,11 +62,11 @@ export function ProjectSettingsCard({ repo, onChange }: { repo: Repo; onChange: 
     }
   }
   return (
-    <div data-testid="repo-row" className="space-y-3 rounded-md border border-neutral-800 p-3">
+    <div data-testid="repo-row" className="space-y-3 rounded-md border border-border p-3">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-sm font-semibold text-white">{repo.name}</span>
+            <span className="text-sm font-semibold text-foreground">{repo.name}</span>
             <Badge tone="ok">
               <Check size={11} className="mr-0.5 inline" />
               Added
@@ -78,7 +78,7 @@ export function ProjectSettingsCard({ repo, onChange }: { repo: Repo; onChange: 
             </Badge>
             {dirty && <Badge tone="info">Unsaved changes</Badge>}
           </div>
-          <div className="mt-0.5 truncate text-xs text-neutral-500">{repo.path}</div>
+          <div className="mt-0.5 truncate text-xs text-muted-foreground">{repo.path}</div>
         </div>
         <Button variant="ghost" aria-label={`Remove ${repo.name}`} onClick={remove}>
           <Trash2 size={14} />
@@ -109,11 +109,11 @@ export function ProjectSettingsCard({ repo, onChange }: { repo: Repo; onChange: 
           {saving ? 'Saving…' : 'Save project'}
         </Button>
         {savedAt && !dirty && (
-          <span className="flex items-center gap-1 text-xs text-emerald-400">
+          <span className="flex items-center gap-1 text-xs text-success">
             <Check size={13} /> Saved
           </span>
         )}
-        {!dirty && !savedAt && <span className="text-xs text-neutral-500">All changes saved</span>}
+        {!dirty && !savedAt && <span className="text-xs text-muted-foreground">All changes saved</span>}
       </div>
     </div>
   )

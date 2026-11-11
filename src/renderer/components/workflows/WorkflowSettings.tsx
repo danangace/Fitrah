@@ -10,7 +10,7 @@ import { Card, Field, Input, Notice, ScriptArea } from '../ui/Field'
 
 type Draft = { name: string; description: string; fields: WorkflowField[]; instructions: string }
 const EMPTY: Draft = { name: '', description: '', fields: [], instructions: '' }
-const cellInput = 'w-full rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-xs focus:border-emerald-600 focus:outline-none'
+const cellInput = 'w-full rounded border border-input bg-card px-2 py-1 text-xs focus:border-ring focus:outline-none'
 
 function FieldRow({
   field,
@@ -24,7 +24,7 @@ function FieldRow({
   onMove: (dir: -1 | 1) => void
 }) {
   return (
-    <div data-testid="workflow-field" className="space-y-2 rounded-md border border-neutral-800 p-2.5">
+    <div data-testid="workflow-field" className="space-y-2 rounded-md border border-border p-2.5">
       <div className="grid grid-cols-12 items-center gap-2">
         <input aria-label="Field label" className={cn(cellInput, 'col-span-4')} value={field.label} onChange={(e) => onChange({ ...field, label: e.target.value })} />
         <select aria-label="Field type" className={cn(cellInput, 'col-span-3')} value={field.type} onChange={(e) => onChange({ ...field, type: e.target.value as WorkflowField['type'] })}>
@@ -34,17 +34,17 @@ function FieldRow({
             </option>
           ))}
         </select>
-        <label className="col-span-2 flex items-center gap-1.5 text-xs text-neutral-300">
+        <label className="col-span-2 flex items-center gap-1.5 text-xs text-foreground/80">
           <input type="checkbox" checked={field.required} onChange={(e) => onChange({ ...field, required: e.target.checked })} /> required
         </label>
-        <div className="col-span-3 flex justify-end gap-1 text-neutral-500">
-          <button type="button" aria-label="Move up" onClick={() => onMove(-1)} className="hover:text-white">
+        <div className="col-span-3 flex justify-end gap-1 text-muted-foreground">
+          <button type="button" aria-label="Move up" onClick={() => onMove(-1)} className="hover:text-foreground">
             <ArrowUp size={13} />
           </button>
-          <button type="button" aria-label="Move down" onClick={() => onMove(1)} className="hover:text-white">
+          <button type="button" aria-label="Move down" onClick={() => onMove(1)} className="hover:text-foreground">
             <ArrowDown size={13} />
           </button>
-          <button type="button" aria-label="Remove field" onClick={onRemove} className="hover:text-red-400">
+          <button type="button" aria-label="Remove field" onClick={onRemove} className="hover:text-destructive">
             <Trash2 size={13} />
           </button>
         </div>
@@ -62,7 +62,7 @@ function FieldRow({
           />
         )}
       </div>
-      <div className="text-[10px] text-neutral-600">key: {field.key}</div>
+      <div className="text-[10px] text-muted-foreground/60">key: {field.key}</div>
     </div>
   )
 }
@@ -137,12 +137,12 @@ function Editor({
       </div>
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-neutral-200">Fields the user fills when creating a workspace</span>
+          <span className="text-sm font-medium text-foreground">Fields the user fills when creating a workspace</span>
           <Button onClick={addField}>
             <Plus size={13} /> Add field
           </Button>
         </div>
-        {draft.fields.length === 0 && <p className="text-xs text-neutral-500">No fields yet.</p>}
+        {draft.fields.length === 0 && <p className="text-xs text-muted-foreground">No fields yet.</p>}
         {draft.fields.map((f, i) => (
           <FieldRow
             key={f.key}
@@ -162,7 +162,7 @@ function Editor({
       {draft.fields.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {draft.fields.map((f) => (
-            <button key={f.key} type="button" onClick={() => insert(f.label)} className="rounded bg-neutral-800 px-1.5 py-0.5 font-mono text-[11px] text-emerald-300 hover:bg-neutral-700">
+            <button key={f.key} type="button" onClick={() => insert(f.label)} className="rounded bg-secondary px-1.5 py-0.5 font-mono text-[11px] text-success hover:bg-secondary">
               {`{${f.label}}`}
             </button>
           ))}
@@ -174,7 +174,7 @@ function Editor({
           {saving ? 'Saving…' : workflow ? 'Save workflow' : 'Create workflow'}
         </Button>
         {saved && (
-          <span className="flex items-center gap-1 text-xs text-emerald-400">
+          <span className="flex items-center gap-1 text-xs text-success">
             <Check size={13} /> Saved
           </span>
         )}
@@ -217,13 +217,13 @@ export function WorkflowSettings() {
             key={w.id}
             type="button"
             onClick={() => setSelected(w.id)}
-            className={cn('block w-full truncate rounded-md px-2.5 py-1.5 text-left text-sm', w.id === selected ? 'bg-neutral-800 text-white' : 'text-neutral-400 hover:bg-neutral-900')}
+            className={cn('block w-full truncate rounded-md px-2.5 py-1.5 text-left text-sm', w.id === selected ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:bg-secondary')}
           >
             {w.name}
-            <span className="ml-1 text-[11px] text-neutral-600">{w.fields.length} fields</span>
+            <span className="ml-1 text-[11px] text-muted-foreground/60">{w.fields.length} fields</span>
           </button>
         ))}
-        <button type="button" onClick={() => setSelected('new')} className="flex w-full items-center gap-1.5 rounded-md px-2.5 py-1.5 text-left text-sm text-emerald-400 hover:bg-neutral-900">
+        <button type="button" onClick={() => setSelected('new')} className="flex w-full items-center gap-1.5 rounded-md px-2.5 py-1.5 text-left text-sm text-success hover:bg-secondary">
           <Plus size={13} /> New workflow
         </button>
       </div>

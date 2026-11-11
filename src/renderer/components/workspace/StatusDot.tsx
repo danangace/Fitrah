@@ -11,12 +11,12 @@ export const STATUS_LABEL: Record<WorkspaceStatus, string> = {
 }
 
 const COLOR: Record<WorkspaceStatus, string> = {
-  idle: 'bg-neutral-600',
-  working: 'bg-sky-400 animate-pulse',
-  needs_approval: 'bg-amber-400',
-  waiting: 'bg-neutral-300',
-  done: 'bg-emerald-400',
-  error: 'bg-red-500',
+  idle: 'bg-muted-foreground/50',
+  working: 'bg-info animate-pulse',
+  needs_approval: 'bg-warning',
+  waiting: 'bg-foreground/70',
+  done: 'bg-success',
+  error: 'bg-destructive',
 }
 
 export function StatusDot({ status }: { status: WorkspaceStatus }) {

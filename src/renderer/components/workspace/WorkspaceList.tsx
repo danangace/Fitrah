@@ -25,7 +25,7 @@ export function WorkspaceList() {
       <button
         type="button"
         onClick={() => open({ kind: 'add-project' })}
-        className="mx-2 flex w-[calc(100%-1rem)] items-center gap-1.5 rounded-md border border-dashed border-neutral-700 px-2 py-2 text-xs text-neutral-400 hover:text-white"
+        className="mx-2 flex w-[calc(100%-1rem)] items-center gap-1.5 rounded-md border border-dashed border-input px-2 py-2 text-xs text-muted-foreground hover:text-foreground"
       >
         <Plus size={13} /> Add your first project
       </button>
@@ -36,11 +36,11 @@ export function WorkspaceList() {
       {repos.map((repo) => (
           <div key={repo.id}>
             <div className="group flex items-center gap-1 px-2 pb-0.5">
-              <FolderGit2 size={12} className="shrink-0 text-neutral-500" />
+              <FolderGit2 size={12} className="shrink-0 text-muted-foreground" />
               <button
                 type="button"
                 onClick={() => navigate({ name: 'project', id: repo.id })}
-                className="min-w-0 flex-1 truncate text-left text-[12px] font-medium text-neutral-400 hover:text-white"
+                className="min-w-0 flex-1 truncate text-left text-[12px] font-medium text-muted-foreground hover:text-foreground"
               >
                 {repo.name}
               </button>
@@ -49,7 +49,7 @@ export function WorkspaceList() {
                 aria-label={`Project settings for ${repo.name}`}
                 title="Project settings"
                 onClick={() => navigate({ name: 'project', id: repo.id })}
-                className="text-neutral-600 opacity-0 group-hover:opacity-100 hover:text-white"
+                className="text-muted-foreground/60 opacity-0 group-hover:opacity-100 hover:text-foreground"
               >
                 <Settings2 size={12} />
               </button>
@@ -58,7 +58,7 @@ export function WorkspaceList() {
                 aria-label={`New workspace in ${repo.name}`}
                 title="New workspace"
                 onClick={() => open({ kind: 'create-workspace', projectId: repo.id })}
-                className="text-neutral-500 hover:text-white"
+                className="text-muted-foreground hover:text-foreground"
               >
                 <Plus size={13} />
               </button>
@@ -73,14 +73,14 @@ export function WorkspaceList() {
                   className={cn(
                     'flex w-full items-center gap-2 rounded-md px-2 py-1 text-left text-sm',
                     route.name === 'workspace' && route.id === w.id
-                      ? 'bg-neutral-800 text-white'
-                      : 'text-neutral-300 hover:bg-neutral-900',
+                      ? 'bg-secondary text-foreground'
+                      : 'text-foreground/80 hover:bg-secondary',
                   )}
                 >
                   {w.workflowId ? (
-                    <ClipboardList size={13} className="shrink-0 text-sky-400" />
+                    <ClipboardList size={13} className="shrink-0 text-info" />
                   ) : (
-                    <MessageSquare size={13} className="shrink-0 text-emerald-400" />
+                    <MessageSquare size={13} className="shrink-0 text-success" />
                   )}
                   <span className="min-w-0 flex-1 truncate">{w.name}</span>
                   <StatusDot status={w.status} />

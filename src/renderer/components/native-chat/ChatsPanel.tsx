@@ -11,7 +11,7 @@ import { Button } from '../ui/Button'
 import { Card, Notice } from '../ui/Field'
 import { ChatPane } from './ChatPane'
 
-const selectClass = 'rounded-md border border-neutral-700 bg-neutral-900 px-2 py-1.5 text-sm'
+const selectClass = 'rounded-md border border-input bg-card px-2 py-1.5 text-sm'
 
 function NewChat({ workspace, onCreated }: { workspace: Workspace; onCreated: (chat: Chat) => void }) {
   const navigate = useRouter((s) => s.navigate)
@@ -49,7 +49,7 @@ function NewChat({ workspace, onCreated }: { workspace: Workspace; onCreated: (c
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="text-sm text-neutral-300">Claude</span>
+      <span className="text-sm text-foreground/80">Claude</span>
       <select aria-label="Account" value={accountId} onChange={(e) => setAccountId(e.target.value)} className={selectClass}>
         {accounts.map((a) => (
           <option key={a.id} value={a.id}>
@@ -110,7 +110,7 @@ export function ChatsPanel({ workspace }: { workspace: Workspace }) {
               onClick={() => setActive(c.id)}
               className={cn(
                 'flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs',
-                c.id === active ? 'bg-neutral-800 text-white' : 'text-neutral-400 hover:bg-neutral-900',
+                c.id === active ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:bg-secondary',
               )}
             >
               <StatusDot status={c.status} />
@@ -119,7 +119,7 @@ export function ChatsPanel({ workspace }: { workspace: Workspace }) {
           ))}
         </div>
       )}
-      {current ? <ChatPane key={current.id} chat={current} /> : <p className="text-sm text-neutral-500">No chat yet.</p>}
+      {current ? <ChatPane key={current.id} chat={current} /> : <p className="text-sm text-muted-foreground">No chat yet.</p>}
     </Card>
   )
 }

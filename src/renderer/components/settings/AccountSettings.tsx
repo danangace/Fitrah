@@ -9,10 +9,10 @@ import { Card, Notice } from '../ui/Field'
 import { ClaudeSignIn } from './ClaudeSignIn'
 
 const statusStyle: Record<Account['loginStatus'], string> = {
-  logged_in: 'bg-emerald-950 text-emerald-300',
-  logged_out: 'bg-amber-950 text-amber-300',
-  unknown: 'bg-neutral-800 text-neutral-300',
-  error: 'bg-red-950 text-red-300',
+  logged_in: 'bg-success/10 text-success',
+  logged_out: 'bg-warning/10 text-warning',
+  unknown: 'bg-secondary text-foreground/80',
+  error: 'bg-destructive/10 text-destructive',
 }
 
 function StatusBadge({ status }: { status: Account['loginStatus'] }) {
@@ -29,19 +29,19 @@ function AccountRow({ account, onChange, onError }: { account: Account; onChange
     if (window.confirm(what)) act(() => api.removeAccount(account.id))()
   }
   return (
-    <li className="flex items-center justify-between gap-3 rounded-md border border-neutral-800 px-3 py-2">
+    <li className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2">
       <div className="min-w-0">
-        <div className="flex items-center gap-2 text-sm font-medium text-white">
+        <div className="flex items-center gap-2 text-sm font-medium text-foreground">
           {account.label}
           <StatusBadge status={account.loginStatus} />
-          <span className="text-xs text-neutral-500">{account.kind}</span>
+          <span className="text-xs text-muted-foreground">{account.kind}</span>
         </div>
-        <div className="truncate text-xs text-neutral-500">
+        <div className="truncate text-xs text-muted-foreground">
           {account.configDir}
           {account.email && ` · ${account.email}`}
           {account.loginExpiresAt && ` · login until ${new Date(account.loginExpiresAt).toLocaleDateString()}`}
         </div>
-        {account.warning && <div className="mt-1 text-xs text-amber-400">⚠ {account.warning}</div>}
+        {account.warning && <div className="mt-1 text-xs text-warning">⚠ {account.warning}</div>}
       </div>
       <div className="flex shrink-0 items-center gap-1">
         <Button
@@ -49,7 +49,7 @@ function AccountRow({ account, onChange, onError }: { account: Account; onChange
           aria-label="Make default"
           title={account.isDefault ? 'Default account' : 'Make default'}
           onClick={act(() => api.setDefaultAccount(account.id))}
-          className={account.isDefault ? 'text-amber-400' : ''}
+          className={account.isDefault ? 'text-warning' : ''}
         >
           <Star size={14} fill={account.isDefault ? 'currentColor' : 'none'} />
         </Button>
@@ -85,11 +85,11 @@ export function AccountSettings() {
       {error && <Notice tone="error">{error}</Notice>}
       {found.length > 0 && (
         <div className="space-y-2">
-          <div className="text-xs font-semibold tracking-wide text-neutral-500 uppercase">Found existing logins</div>
+          <div className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Found existing logins</div>
           <ul className="space-y-1">
             {found.map((f) => (
-              <li key={f.configDir} className="flex items-center justify-between rounded-md bg-neutral-900 px-3 py-1.5 text-sm">
-                <span className="text-neutral-300">{f.configDir}</span>
+              <li key={f.configDir} className="flex items-center justify-between rounded-md bg-card px-3 py-1.5 text-sm">
+                <span className="text-foreground/80">{f.configDir}</span>
                 <Button onClick={() => api.attachAccount(f.agent, f.configDir).then(load, onError)}>Attach</Button>
               </li>
             ))}
@@ -97,9 +97,9 @@ export function AccountSettings() {
         </div>
       )}
       <div className="space-y-2">
-        <div className="text-xs font-semibold tracking-wide text-neutral-500 uppercase">Accounts</div>
+        <div className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Accounts</div>
         {accounts.length === 0 ? (
-          <p className="text-sm text-neutral-500">No account yet. Attach a login above or sign in a new account.</p>
+          <p className="text-sm text-muted-foreground">No account yet. Attach a login above or sign in a new account.</p>
         ) : (
           <ul className="space-y-1.5">
             {accounts.map((a) => (

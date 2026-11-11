@@ -18,16 +18,16 @@ function Option({ icon, title, text, onClick, primary }: { icon: React.ReactNode
       onClick={onClick}
       className={
         primary
-          ? 'flex w-full items-center gap-3 rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-3 text-left hover:bg-neutral-700'
-          : 'flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-neutral-800'
+          ? 'flex w-full items-center gap-3 rounded-lg border border-input bg-secondary px-4 py-3 text-left hover:bg-secondary'
+          : 'flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-secondary'
       }
     >
-      <span className="text-neutral-300">{icon}</span>
+      <span className="text-foreground/80">{icon}</span>
       <span className="min-w-0 flex-1">
-        <span className="block text-sm font-medium text-white">{title}</span>
-        <span className="block text-xs text-neutral-500">{text}</span>
+        <span className="block text-sm font-medium text-foreground">{title}</span>
+        <span className="block text-xs text-muted-foreground">{text}</span>
       </span>
-      <ChevronRight size={14} className="text-neutral-600" />
+      <ChevronRight size={14} className="text-muted-foreground/60" />
     </button>
   )
 }
@@ -72,8 +72,8 @@ export function AddProjectModal({ onClose }: { onClose: () => void }) {
       {step.kind === 'choose' && (
         <>
           <Option primary icon={<FolderOpen size={18} />} title="Browse folder" text="An existing git repo on this Mac" onClick={() => setStep({ kind: 'browse' })} />
-          <div className="pt-1 text-[11px] font-semibold tracking-wide text-neutral-500 uppercase">Other ways to add</div>
-          <div className="divide-y divide-neutral-800 overflow-hidden rounded-lg border border-neutral-800">
+          <div className="pt-1 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">Other ways to add</div>
+          <div className="divide-y divide-neutral-800 overflow-hidden rounded-lg border border-border">
             <Option icon={<Globe size={16} />} title="Clone from URL" text="Clone a remote git repository" onClick={() => setStep({ kind: 'clone' })} />
             <Option icon={<Plus size={16} />} title="Create new project" text="Start from an empty folder" onClick={() => setStep({ kind: 'create' })} />
           </div>
@@ -84,9 +84,9 @@ export function AddProjectModal({ onClose }: { onClose: () => void }) {
 
       {step.kind === 'confirm' && (
         <>
-          <div className="rounded-md bg-neutral-950 px-3 py-2 text-sm">
-            <div className="font-medium text-white">{step.folder.name}</div>
-            <div className="truncate font-mono text-xs text-neutral-500">{step.folder.path}</div>
+          <div className="rounded-md bg-background px-3 py-2 text-sm">
+            <div className="font-medium text-foreground">{step.folder.name}</div>
+            <div className="truncate font-mono text-xs text-muted-foreground">{step.folder.path}</div>
           </div>
           <Field label="Base branch" hint="New workspaces start from here.">
             <Input value={form.base} onChange={(e) => setForm({ ...form, base: e.target.value })} />
@@ -158,7 +158,7 @@ export function AddProjectModal({ onClose }: { onClose: () => void }) {
       )}
 
       {step.kind !== 'choose' && (
-        <button type="button" onClick={() => setStep({ kind: 'choose' })} className="text-xs text-neutral-500 hover:text-neutral-300">
+        <button type="button" onClick={() => setStep({ kind: 'choose' })} className="text-xs text-muted-foreground hover:text-foreground/80">
           ← Back
         </button>
       )}

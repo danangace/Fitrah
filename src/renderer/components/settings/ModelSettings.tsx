@@ -54,18 +54,18 @@ export function ModelSettings() {
       {message && <Notice tone={message.tone}>{message.text}</Notice>}
       <ul className="space-y-1">
         {claude.list.map((model) => (
-          <li key={model} className="flex items-center justify-between rounded-md bg-neutral-900 px-3 py-1.5 text-sm">
+          <li key={model} className="flex items-center justify-between rounded-md bg-card px-3 py-1.5 text-sm">
             <span>{model}</span>
             <span className="flex items-center gap-2">
               <button
                 type="button"
                 aria-label={`Make ${model} the default`}
                 onClick={() => update(claude.list, model)}
-                className={cn(model === claude.default ? 'text-amber-400' : 'text-neutral-600 hover:text-neutral-300')}
+                className={cn(model === claude.default ? 'text-warning' : 'text-muted-foreground/60 hover:text-foreground/80')}
               >
                 <Star size={14} fill={model === claude.default ? 'currentColor' : 'none'} />
               </button>
-              <button type="button" aria-label={`Remove ${model}`} onClick={() => remove(model)} className="text-neutral-500 hover:text-red-400">
+              <button type="button" aria-label={`Remove ${model}`} onClick={() => remove(model)} className="text-muted-foreground hover:text-destructive">
                 <X size={14} />
               </button>
             </span>

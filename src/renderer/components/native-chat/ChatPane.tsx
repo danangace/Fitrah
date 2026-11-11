@@ -16,23 +16,23 @@ import { ApprovalCard } from './ApprovalCard'
 function ToolRow({ item }: { item: ToolItem }) {
   const [open, setOpen] = useState(false)
   const icon = !item.result ? (
-    <Loader2 size={12} className="animate-spin text-sky-400" />
+    <Loader2 size={12} className="animate-spin text-info" />
   ) : item.result.isError ? (
-    <CircleX size={12} className="text-red-400" />
+    <CircleX size={12} className="text-destructive" />
   ) : (
-    <CheckCircle2 size={12} className="text-emerald-400" />
+    <CheckCircle2 size={12} className="text-success" />
   )
   return (
-    <div className="rounded border border-neutral-800 bg-neutral-900/50 text-xs">
+    <div className="rounded border border-border bg-card text-xs">
       <button type="button" onClick={() => setOpen(!open)} className="flex w-full items-center gap-1.5 px-2 py-1 text-left">
         <ChevronRight size={12} className={cn('transition-transform', open && 'rotate-90')} />
-        <Wrench size={12} className="text-neutral-500" />
-        <span className="font-medium text-neutral-300">{item.name}</span>
-        <span className="min-w-0 flex-1 truncate text-neutral-500">{item.summary}</span>
+        <Wrench size={12} className="text-muted-foreground" />
+        <span className="font-medium text-foreground/80">{item.name}</span>
+        <span className="min-w-0 flex-1 truncate text-muted-foreground">{item.summary}</span>
         {icon}
       </button>
       {open && item.result && (
-        <pre className="max-h-48 overflow-auto border-t border-neutral-800 px-2 py-1 whitespace-pre-wrap text-neutral-400">
+        <pre className="max-h-48 overflow-auto border-t border-border px-2 py-1 whitespace-pre-wrap text-muted-foreground">
           {item.result.summary || '(no output)'}
         </pre>
       )}
@@ -79,14 +79,14 @@ export function ChatPane({ chat }: { chat: Chat }) {
   }
 
   return (
-    <div className="flex h-[70vh] flex-col rounded-lg border border-neutral-800">
+    <div className="flex h-[70vh] flex-col rounded-lg border border-border">
       <div className="flex-1 space-y-3 overflow-y-auto p-4">
-        {items.length === 0 && <p className="text-sm text-neutral-500">Say what Claude should do in this workspace.</p>}
+        {items.length === 0 && <p className="text-sm text-muted-foreground">Say what Claude should do in this workspace.</p>}
         {items.map((item, i) => {
           switch (item.kind) {
             case 'user':
               return (
-                <div key={i} className="ml-auto max-w-[85%] rounded-lg bg-emerald-900/40 px-3 py-2 text-sm whitespace-pre-wrap text-neutral-100">
+                <div key={i} className="ml-auto max-w-[85%] rounded-lg bg-emerald-900/40 px-3 py-2 text-sm whitespace-pre-wrap text-foreground">
                   {item.text}
                 </div>
               )
@@ -104,20 +104,20 @@ export function ChatPane({ chat }: { chat: Chat }) {
                 </Notice>
               )
             case 'turn':
-              return <div key={i} className="border-t border-neutral-900" />
+              return <div key={i} className="border-t border-border" />
           }
         })}
         <div ref={bottom} />
       </div>
       {error && <div className="px-4 pb-2"><Notice tone="error">{error}</Notice></div>}
-      <div className="flex items-end gap-2 border-t border-neutral-800 p-3">
+      <div className="flex items-end gap-2 border-t border-border p-3">
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={onKey}
           rows={2}
           placeholder={running ? 'Claude is working…' : 'Message Claude (Enter to send, Shift+Enter for a new line)'}
-          className="min-h-[2.5rem] flex-1 resize-y rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none"
+          className="min-h-[2.5rem] flex-1 resize-y rounded-md border border-input bg-card px-3 py-2 text-sm focus:border-ring focus:outline-none"
         />
         {running ? (
           <Button key="stop" variant="danger" onClick={() => void api.stopChat(chat.id)}>

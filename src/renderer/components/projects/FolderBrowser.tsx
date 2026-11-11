@@ -39,7 +39,7 @@ export function FolderBrowser({
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-1.5">
-        <button type="button" title="Home" onClick={() => void go(listing?.home)} className="rounded p-1 text-neutral-400 hover:bg-neutral-800">
+        <button type="button" title="Home" onClick={() => void go(listing?.home)} className="rounded p-1 text-muted-foreground hover:bg-secondary">
           <Home size={14} />
         </button>
         <button
@@ -47,7 +47,7 @@ export function FolderBrowser({
           title="Up"
           disabled={!listing?.parent}
           onClick={() => void go(listing?.parent ?? undefined)}
-          className="rounded p-1 text-neutral-400 hover:bg-neutral-800 disabled:opacity-30"
+          className="rounded p-1 text-muted-foreground hover:bg-secondary disabled:opacity-30"
         >
           <ArrowUp size={14} />
         </button>
@@ -57,27 +57,27 @@ export function FolderBrowser({
           onChange={(e) => setTyped(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && void go(typed ?? undefined)}
           title="Type or paste a path, then Enter"
-          className="min-w-0 flex-1 rounded bg-neutral-950 px-2 py-1 font-mono text-xs text-neutral-300 focus:outline focus:outline-emerald-700"
+          className="min-w-0 flex-1 rounded bg-background px-2 py-1 font-mono text-xs text-foreground/80 focus:outline focus:outline-ring"
         />
-        <label className="flex items-center gap-1 text-xs text-neutral-500">
+        <label className="flex items-center gap-1 text-xs text-muted-foreground">
           <input type="checkbox" checked={hidden} onChange={(e) => setHidden(e.target.checked)} /> hidden
         </label>
       </div>
       {error && <Notice tone="error">{error}</Notice>}
-      <ul className="max-h-64 overflow-y-auto rounded-md border border-neutral-800">
-        {listing?.dirs.length === 0 && <li className="px-3 py-2 text-xs text-neutral-500">No folders here.</li>}
+      <ul className="max-h-64 overflow-y-auto rounded-md border border-border">
+        {listing?.dirs.length === 0 && <li className="px-3 py-2 text-xs text-muted-foreground">No folders here.</li>}
         {listing?.dirs.map((d) => (
           <li key={d.path}>
             <button
               type="button"
               onDoubleClick={() => onPick(d.path)}
               onClick={() => void go(d.path)}
-              className={cn('flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-neutral-800', d.isGitRepo && 'text-white')}
+              className={cn('flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-secondary', d.isGitRepo && 'text-foreground')}
             >
-              <Folder size={14} className="shrink-0 text-neutral-500" />
+              <Folder size={14} className="shrink-0 text-muted-foreground" />
               <span className="min-w-0 flex-1 truncate">{d.name}</span>
               {d.isGitRepo && (
-                <span className="flex items-center gap-1 rounded bg-emerald-950 px-1.5 py-0.5 text-[10px] text-emerald-300">
+                <span className="flex items-center gap-1 rounded bg-success/10 px-1.5 py-0.5 text-[10px] text-success">
                   <GitBranch size={10} /> git
                 </span>
               )}
@@ -89,7 +89,7 @@ export function FolderBrowser({
         <button
           type="button"
           onClick={() => onPick(listing.path)}
-          className="w-full rounded-md bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-500"
+          className="h-8 w-full rounded-md bg-primary px-3 text-[13px] font-medium text-primary-foreground hover:bg-primary/90"
         >
           {pickLabel}: <span className="font-mono text-xs">{listing.path.split('/').pop() || listing.path}</span>
         </button>

@@ -14,7 +14,7 @@ function Node({ node, active, onOpen, depth }: { node: DocNodeT; active: string;
         onClick={() => onOpen(node.path)}
         className={cn(
           'flex w-full items-center gap-1.5 truncate rounded py-0.5 pr-2 text-left text-xs',
-          node.path === active ? 'bg-neutral-800 text-white' : 'text-neutral-400 hover:text-neutral-200',
+          node.path === active ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:text-foreground',
         )}
       >
         <FileText size={12} className="shrink-0" />
@@ -28,7 +28,7 @@ function Node({ node, active, onOpen, depth }: { node: DocNodeT; active: string;
         type="button"
         style={pad}
         onClick={() => setOpen(!open)}
-        className="flex w-full items-center gap-1 truncate py-0.5 pr-2 text-left text-xs text-neutral-300 hover:text-white"
+        className="flex w-full items-center gap-1 truncate py-0.5 pr-2 text-left text-xs text-foreground/80 hover:text-foreground"
       >
         {open ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
         <Folder size={12} className="shrink-0" />

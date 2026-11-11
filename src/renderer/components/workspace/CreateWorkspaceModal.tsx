@@ -10,7 +10,7 @@ import { Button } from '../ui/Button'
 import { Field, Input, Notice } from '../ui/Field'
 import { Modal } from '../ui/Modal'
 
-const select = 'w-full rounded-md border border-neutral-700 bg-neutral-900 px-2.5 py-1.5 text-sm text-neutral-100'
+const select = 'w-full rounded-md border border-input bg-card px-2.5 py-1.5 text-sm text-foreground'
 const FREE = '__free'
 const NO_AGENT = '__none'
 
@@ -166,8 +166,8 @@ export function CreateWorkspaceModal({ projectId, onClose }: { projectId?: strin
               </select>
             </Field>
             {workflow && (
-              <div className="space-y-3 rounded-md border border-neutral-800 p-3">
-                {workflow.description && <p className="text-xs text-neutral-400">{workflow.description}</p>}
+              <div className="space-y-3 rounded-md border border-border p-3">
+                {workflow.description && <p className="text-xs text-muted-foreground">{workflow.description}</p>}
                 {workflow.fields.map((f) => (
                   <WorkflowFieldInput
                     key={f.key}
@@ -206,18 +206,18 @@ export function CreateWorkspaceModal({ projectId, onClose }: { projectId?: strin
                 </select>
               </Field>
             </div>
-            <details className="rounded-md border border-neutral-800 px-3 py-2 text-sm">
-              <summary className="cursor-pointer text-neutral-400">Advanced</summary>
+            <details className="rounded-md border border-border px-3 py-2 text-sm">
+              <summary className="cursor-pointer text-muted-foreground">Advanced</summary>
               <div className="mt-2 space-y-2">
                 <Field label="Base branch">
                   <Input aria-label="Base branch override" value={base} placeholder={effectiveBase} onChange={(e) => setBase(e.target.value)} />
                 </Field>
               </div>
             </details>
-            <p className="text-xs text-neutral-500">
-              Branch <code className="text-neutral-300">{branchPreview}</code> from <code className="text-neutral-300">{effectiveBase}</code>
+            <p className="text-xs text-muted-foreground">
+              Branch <code className="text-foreground/80">{branchPreview}</code> from <code className="text-foreground/80">{effectiveBase}</code>
             </p>
-            {missing.length > 0 && <p className="text-xs text-amber-400">Fill in: {missing.join(', ')}</p>}
+            {missing.length > 0 && <p className="text-xs text-warning">Fill in: {missing.join(', ')}</p>}
             <div className="flex justify-end">
               <Button variant="primary" disabled={!canCreate} onClick={() => void create()}>
                 {busy && <Loader2 size={14} className="animate-spin" />}

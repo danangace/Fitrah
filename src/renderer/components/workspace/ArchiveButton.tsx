@@ -38,9 +38,9 @@ export function ArchiveButton({ workspace }: { workspace: Workspace }) {
     )
   }
   return (
-    <div className="space-y-2 rounded-md border border-neutral-700 bg-neutral-900 p-3 text-sm">
-      <p className="text-neutral-200">Archive this workspace? Its worktree folder is removed.</p>
-      <label className="flex items-center gap-2 text-neutral-300">
+    <div className="space-y-2 rounded-md border border-input bg-card p-3 text-sm">
+      <p className="text-foreground">Archive this workspace? Its worktree folder is removed.</p>
+      <label className="flex items-center gap-2 text-foreground/80">
         <input type="checkbox" checked={deleteBranch} onChange={(e) => setDeleteBranch(e.target.checked)} />
         Also delete branch <code className="text-xs">{workspace.branch}</code>
       </label>

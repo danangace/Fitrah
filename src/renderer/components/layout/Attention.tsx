@@ -31,7 +31,7 @@ export function EnableNotifications() {
     <button
       type="button"
       onClick={() => void Notification.requestPermission().then(setPermission)}
-      className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-neutral-400 hover:bg-neutral-900"
+      className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-muted-foreground hover:bg-secondary"
     >
       <Bell size={13} /> Enable notifications
     </button>
@@ -45,10 +45,10 @@ export function WorkingCount() {
   const waiting = workspaces.filter((w) => w.status === 'needs_approval').length
   if (!working && !waiting) return null
   return (
-    <div className="px-4 pb-1 text-[11px] text-neutral-500">
-      {working > 0 && <span className="text-sky-400">{working} working</span>}
+    <div className="px-4 pb-1 text-[11px] text-muted-foreground">
+      {working > 0 && <span className="text-info">{working} working</span>}
       {working > 0 && waiting > 0 && ' · '}
-      {waiting > 0 && <span className="text-amber-400">{waiting} need you</span>}
+      {waiting > 0 && <span className="text-warning">{waiting} need you</span>}
     </div>
   )
 }
@@ -73,7 +73,7 @@ export function AccountWarnings() {
           key={a.id}
           type="button"
           onClick={() => navigate({ name: 'settings', section: 'accounts' })}
-          className="flex w-full items-start gap-1.5 rounded-md bg-amber-950/50 px-2 py-1.5 text-left text-[11px] text-amber-300"
+          className="flex w-full items-start gap-1.5 rounded-md bg-warning/10 px-2 py-1.5 text-left text-[11px] text-warning"
         >
           <TriangleAlert size={12} className="mt-0.5 shrink-0" />
           <span>

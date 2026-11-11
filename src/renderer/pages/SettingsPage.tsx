@@ -18,8 +18,8 @@ export function SettingsPage({ section }: { section: string }) {
   const active = SECTIONS.find((s) => s.id === section) ?? SECTIONS[0]
   return (
     <div className="h-full overflow-y-auto"><div className="mx-auto max-w-4xl space-y-4 p-6">
-      <h1 className="text-xl font-semibold text-white">Settings</h1>
-      <div className="flex gap-1 border-b border-neutral-800">
+      <h1 className="text-xl font-semibold text-foreground">Settings</h1>
+      <div className="flex gap-1 border-b border-border">
         {SECTIONS.map((s) => (
           <button
             key={s.id}
@@ -27,7 +27,7 @@ export function SettingsPage({ section }: { section: string }) {
             onClick={() => navigate({ name: 'settings', section: s.id })}
             className={cn(
               '-mb-px border-b-2 px-3 py-2 text-sm',
-              s.id === active?.id ? 'border-emerald-500 text-white' : 'border-transparent text-neutral-400 hover:text-neutral-200',
+              s.id === active?.id ? 'border-foreground text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground',
             )}
           >
             {s.label}

@@ -15,8 +15,8 @@ function Frontmatter({ data }: { data: Record<string, unknown> }) {
   return (
     <div className="mb-4 flex flex-wrap gap-1.5">
       {entries.map(([key, value]) => (
-        <span key={key} className="rounded bg-neutral-800 px-2 py-0.5 text-xs text-neutral-300">
-          <span className="text-neutral-500">{key}:</span> {Array.isArray(value) ? value.join(', ') : String(value)}
+        <span key={key} className="rounded bg-secondary px-2 py-0.5 text-xs text-foreground/80">
+          <span className="text-muted-foreground">{key}:</span> {Array.isArray(value) ? value.join(', ') : String(value)}
         </span>
       ))}
     </div>
@@ -57,16 +57,16 @@ export function DocsPage({ path }: { path: string }) {
 
   return (
     <div className="flex h-full">
-      <div className="w-72 shrink-0 overflow-y-auto border-r border-neutral-800 p-2">
+      <div className="w-72 shrink-0 overflow-y-auto border-r border-border p-2">
         <DocTree nodes={tree} active={path} onOpen={open} />
       </div>
       <div className="min-w-0 flex-1 overflow-y-auto">
         <div className="mx-auto max-w-4xl p-6">
           {error && <Notice tone="error">{error}</Notice>}
-          {!path && !error && <p className="text-sm text-neutral-500">Pick a note on the left. Docs are read-only here; edit them in Obsidian.</p>}
+          {!path && !error && <p className="text-sm text-muted-foreground">Pick a note on the left. Docs are read-only here; edit them in Obsidian.</p>}
           {doc && (
             <>
-              <div className="mb-2 text-xs text-neutral-500">{doc.path}</div>
+              <div className="mb-2 text-xs text-muted-foreground">{doc.path}</div>
               <Frontmatter data={doc.frontmatter} />
               <Markdown source={wikiToMarkdown(doc.body, doc.links)} onOpenDoc={open} />
             </>

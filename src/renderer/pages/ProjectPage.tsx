@@ -10,7 +10,7 @@ export function ProjectPage({ id }: { id: string }) {
   return (
     <div className="h-full overflow-y-auto">
       <div className="mx-auto max-w-3xl space-y-4 p-6">
-        <h1 className="text-xl font-semibold text-white">Project settings</h1>
+        <h1 className="text-xl font-semibold text-foreground">Project settings</h1>
         <ProjectSettingsCard key={repo.id} repo={repo} onChange={() => void load()} />
       </div>
     </div>

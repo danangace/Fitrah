@@ -1,33 +1,67 @@
 @import 'tailwindcss';
 @import '@fontsource-variable/plus-jakarta-sans';
 
-/* App font: Plus Jakarta Sans (bundled, works offline). Code keeps Tailwind's mono stack. */
+/* App font: Plus Jakarta Sans (bundled, works offline). Code keeps Tailwind's mono stack.
+   Colors: Orca's dark "neutral" palette (shadcn), as semantic tokens. */
 @theme {
   --font-sans: 'Plus Jakarta Sans Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --color-background: #0a0a0a;
+  --color-foreground: #f0f0f0;
+  --color-sidebar: #171717;
+  --color-card: #171717;
+  --color-popover: #171717;
+  --color-secondary: #262626;
+  --color-muted: #262626;
+  --color-muted-foreground: #acacac;
+  --color-accent: #404040;
+  --color-border: rgb(255 255 255 / 0.07);
+  --color-input: rgb(255 255 255 / 0.15);
+  --color-ring: #737373;
+  --color-primary: #e5e5e5;
+  --color-primary-foreground: #171717;
+  --color-destructive: #e5484d;
+  --color-success: #3dd68c;
+  --color-warning: #f5a524;
+  --color-info: #5eb1ef;
+  --color-chat-user: #262626;
+
+  --radius-lg: 0.625rem;
 }
 
+html,
 body {
-  @apply font-sans antialiased;
+  @apply bg-background font-sans text-[13px] text-foreground antialiased;
+}
+
+::selection {
+  background: rgb(255 255 255 / 0.18);
+}
+
+/* Thin, quiet scrollbars like Orca. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 0.12) transparent;
 }
 
 /* Read-only markdown view */
-.markdown { @apply text-sm leading-6 text-neutral-200; }
-.markdown h1 { @apply mt-2 mb-4 text-2xl font-semibold text-white; }
-.markdown h2 { @apply mt-8 mb-3 border-b border-neutral-800 pb-1 text-xl font-semibold text-white; }
-.markdown h3 { @apply mt-6 mb-2 text-base font-semibold text-white; }
-.markdown h4 { @apply mt-4 mb-2 font-semibold text-white; }
+.markdown { @apply text-sm leading-6 text-foreground/90; }
+.markdown h1 { @apply mt-2 mb-4 text-2xl font-semibold text-foreground; }
+.markdown h2 { @apply mt-8 mb-3 border-b border-border pb-1 text-xl font-semibold text-foreground; }
+.markdown h3 { @apply mt-6 mb-2 text-base font-semibold text-foreground; }
+.markdown h4 { @apply mt-4 mb-2 font-semibold text-foreground; }
 .markdown p { @apply my-3; }
-.markdown a { @apply text-emerald-400 underline-offset-2 hover:underline; }
+.markdown a { @apply text-foreground underline decoration-foreground/30 underline-offset-2 hover:underline; }
 .markdown ul { @apply my-3 list-disc pl-6; }
 .markdown ol { @apply my-3 list-decimal pl-6; }
 .markdown li { @apply my-1; }
-.markdown blockquote { @apply my-4 border-l-2 border-emerald-700 bg-neutral-900/60 px-4 py-2 text-neutral-300; }
-.markdown code { @apply rounded bg-neutral-800 px-1 py-0.5 text-[0.85em]; }
-.markdown pre { @apply my-4 overflow-x-auto rounded-md bg-neutral-900 p-3; }
+.markdown blockquote { @apply my-4 border-l-2 border-input bg-card px-4 py-2 text-muted-foreground; }
+.markdown code { @apply rounded bg-secondary px-1 py-0.5 text-[0.85em]; }
+.markdown pre { @apply my-4 overflow-x-auto rounded-md bg-card p-3; }
 .markdown pre code { @apply bg-transparent p-0; }
 .markdown table { @apply my-4 block w-full overflow-x-auto border-collapse text-left; }
-.markdown th { @apply border border-neutral-800 bg-neutral-900 px-2 py-1 font-semibold; }
-.markdown td { @apply border border-neutral-800 px-2 py-1 align-top; }
+.markdown th { @apply border border-border bg-card px-2 py-1 font-semibold; }
+.markdown td { @apply border border-border px-2 py-1 align-top; }
 .markdown img { @apply my-3 max-w-full rounded; }
-.markdown hr { @apply my-6 border-neutral-800; }
+.markdown hr { @apply my-6 border-border; }
 .markdown input[type='checkbox'] { @apply mr-1.5; }

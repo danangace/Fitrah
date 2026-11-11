@@ -8,14 +8,14 @@ import { errorText } from '../lib/errors'
 import { useAppEvents } from '../store/events'
 
 function TaskLink({ label, value }: { label: string; value: string }) {
-  if (!value) return <span className="rounded bg-neutral-900 px-2 py-0.5 text-neutral-600">{label}: —</span>
+  if (!value) return <span className="rounded bg-card px-2 py-0.5 text-muted-foreground/60">{label}: —</span>
   return /^https?:\/\//.test(value) ? (
-    <a href={value} target="_blank" rel="noreferrer" className="rounded bg-neutral-800 px-2 py-0.5 text-emerald-400 hover:underline">
+    <a href={value} target="_blank" rel="noreferrer" className="rounded bg-secondary px-2 py-0.5 text-success hover:underline">
       {label} ↗
     </a>
   ) : (
-    <span className="rounded bg-neutral-800 px-2 py-0.5 text-neutral-300">
-      <span className="text-neutral-500">{label}:</span> {value}
+    <span className="rounded bg-secondary px-2 py-0.5 text-foreground/80">
+      <span className="text-muted-foreground">{label}:</span> {value}
     </span>
   )
 }
@@ -27,10 +27,10 @@ function TaskDetails({ workspace }: { workspace: Workspace }) {
     if (!workspace.workflowId) return setWorkflow(null)
     api.listWorkflows().then((list) => setWorkflow(list.find((w) => w.id === workspace.workflowId) ?? null), () => setWorkflow(null))
   }, [workspace.workflowId])
-  if (!workspace.workflowId) return <div className="mt-2 text-xs text-neutral-500">Free chat</div>
+  if (!workspace.workflowId) return <div className="mt-2 text-xs text-muted-foreground">Free chat</div>
   return (
     <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs" title="Claude gets these in every chat of this workspace">
-      <span className="rounded bg-sky-950 px-2 py-0.5 font-medium text-sky-300">{workflow?.name ?? 'Workflow'}</span>
+      <span className="rounded bg-info/10 px-2 py-0.5 font-medium text-info">{workflow?.name ?? 'Workflow'}</span>
       {(workflow?.fields ?? []).map((f) => (
         <TaskLink key={f.key} label={f.label} value={workspace.values[f.key] ?? ''} />
       ))}
@@ -52,9 +52,9 @@ function SetupLog({ workspace }: { workspace: Workspace }) {
   }, [log])
   if (workspace.setupStatus === 'skipped') return null
   return (
-    <details open={workspace.setupStatus !== 'done'} className="rounded-md border border-neutral-800">
-      <summary className="cursor-pointer px-3 py-2 text-sm text-neutral-300">Setup · {workspace.setupStatus}</summary>
-      <pre ref={ref} className="max-h-64 overflow-y-auto border-t border-neutral-800 p-3 text-xs text-neutral-400">
+    <details open={workspace.setupStatus !== 'done'} className="rounded-md border border-border">
+      <summary className="cursor-pointer px-3 py-2 text-sm text-foreground/80">Setup · {workspace.setupStatus}</summary>
+      <pre ref={ref} className="max-h-64 overflow-y-auto border-t border-border p-3 text-xs text-muted-foreground">
         {log || 'Waiting for output…'}
       </pre>
     </details>
@@ -77,14 +77,14 @@ export function WorkspacePage({ id, chats }: { id: string; chats?: (ws: Workspac
   if (!workspace) return null
   return (
     <div className="flex h-full flex-col">
-      <header className="border-b border-neutral-800 px-6 py-3">
+      <header className="border-b border-border px-6 py-3">
         <div className="flex items-center gap-2">
           <StatusDot status={workspace.status} />
-          <h1 className="text-lg font-semibold text-white">{workspace.name}</h1>
-          <span className="text-xs text-neutral-500">{STATUS_LABEL[workspace.status]}</span>
+          <h1 className="text-lg font-semibold text-foreground">{workspace.name}</h1>
+          <span className="text-xs text-muted-foreground">{STATUS_LABEL[workspace.status]}</span>
         </div>
         <div className="mt-1 flex items-start justify-between gap-4">
-          <div className="text-xs text-neutral-500">
+          <div className="text-xs text-muted-foreground">
             {workspace.branch} ← {workspace.base} · {workspace.worktreePath}
           </div>
           <ArchiveButton workspace={workspace} />
