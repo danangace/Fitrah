@@ -58,6 +58,19 @@ test('a repo added in Settings can be used for a new workspace without reloading
   await page.getByPlaceholder('origin/dev/tribe-2').last().fill('origin/main')
   await page.getByRole('button', { name: 'Add repo' }).click()
   await expect(page.getByText(extraRepo)).toBeVisible()
+  await expect(page.getByText('Added extra-repo. It is ready for new workspaces.')).toBeVisible()
+
+  // The repo row shows its state, and saving gives feedback.
+  const row = page.getByTestId('repo-row').filter({ hasText: 'extra-repo' })
+  await expect(row.getByText('Added', { exact: true })).toBeVisible()
+  await expect(row.getByText('Ready · no setup script')).toBeVisible()
+  await expect(row.getByRole('button', { name: 'Save repo' })).toBeDisabled()
+  await row.locator('textarea').first().fill('echo ready')
+  await expect(row.getByText('Unsaved changes')).toBeVisible()
+  await row.getByRole('button', { name: 'Save repo' }).click()
+  await expect(row.getByText('Saved', { exact: true })).toBeVisible()
+  await expect(row.getByText('Ready · setup script')).toBeVisible()
+  await page.screenshot({ path: 'test-results/screens/repo-feedback.png', fullPage: true })
 
   // Same page session, no reload: the new repo is selectable and usable.
   await page.locator('aside').getByRole('button', { name: 'New workspace' }).click()
