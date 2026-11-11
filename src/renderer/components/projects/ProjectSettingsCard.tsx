@@ -8,6 +8,7 @@ import { errorText } from '../../lib/errors'
 import { type RepoForm, formFromRepo, isDirty, setupState } from '../../lib/repo-form'
 import { Button } from '../ui/Button'
 import { Field, Input, Notice, ScriptArea } from '../ui/Field'
+import { useConfirm } from '../ui/confirm'
 
 const SETUP_HINT = 'Runs once in each new workspace, line by line; stops at the first failing line. Keep long-running commands (dev servers) out.'
 const SETUP_PLACEHOLDER = 'cp ~/path/to/repo/.env .env\npnpm install\npnpm setup:env'
@@ -28,6 +29,7 @@ export function ProjectSettingsCard({ repo, onChange }: { repo: Repo; onChange: 
   const [saving, setSaving] = useState(false)
   const [savedAt, setSavedAt] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const confirm = useConfirm()
   const workspaceCount = useWorkspaces((s) => s.workspaces.filter((w) => w.repoId === repo.id).length)
   const dirty = isDirty(form, repo)
   const state = setupState(repo)
@@ -53,7 +55,13 @@ export function ProjectSettingsCard({ repo, onChange }: { repo: Repo; onChange: 
     }
   }
   const remove = async () => {
-    if (!window.confirm(`Remove ${repo.name} from Fitrah? The folder itself is not touched.`)) return
+    const ok = await confirm({
+      title: `Remove ${repo.name}?`,
+      description: 'It is removed from Fitrah only. The folder itself is not touched.',
+      confirmLabel: 'Remove',
+      destructive: true,
+    })
+    if (!ok) return
     try {
       await api.removeRepo(repo.id)
       onChange()

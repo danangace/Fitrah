@@ -6,6 +6,7 @@ import { cn } from '../../lib/cn'
 import { errorText } from '../../lib/errors'
 import { Button } from '../ui/Button'
 import { Card, Notice } from '../ui/Field'
+import { useConfirm } from '../ui/confirm'
 import { ClaudeSignIn } from './ClaudeSignIn'
 
 const statusStyle: Record<Account['loginStatus'], string> = {
@@ -21,12 +22,16 @@ function StatusBadge({ status }: { status: Account['loginStatus'] }) {
 
 function AccountRow({ account, onChange, onError }: { account: Account; onChange: () => void; onError: (e: unknown) => void }) {
   const act = (fn: () => Promise<unknown>) => () => fn().then(onChange, onError)
-  const remove = () => {
-    const what =
-      account.kind === 'managed'
-        ? 'Sign out and delete this Fitrah-managed login folder?'
-        : 'Forget this account? Your login folder is not touched.'
-    if (window.confirm(what)) act(() => api.removeAccount(account.id))()
+  const confirm = useConfirm()
+  const remove = async () => {
+    const managed = account.kind === 'managed'
+    const ok = await confirm({
+      title: managed ? `Sign out ${account.label}?` : `Forget ${account.label}?`,
+      description: managed ? 'This signs out and deletes the Fitrah-managed login folder.' : 'Your login folder is not touched.',
+      confirmLabel: managed ? 'Sign out' : 'Forget',
+      destructive: true,
+    })
+    if (ok) act(() => api.removeAccount(account.id))()
   }
   return (
     <li className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2">

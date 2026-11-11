@@ -4,6 +4,7 @@ import { z } from 'zod/v4'
 import { API } from '../shared/api'
 import { App } from './App'
 import { ApiError, bootstrapSession, request } from './api/http-client'
+import { ConfirmProvider } from './components/ui/confirm'
 import { NotConnected } from './pages/NotConnected'
 import './styles.css'
 
@@ -22,5 +23,11 @@ async function connected(): Promise<boolean> {
 }
 
 void connected().then((ok) => {
-  createRoot(root).render(<StrictMode>{ok ? <App /> : <NotConnected />}</StrictMode>)
+  createRoot(root).render(<StrictMode>{ok ? (
+        <ConfirmProvider>
+          <App />
+        </ConfirmProvider>
+      ) : (
+        <NotConnected />
+      )}</StrictMode>)
 })

@@ -7,6 +7,7 @@ import { errorText } from '../../lib/errors'
 import { FIELD_TYPE_LABEL, keyFromLabel, parseOptions } from '../../lib/workflow-form'
 import { Button } from '../ui/Button'
 import { Card, Field, Input, Notice, ScriptArea } from '../ui/Field'
+import { useConfirm } from '../ui/confirm'
 
 type Draft = { name: string; description: string; fields: WorkflowField[]; instructions: string }
 const EMPTY: Draft = { name: '', description: '', fields: [], instructions: '' }
@@ -84,6 +85,7 @@ function Editor({
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(justSaved)
   const [error, setError] = useState<string | null>(null)
+  const confirm = useConfirm()
   const set = (patch: Partial<Draft>) => {
     setDraft({ ...draft, ...patch })
     setSaved(false)
@@ -115,7 +117,9 @@ function Editor({
     }
   }
   const remove = async () => {
-    if (!workflow || !window.confirm(`Delete the workflow "${workflow.name}"?`)) return
+    if (!workflow) return
+    const ok = await confirm({ title: `Delete "${workflow.name}"?`, description: 'This workflow is deleted for good.', confirmLabel: 'Delete', destructive: true })
+    if (!ok) return
     try {
       await api.deleteWorkflow(workflow.id)
       onDeleted()

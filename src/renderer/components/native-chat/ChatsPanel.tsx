@@ -8,6 +8,7 @@ import { errorText } from '../../lib/errors'
 import { useRouter } from '../../store/router'
 import { Button } from '../ui/Button'
 import { Notice } from '../ui/Field'
+import { useConfirm } from '../ui/confirm'
 import { StatusDot } from '../workspace/StatusDot'
 import { ChatPane } from './ChatPane'
 
@@ -88,6 +89,8 @@ export function ChatsPanel({ workspace }: { workspace: Workspace }) {
   const [chats, setChats] = useState<Chat[]>([])
   const [active, setActive] = useState<string | null>(null)
   const [picker, setPicker] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const confirm = useConfirm()
   const load = useCallback(
     (select?: string) =>
       api.listChats(workspace.id).then((list) => {
@@ -110,12 +113,18 @@ export function ChatsPanel({ workspace }: { workspace: Workspace }) {
   )
   const remove = async (chat: Chat) => {
     const busy = chat.status === 'working' || chat.status === 'needs_approval'
-    const what = busy ? `"${chat.title}" is still running. Stop and delete this chat?` : `Delete the chat "${chat.title}"? This cannot be undone.`
-    if (!window.confirm(what)) return
+    const ok = await confirm({
+      title: `Delete "${chat.title}"?`,
+      description: busy ? 'It is still running: it will be stopped and deleted. This cannot be undone.' : 'This chat and its history are deleted. This cannot be undone.',
+      confirmLabel: 'Delete',
+      destructive: true,
+    })
+    if (!ok) return
     try {
       await api.deleteChat(chat.id)
+      setError(null)
     } catch (e) {
-      window.alert(errorText(e))
+      setError(errorText(e))
       return
     }
     const rest = chats.filter((c) => c.id !== chat.id)
@@ -173,6 +182,11 @@ export function ChatsPanel({ workspace }: { workspace: Workspace }) {
           )}
         </div>
       </div>
+      {error && (
+        <div className="px-3 pt-2">
+          <Notice tone="error">{error}</Notice>
+        </div>
+      )}
       {current ? (
         <ChatPane key={current.id} chat={current} />
       ) : (
