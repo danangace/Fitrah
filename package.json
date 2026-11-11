@@ -1,6 +1,6 @@
 {
   "name": "fitrah",
-  "version": "0.0.0",
+  "version": "0.1.0-beta",
   "private": true,
   "description": "Fitrah: Finance Iteration Tools, Review & Agent Hub. A personal agent orchestrator for doc-driven development.",
   "license": "MIT",
