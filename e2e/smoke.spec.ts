@@ -8,7 +8,7 @@ const shot = (name: string) => `test-results/screens/${name}.png`
 test('start, accounts, docs, workspace and chat (AC-B1 smoke)', async ({ page }) => {
   // Start: the link from `fitrah start` carries the token; it becomes a cookie and leaves the URL.
   await page.goto(`/?token=${TOKEN}`)
-  await expect(page.getByText('Finance Iteration Tools, Review & Agent Hub')).toBeVisible()
+  await expect(page.locator('aside [title="Finance Iteration Tools, Review & Agent Hub"]')).toContainText('Fitrah')
   await expect(page).not.toHaveURL(/token=/)
   await page.screenshot({ path: shot('1-home') })
 

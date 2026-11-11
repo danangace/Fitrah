@@ -1,5 +1,6 @@
-import { ClipboardList, FolderGit2, MessageSquare, Plus, Settings2 } from 'lucide-react'
-import { useEffect } from 'react'
+import { ChevronDown, ChevronRight, ClipboardList, MessageSquare, Plus, Settings2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import type { Repo, Workspace } from '../../../shared/schemas'
 import { cn } from '../../lib/cn'
 import { useAppEvents } from '../../store/events'
 import { useRouter } from '../../store/router'
@@ -7,10 +8,87 @@ import { useModal } from '../../store/ui'
 import { useWorkspaces } from '../../store/workspaces'
 import { StatusDot } from './StatusDot'
 
-/** Sidebar: projects → their workspaces, each with its status dot (D-14). */
+function WorkspaceRow({ ws, active, onClick }: { ws: Workspace; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'group flex w-full items-center gap-2 rounded-md py-1.5 pr-2 pl-6 text-left transition-colors',
+        active ? 'bg-secondary text-foreground' : 'text-foreground/70 hover:bg-foreground/5 hover:text-foreground',
+      )}
+    >
+      {ws.workflowId ? (
+        <ClipboardList className={cn('size-3.5 shrink-0', active ? 'text-info' : 'text-foreground/30')} />
+      ) : (
+        <MessageSquare className={cn('size-3.5 shrink-0', active ? 'text-foreground/70' : 'text-foreground/30')} />
+      )}
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[13px] leading-tight">{ws.name}</span>
+        <span className="block truncate font-mono text-[10.5px] leading-tight text-muted-foreground/60">{ws.branch}</span>
+      </span>
+      <StatusDot status={ws.status} />
+    </button>
+  )
+}
+
+function ProjectGroup({ repo, workspaces }: { repo: Repo; workspaces: Workspace[] }) {
+  const { route, navigate } = useRouter()
+  const open = useModal((s) => s.open)
+  const [collapsed, setCollapsed] = useState(false)
+  const active = route.name === 'project' && route.id === repo.id
+  return (
+    <div>
+      <div className={cn('group flex h-7 items-center gap-1 rounded-md pr-1 pl-1', active && 'bg-secondary')}>
+        <button
+          type="button"
+          aria-label={collapsed ? `Expand ${repo.name}` : `Collapse ${repo.name}`}
+          onClick={() => setCollapsed(!collapsed)}
+          className="flex size-5 items-center justify-center text-foreground/30 hover:text-foreground/70"
+        >
+          {collapsed ? <ChevronRight className="size-3.5" /> : <ChevronDown className="size-3.5" />}
+        </button>
+        <button
+          type="button"
+          onClick={() => navigate({ name: 'project', id: repo.id })}
+          className="min-w-0 flex-1 truncate text-left text-[13px] font-medium tracking-tight text-foreground/80 hover:text-foreground"
+        >
+          {repo.name}
+        </button>
+        <button
+          type="button"
+          aria-label={`Project settings for ${repo.name}`}
+          title="Project settings"
+          onClick={() => navigate({ name: 'project', id: repo.id })}
+          className="flex size-5 items-center justify-center rounded text-foreground/30 opacity-0 group-hover:opacity-100 hover:bg-foreground/10 hover:text-foreground"
+        >
+          <Settings2 className="size-3.5" />
+        </button>
+        <button
+          type="button"
+          aria-label={`New workspace in ${repo.name}`}
+          title="New workspace"
+          onClick={() => open({ kind: 'create-workspace', projectId: repo.id })}
+          className="flex size-5 items-center justify-center rounded text-foreground/40 hover:bg-foreground/10 hover:text-foreground"
+        >
+          <Plus className="size-3.5" />
+        </button>
+      </div>
+      {!collapsed && (
+        <div className="mt-0.5 space-y-0.5">
+          {workspaces.length === 0 && <div className="py-1 pl-7 text-[11px] text-muted-foreground/50">No workspaces</div>}
+          {workspaces.map((w) => (
+            <WorkspaceRow key={w.id} ws={w} active={route.name === 'workspace' && route.id === w.id} onClick={() => navigate({ name: 'workspace', id: w.id })} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/** Sidebar: projects → their workspaces, each with its status dot (D-14), styled like Orca. */
 export function WorkspaceList() {
   const { workspaces, repos, load, patch } = useWorkspaces()
-  const { route, navigate } = useRouter()
   const open = useModal((s) => s.open)
   useEffect(() => {
     void load()
@@ -25,69 +103,17 @@ export function WorkspaceList() {
       <button
         type="button"
         onClick={() => open({ kind: 'add-project' })}
-        className="mx-2 flex w-[calc(100%-1rem)] items-center gap-1.5 rounded-md border border-dashed border-input px-2 py-2 text-xs text-muted-foreground hover:text-foreground"
+        className="flex w-full items-center gap-2 rounded-md border border-dashed border-input px-2 py-2 text-[12px] text-muted-foreground hover:text-foreground"
       >
-        <Plus size={13} /> Add your first project
+        <Plus className="size-3.5" /> Add your first project
       </button>
     )
   }
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {repos.map((repo) => (
-          <div key={repo.id}>
-            <div className="group flex items-center gap-1 px-2 pb-0.5">
-              <FolderGit2 size={12} className="shrink-0 text-muted-foreground" />
-              <button
-                type="button"
-                onClick={() => navigate({ name: 'project', id: repo.id })}
-                className="min-w-0 flex-1 truncate text-left text-[12px] font-medium text-muted-foreground hover:text-foreground"
-              >
-                {repo.name}
-              </button>
-              <button
-                type="button"
-                aria-label={`Project settings for ${repo.name}`}
-                title="Project settings"
-                onClick={() => navigate({ name: 'project', id: repo.id })}
-                className="text-muted-foreground/60 opacity-0 group-hover:opacity-100 hover:text-foreground"
-              >
-                <Settings2 size={12} />
-              </button>
-              <button
-                type="button"
-                aria-label={`New workspace in ${repo.name}`}
-                title="New workspace"
-                onClick={() => open({ kind: 'create-workspace', projectId: repo.id })}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <Plus size={13} />
-              </button>
-            </div>
-            {workspaces
-              .filter((w) => w.repoId === repo.id)
-              .map((w) => (
-                <button
-                  key={w.id}
-                  type="button"
-                  onClick={() => navigate({ name: 'workspace', id: w.id })}
-                  className={cn(
-                    'flex w-full items-center gap-2 rounded-md px-2 py-1 text-left text-sm',
-                    route.name === 'workspace' && route.id === w.id
-                      ? 'bg-secondary text-foreground'
-                      : 'text-foreground/80 hover:bg-secondary',
-                  )}
-                >
-                  {w.workflowId ? (
-                    <ClipboardList size={13} className="shrink-0 text-info" />
-                  ) : (
-                    <MessageSquare size={13} className="shrink-0 text-success" />
-                  )}
-                  <span className="min-w-0 flex-1 truncate">{w.name}</span>
-                  <StatusDot status={w.status} />
-                </button>
-              ))}
-          </div>
-        ))}
+        <ProjectGroup key={repo.id} repo={repo} workspaces={workspaces.filter((w) => w.repoId === repo.id)} />
+      ))}
     </div>
   )
 }
