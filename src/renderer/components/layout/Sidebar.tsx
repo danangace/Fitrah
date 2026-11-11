@@ -4,6 +4,7 @@ import { APP_INFO } from '../../../shared/app-info'
 import { cn } from '../../lib/cn'
 import type { Route } from '../../lib/route'
 import { useRouter } from '../../store/router'
+import { AccountWarnings, EnableNotifications, WorkingCount } from './Attention'
 
 function NavItem({ active, icon, label, onClick }: { active: boolean; icon: ReactNode; label: string; onClick: () => void }) {
   return (
@@ -38,8 +39,11 @@ export function Sidebar({ workspaces }: { workspaces?: ReactNode }) {
           <Plus size={14} />
         </button>
       </div>
+      <WorkingCount />
       <nav className="flex-1 overflow-y-auto px-2">{workspaces}</nav>
+      <AccountWarnings />
       <div className="space-y-0.5 border-t border-neutral-800 p-2">
+        <EnableNotifications />
         <NavItem active={is('docs')} icon={<BookOpen size={16} />} label="Docs" onClick={() => navigate({ name: 'docs', path: '' })} />
         <NavItem active={is('settings')} icon={<Settings size={16} />} label="Settings" onClick={() => navigate({ name: 'settings', section: 'general' })} />
       </div>

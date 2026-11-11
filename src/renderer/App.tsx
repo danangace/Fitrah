@@ -1,3 +1,4 @@
+import { WorkspaceNotifier } from './components/layout/Attention'
 import { Sidebar } from './components/layout/Sidebar'
 import { ChatsPanel } from './components/native-chat/ChatsPanel'
 import { WorkspaceList } from './components/workspace/WorkspaceList'
@@ -27,6 +28,7 @@ function Page() {
 export function App() {
   return (
     <div className="flex h-screen bg-neutral-950 text-neutral-100">
+      <WorkspaceNotifier />
       <Sidebar workspaces={<WorkspaceList />} />
       <main className="min-w-0 flex-1 overflow-hidden">
         <Page />
