@@ -5,6 +5,7 @@ import { Hono } from 'hono'
 import { setCookie } from 'hono/cookie'
 import { APP_INFO } from '../../shared/app-info'
 import { UserError } from '../errors'
+import { registerAccountRoutes } from '../accounts/routes'
 import { registerSettingsRoutes } from '../settings/routes'
 import type { Db } from '../sqlite/db'
 import { TOKEN_COOKIE, type SecurityConfig, hostGuard, tokenGuard } from './security'
@@ -36,6 +37,7 @@ export function createApp(options: AppOptions): Hono {
   })
 
   registerSettingsRoutes(app, db)
+  registerAccountRoutes(app, db)
 
   app.all('/api/*', (c) => c.json({ error: 'not_found' }, 404))
 
