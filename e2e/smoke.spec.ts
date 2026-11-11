@@ -69,3 +69,15 @@ test('a repo added in Settings can be used for a new workspace without reloading
   await page.getByRole('button', { name: 'Create workspace' }).click()
   await expect(page.getByText('feat/tribe-2/from-new-repo ← origin/main')).toBeVisible({ timeout: 20_000 })
 })
+
+test('a browser without the session sees how to connect', async ({ browser }) => {
+  const context = await browser.newContext()
+  const page = await context.newPage()
+  await page.goto('/')
+  await expect(page.getByText("This browser isn't connected to Fitrah")).toBeVisible()
+  await expect(page.getByText('fitrah open --print', { exact: false })).toBeVisible()
+  // A wrong token does not connect either.
+  await page.goto('/?token=wrong')
+  await expect(page.getByText("This browser isn't connected to Fitrah")).toBeVisible()
+  await context.close()
+})

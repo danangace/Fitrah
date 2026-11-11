@@ -34,6 +34,8 @@ fitrah start
 
 Options: `fitrah start --port 4400`, `fitrah start --no-open` (prints the link instead of opening the browser).
 
+Already running and you closed the tab, or want **another browser**? Run `fitrah open` (opens your default browser) or `fitrah open --print` (prints the private link to paste into any browser). A browser without that link shows "This browser isn't connected"; that's the security guard, not an error.
+
 ## 3. First-time setup (Settings)
 
 1. **General:** set the **Docs root** to your markdown folder (e.g. your Obsidian vault). Docs are shown **read-only**; you keep editing them in Obsidian. Also set the **Workspaces folder** (default `~/fitrah/workspaces`).
@@ -101,7 +103,7 @@ Fitrah never stores tokens or credentials, and removes `ANTHROPIC_API_KEY`-style
 
 | Problem | Try |
 |---|---|
-| "Fitrah could not start a session" | Open the link printed by `fitrah start` (it carries the token). |
+| "This browser isn't connected to Fitrah" | Run `fitrah open`, or `fitrah open --print` and paste the link into that browser. |
 | Account shows **logged out** | `CLAUDE_CONFIG_DIR=<folder> claude auth login`, then **Re-check** in Accounts. |
 | Account shows **error** | Is `claude` on your `PATH` in the terminal where you ran `fitrah start`? |
 | Workspace creation fails with "Base not found" | Check the base name, e.g. `origin/dev/tribe-2`; Fitrah fetches it first. |
