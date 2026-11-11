@@ -33,6 +33,13 @@ describe('claudeStatus', () => {
 })
 
 describe('claudeEnv', () => {
+  it('runs the default ~/.claude account without CLAUDE_CONFIG_DIR (its login is in the default Keychain entry)', () => {
+    const env = claudeEnv('/home/me/.claude', { PATH: '/bin', CLAUDE_CONFIG_DIR: '/home/me/.claude-sid' }, '/home/me')
+    expect(env).toEqual({ PATH: '/bin' })
+    expect(claudeEnv('/home/me/.claude/', {}, '/home/me')).toEqual({})
+    expect(claudeEnv('/home/me/.claude-sid', {}, '/home/me')).toEqual({ CLAUDE_CONFIG_DIR: '/home/me/.claude-sid' })
+  })
+
   it('sets the config dir and strips api keys and parent session vars', () => {
     const env = claudeEnv('/acc', {
       PATH: '/bin',
