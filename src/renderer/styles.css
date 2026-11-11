@@ -51,7 +51,7 @@ body {
 }
 
 /* Read-only markdown view */
-.markdown { @apply text-sm leading-7 text-foreground/90; }
+.markdown { @apply text-sm leading-relaxed text-foreground/90; }
 .markdown h1 { @apply mt-2 mb-4 text-[1.4rem] font-semibold text-foreground; }
 .markdown h2 { @apply mt-8 mb-3 border-b border-border pb-1 text-lg font-semibold text-foreground; }
 .markdown h3 { @apply mt-6 mb-2 text-[0.95rem] font-semibold text-foreground; }
