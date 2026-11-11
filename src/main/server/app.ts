@@ -6,6 +6,8 @@ import { setCookie } from 'hono/cookie'
 import { APP_INFO } from '../../shared/app-info'
 import { UserError } from '../errors'
 import { registerAccountRoutes } from '../accounts/routes'
+import { registerDocsRoutes } from '../docs/routes'
+import { DocsService } from '../docs/service'
 import { registerSettingsRoutes } from '../settings/routes'
 import type { Db } from '../sqlite/db'
 import { TOKEN_COOKIE, type SecurityConfig, hostGuard, tokenGuard } from './security'
@@ -13,6 +15,7 @@ import { TOKEN_COOKIE, type SecurityConfig, hostGuard, tokenGuard } from './secu
 export type AppOptions = {
   security: SecurityConfig
   db: Db
+  docs?: DocsService
   /** Folder with the built UI; when missing, only the API is served. */
   webRoot?: string
 }
@@ -38,6 +41,7 @@ export function createApp(options: AppOptions): Hono {
 
   registerSettingsRoutes(app, db)
   registerAccountRoutes(app, db)
+  registerDocsRoutes(app, options.docs ?? new DocsService(db))
 
   app.all('/api/*', (c) => c.json({ error: 'not_found' }, 404))
 
