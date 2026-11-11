@@ -1,11 +1,12 @@
 import type { Repo } from '../../shared/schemas'
 
-export type RepoForm = { setupScript: string; archiveScript: string; featureBase: string }
+export type RepoForm = { setupScript: string; archiveScript: string; featureBase: string; branchPrefix: string }
 
 export const formFromRepo = (repo: Repo): RepoForm => ({
   setupScript: repo.setupScript,
   archiveScript: repo.archiveScript,
   featureBase: repo.featureBase,
+  branchPrefix: repo.branchPrefix,
 })
 
 /** True when the form differs from what is saved (ignores trailing whitespace). */

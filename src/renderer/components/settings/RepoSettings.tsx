@@ -24,7 +24,8 @@ function Badge({ tone, children }: { tone: 'ok' | 'warn' | 'muted' | 'info'; chi
   return <span className={cn('rounded px-1.5 py-0.5 text-[11px]', tones[tone])}>{children}</span>
 }
 
-function RepoRow({ repo, onChange }: { repo: Repo; onChange: () => void }) {
+/** Project settings: base, branch prefix, setup / archive scripts (D-14). */
+export function RepoRow({ repo, onChange }: { repo: Repo; onChange: () => void }) {
   const [form, setForm] = useState<RepoForm>(formFromRepo(repo))
   const [saving, setSaving] = useState(false)
   const [savedAt, setSavedAt] = useState<number | null>(null)
@@ -86,9 +87,14 @@ function RepoRow({ repo, onChange }: { repo: Repo; onChange: () => void }) {
         </Button>
       </div>
       {error && <Notice tone="error">{error}</Notice>}
-      <Field label="Feature base">
-        <Input value={form.featureBase} onChange={(e) => setForm({ ...form, featureBase: e.target.value })} />
-      </Field>
+      <div className="grid gap-3 md:grid-cols-2">
+        <Field label="Base branch" hint="New workspaces start from here.">
+          <Input value={form.featureBase} onChange={(e) => setForm({ ...form, featureBase: e.target.value })} />
+        </Field>
+        <Field label="Branch prefix" hint={`Branch = prefix + name, e.g. ${form.branchPrefix}rapikan-tabel`}>
+          <Input value={form.branchPrefix} placeholder="feat/tribe-2/" onChange={(e) => setForm({ ...form, branchPrefix: e.target.value })} />
+        </Field>
+      </div>
       <Field label="Setup script" hint={SETUP_HINT}>
         <ScriptArea
           value={form.setupScript}

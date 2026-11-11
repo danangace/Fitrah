@@ -4,6 +4,7 @@ export type Route =
   | { name: 'docs'; path: string }
   | { name: 'settings'; section: string }
   | { name: 'workspace'; id: string }
+  | { name: 'project'; id: string }
   | { name: 'not-found' }
 
 export function parseRoute(pathname: string): Route {
@@ -13,6 +14,7 @@ export function parseRoute(pathname: string): Route {
   if (head === 'docs') return { name: 'docs', path: rest.join('/') }
   if (head === 'settings') return { name: 'settings', section: rest[0] ?? 'general' }
   if (head === 'workspaces' && rest[0]) return { name: 'workspace', id: rest[0] }
+  if (head === 'projects' && rest[0]) return { name: 'project', id: rest[0] }
   return { name: 'not-found' }
 }
 
@@ -26,6 +28,8 @@ export function routePath(route: Route): string {
       return `/settings/${route.section}`
     case 'workspace':
       return `/workspaces/${encodeURIComponent(route.id)}`
+    case 'project':
+      return `/projects/${encodeURIComponent(route.id)}`
     case 'not-found':
       return '/'
   }

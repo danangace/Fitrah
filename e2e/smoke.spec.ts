@@ -13,7 +13,7 @@ test('start, accounts, docs, workspace and chat (AC-B1 smoke)', async ({ page })
   await page.screenshot({ path: shot('1-home') })
 
   // Accounts
-  await page.getByRole('button', { name: 'Settings' }).click()
+  await page.locator('aside').getByRole('button', { name: 'Settings', exact: true }).click()
   await page.getByRole('button', { name: 'Accounts', exact: true }).click()
   await expect(page.getByText('smoke@example.com')).toBeVisible()
   await page.screenshot({ path: shot('2-accounts') })
@@ -29,7 +29,7 @@ test('start, accounts, docs, workspace and chat (AC-B1 smoke)', async ({ page })
   await expect(page.getByRole('heading', { name: 'Second note' })).toBeVisible()
 
   // Workspace
-  await page.getByRole('button', { name: 'New workspace' }).click()
+  await page.locator('aside').getByRole('button', { name: 'New workspace', exact: true }).click()
   await page.getByPlaceholder('kelola-xyz').fill('smoke-feature')
   await page.getByRole('button', { name: 'Create workspace' }).click()
   await expect(page.getByRole('heading', { name: 'smoke-feature' })).toBeVisible({ timeout: 20_000 })
@@ -49,38 +49,29 @@ test('start, accounts, docs, workspace and chat (AC-B1 smoke)', async ({ page })
   await page.screenshot({ path: shot('5-chat-done') })
 })
 
-test('a repo added in Settings can be used for a new workspace without reloading', async ({ page }) => {
+test('Add a project by browsing to a folder, then edit its settings (AC-P1)', async ({ page }) => {
   const { extraRepo } = JSON.parse(readFileSync(join(import.meta.dirname, '.state.json'), 'utf8')) as { extraRepo: string }
   await page.goto(`/?token=${TOKEN}`)
-  await page.locator('aside').getByRole('button', { name: 'Settings' }).click()
-  await page.getByRole('button', { name: 'Repos', exact: true }).click()
-  await page.getByPlaceholder('~/Documents/Sekolahmu/Modularity/website-cf-monorepo').fill(extraRepo)
-  await page.getByPlaceholder('origin/dev/tribe-2').last().fill('origin/main')
-  await page.getByRole('button', { name: 'Add repo' }).click()
-  await expect(page.getByText(extraRepo)).toBeVisible()
-  await expect(page.getByText('Added extra-repo. It is ready for new workspaces.')).toBeVisible()
+  await page.locator('aside').getByRole('button', { name: 'Add project' }).click()
+  await page.getByRole('button', { name: /Browse folder/ }).click()
+  await page.getByLabel('Folder path').fill(extraRepo)
+  await page.getByLabel('Folder path').press('Enter')
+  await expect(page.getByRole('button', { name: /Use this folder: extra-repo/ })).toBeVisible()
+  await page.getByRole('button', { name: /Use this folder/ }).click()
+  await expect(page.getByText('Base branch')).toBeVisible()
+  await page.getByPlaceholder('feat/tribe-2/').fill('try/')
+  await page.getByRole('dialog').getByRole('button', { name: 'Add project' }).click()
 
-  // The repo row shows its state, and saving gives feedback.
-  const row = page.getByTestId('repo-row').filter({ hasText: 'extra-repo' })
+  // Lands on the project settings; the project is in the sidebar.
+  await expect(page.getByRole('heading', { name: 'Project settings' })).toBeVisible()
+  await expect(page.locator('aside').getByText('extra-repo')).toBeVisible()
+  const row = page.getByTestId('repo-row')
   await expect(row.getByText('Added', { exact: true })).toBeVisible()
-  await expect(row.getByText('Ready · no setup script')).toBeVisible()
-  await expect(row.getByRole('button', { name: 'Save repo' })).toBeDisabled()
   await row.locator('textarea').first().fill('echo ready')
   await expect(row.getByText('Unsaved changes')).toBeVisible()
   await row.getByRole('button', { name: 'Save repo' }).click()
   await expect(row.getByText('Saved', { exact: true })).toBeVisible()
-  await expect(row.getByText('Ready · setup script')).toBeVisible()
-  await page.screenshot({ path: 'test-results/screens/repo-feedback.png', fullPage: true })
-
-  // Same page session, no reload: the new repo is selectable and usable.
-  await page.locator('aside').getByRole('button', { name: 'New workspace' }).click()
-  const repoName = extraRepo.split('/').pop() ?? ''
-  const select = page.locator('select').first()
-  await expect(select.locator('option')).toHaveCount(2)
-  await select.selectOption({ label: repoName })
-  await page.getByPlaceholder('kelola-xyz').fill('from-new-repo')
-  await page.getByRole('button', { name: 'Create workspace' }).click()
-  await expect(page.getByText('from-new-repo ← origin/main')).toBeVisible({ timeout: 20_000 })
+  await page.screenshot({ path: 'test-results/screens/project-settings.png', fullPage: true })
 })
 
 test('a browser without the session sees how to connect', async ({ browser }) => {

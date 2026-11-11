@@ -1,15 +1,17 @@
-import { ClipboardList, MessageSquare } from 'lucide-react'
+import { ClipboardList, FolderGit2, MessageSquare, Plus, Settings2 } from 'lucide-react'
 import { useEffect } from 'react'
 import { cn } from '../../lib/cn'
 import { useAppEvents } from '../../store/events'
 import { useRouter } from '../../store/router'
+import { useModal } from '../../store/ui'
 import { useWorkspaces } from '../../store/workspaces'
 import { StatusDot } from './StatusDot'
 
-/** Sidebar: repo → workspaces, each with its status dot. */
+/** Sidebar: projects → their workspaces, each with its status dot (D-14). */
 export function WorkspaceList() {
   const { workspaces, repos, load, patch } = useWorkspaces()
   const { route, navigate } = useRouter()
+  const open = useModal((s) => s.open)
   useEffect(() => {
     void load()
   }, [load])
@@ -18,14 +20,49 @@ export function WorkspaceList() {
     if (e.type === 'workspace.setup' && e.done) void load()
   })
 
-  if (workspaces.length === 0) return <p className="px-2 py-1 text-xs text-neutral-600">No workspaces yet.</p>
+  if (repos.length === 0) {
+    return (
+      <button
+        type="button"
+        onClick={() => open({ kind: 'add-project' })}
+        className="mx-2 flex w-[calc(100%-1rem)] items-center gap-1.5 rounded-md border border-dashed border-neutral-700 px-2 py-2 text-xs text-neutral-400 hover:text-white"
+      >
+        <Plus size={13} /> Add your first project
+      </button>
+    )
+  }
   return (
     <div className="space-y-3">
-      {repos
-        .filter((r) => workspaces.some((w) => w.repoId === r.id))
-        .map((repo) => (
+      {repos.map((repo) => (
           <div key={repo.id}>
-            <div className="px-2 pb-0.5 text-[11px] text-neutral-500">{repo.name}</div>
+            <div className="group flex items-center gap-1 px-2 pb-0.5">
+              <FolderGit2 size={12} className="shrink-0 text-neutral-500" />
+              <button
+                type="button"
+                onClick={() => navigate({ name: 'project', id: repo.id })}
+                className="min-w-0 flex-1 truncate text-left text-[12px] font-medium text-neutral-400 hover:text-white"
+              >
+                {repo.name}
+              </button>
+              <button
+                type="button"
+                aria-label={`Project settings for ${repo.name}`}
+                title="Project settings"
+                onClick={() => navigate({ name: 'project', id: repo.id })}
+                className="text-neutral-600 opacity-0 group-hover:opacity-100 hover:text-white"
+              >
+                <Settings2 size={12} />
+              </button>
+              <button
+                type="button"
+                aria-label={`New workspace in ${repo.name}`}
+                title="New workspace"
+                onClick={() => open({ kind: 'create-workspace', projectId: repo.id })}
+                className="text-neutral-500 hover:text-white"
+              >
+                <Plus size={13} />
+              </button>
+            </div>
             {workspaces
               .filter((w) => w.repoId === repo.id)
               .map((w) => (

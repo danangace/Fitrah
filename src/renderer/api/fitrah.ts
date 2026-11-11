@@ -28,6 +28,22 @@ export const LoginView = z.object({
 })
 export type LoginView = z.infer<typeof LoginView>
 
+export const DirListing = z.object({
+  path: z.string(),
+  parent: z.string().nullable(),
+  home: z.string(),
+  dirs: z.array(z.object({ name: z.string(), path: z.string(), isGitRepo: z.boolean() })),
+})
+export type DirListing = z.infer<typeof DirListing>
+
+export const Inspection = z.object({
+  path: z.string(),
+  name: z.string(),
+  isGitRepo: z.boolean(),
+  defaultBase: z.string().nullable(),
+})
+export type Inspection = z.infer<typeof Inspection>
+
 export const DocFile = z.object({
   path: z.string(),
   frontmatter: z.record(z.string(), z.unknown()),
@@ -41,6 +57,12 @@ export const api = {
   getSettings: () => request('GET', API.settings, Settings),
   saveSettings: (settings: Settings) => request('PUT', API.settings, Settings, settings),
   chromeProfiles: () => request('GET', '/api/system/chrome-profiles', z.array(z.object({ dir: z.string(), name: z.string() }))),
+  listDirs: (path?: string, hidden = false) =>
+    request('GET', `/api/fs/dirs?${new URLSearchParams({ ...(path ? { path } : {}), ...(hidden ? { hidden: '1' } : {}) })}`, DirListing),
+  inspectFolder: (path: string) => request('POST', '/api/projects/inspect', Inspection, { path }),
+  cloneProject: (url: string, parentDir: string, name?: string) =>
+    request('POST', '/api/projects/clone', Repo, { url, parentDir, name }),
+  createProject: (parentDir: string, name: string) => request('POST', '/api/projects/create', Repo, { parentDir, name }),
   listRepos: () => request('GET', API.repos, z.array(Repo)),
   addRepo: (input: RepoInput) => request('POST', API.repos, Repo, input),
   updateRepo: (id: string, input: Partial<RepoInput>) => request('PATCH', `${API.repos}/${id}`, Repo, input),
