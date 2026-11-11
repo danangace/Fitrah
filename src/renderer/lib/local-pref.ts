@@ -15,3 +15,20 @@ export function writePref(key: string, value: boolean): void {
     /* storage blocked: keep the in-memory value */
   }
 }
+
+export function readNumber(key: string, fallback: number): number {
+  try {
+    const v = Number(window.localStorage.getItem(`fitrah:${key}`))
+    return Number.isFinite(v) && v > 0 ? v : fallback
+  } catch {
+    return fallback
+  }
+}
+
+export function writeNumber(key: string, value: number): void {
+  try {
+    window.localStorage.setItem(`fitrah:${key}`, String(Math.round(value)))
+  } catch {
+    /* storage blocked */
+  }
+}

@@ -1,7 +1,8 @@
 import { BookOpen, FolderPlus, Plus, Settings } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { type PointerEvent, type ReactNode, useState } from 'react'
 import { APP_INFO } from '../../../shared/app-info'
 import { cn } from '../../lib/cn'
+import { readNumber, writeNumber } from '../../lib/local-pref'
 import type { Route } from '../../lib/route'
 import { useRouter } from '../../store/router'
 import { useModal } from '../../store/ui'
@@ -39,12 +40,47 @@ export function NavRow({
   )
 }
 
+const MIN_WIDTH = 240
+const MAX_WIDTH = 480
+
 export function Sidebar({ workspaces }: { workspaces?: ReactNode }) {
   const { route, navigate } = useRouter()
   const open = useModal((s) => s.open)
   const is = (name: Route['name']) => route.name === name
+  // Resizable like Orca: drag the right edge; width remembered per browser.
+  const [width, setWidth] = useState(() => readNumber('sidebar-width', 300))
+  const startResize = (e: PointerEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    const startX = e.clientX
+    const startWidth = width
+    let latest = startWidth
+    const move = (ev: globalThis.PointerEvent) => {
+      latest = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, startWidth + ev.clientX - startX))
+      setWidth(latest)
+    }
+    const up = () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+      document.body.style.cursor = ''
+      writeNumber('sidebar-width', latest)
+    }
+    document.body.style.cursor = 'col-resize'
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+  }
   return (
-    <aside className="flex w-64 shrink-0 flex-col border-r border-border bg-sidebar">
+    <aside style={{ width }} className="relative flex shrink-0 flex-col border-r border-border bg-sidebar">
+      <div
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize sidebar"
+        onPointerDown={startResize}
+        onDoubleClick={() => {
+          setWidth(300)
+          writeNumber('sidebar-width', 300)
+        }}
+        className="absolute inset-y-0 -right-1 z-10 w-2 cursor-col-resize hover:bg-foreground/10"
+      />
       <div className="flex h-11 items-center gap-2 px-4" title={APP_INFO.acronym}>
         <span className="flex size-5 items-center justify-center rounded-md bg-primary text-xs font-bold text-primary-foreground">F</span>
         <span className="text-sm font-semibold tracking-tight text-foreground">{APP_INFO.name}</span>
