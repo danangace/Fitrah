@@ -15,7 +15,8 @@
     "build:ui": "vite build --config vite.web.config.ts",
     "typecheck": "tsc --noEmit",
     "lint": "oxlint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "fitrah": "tsx src/cli/fitrah.ts"
   },
   "dependencies": {
     "@hono/node-server": "^2.1.6",
@@ -40,5 +41,8 @@
     "typescript": "^7.0.2",
     "vite": "^8.3.7",
     "vitest": "^5.1.0"
+  },
+  "bin": {
+    "fitrah": "./bin/fitrah.mjs"
   }
 }
