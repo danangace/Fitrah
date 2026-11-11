@@ -45,9 +45,18 @@ mkdirSync(accountDir)
 const account = insertAccount(db, { agent: 'claude', label: 'smoke', kind: 'attached', configDir: accountDir })
 db.prepare("UPDATE accounts SET login_status = 'logged_in', email = 'smoke@example.com' WHERE id = ?").run(account.id)
 
+const inMins = (m: number) => Math.round(Date.now() / 1000) + m * 60
+
 // Fake Claude: answers, asks to run a command, reports the decision.
 const agent = fakeAdapter(async (o, emit) => {
   emit({ type: 'session.started', sessionId: 'smoke-session', model: o.model })
+  emit({
+    type: 'usage',
+    windows: [
+      { key: 'five_hour', utilization: 0.82, resetsAt: inMins(56), status: 'allowed' },
+      { key: 'seven_day', utilization: 0.46, resetsAt: inMins(3 * 1440 + 21 * 60), status: 'allowed' },
+    ],
+  })
   emit({ type: 'message.text', text: `Working on: ${o.prompt}` })
   emit({ type: 'tool.started', toolUseId: 't1', name: 'Bash', summary: 'touch smoke.txt' })
   const answer = await o.onToolRequest({ tool: 'Bash', input: { command: 'touch smoke.txt' } })

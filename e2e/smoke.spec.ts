@@ -39,6 +39,9 @@ test('start, accounts, docs, workspace and chat (AC-B1 smoke)', async ({ page })
   await expect(page.locator('main header').getByText('feat/tribe-2/smoke-feature')).toBeVisible()
   await expect(page.getByText('Free chat')).toBeVisible()
 
+  // Usage: nothing yet before the first message
+  await expect(page.getByRole('button', { name: 'Usage' })).toContainText('after your first message')
+
   // Chat with the fake agent: approval card → deny
   await page.getByPlaceholder(/Message Claude/).fill('please touch a file')
   await page.getByRole('button', { name: 'Send' }).click()
@@ -50,6 +53,14 @@ test('start, accounts, docs, workspace and chat (AC-B1 smoke)', async ({ page })
   await expect(page.getByText('Denied: Bash')).toBeVisible()
   await expect(page.locator('aside [title="done"]').first()).toBeVisible()
   await page.screenshot({ path: shot('5-chat-done') })
+
+  // Usage from the turn: status bar + card (like the Claude statusline / Orca)
+  await expect(page.getByRole('button', { name: 'Usage' })).toContainText('82%')
+  await expect(page.getByRole('button', { name: 'Usage' })).toContainText('46%')
+  await page.getByRole('button', { name: 'Usage' }).click()
+  await expect(page.getByTestId('usage-five_hour')).toContainText('82% used')
+  await expect(page.getByTestId('usage-seven_day')).toContainText('Resets in 3d')
+  await page.screenshot({ path: shot('6-usage') })
 })
 
 test('Add a project by browsing to a folder, then edit its settings (AC-P1)', async ({ page }) => {

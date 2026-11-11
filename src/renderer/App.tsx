@@ -1,4 +1,5 @@
 import { WorkspaceNotifier } from './components/layout/Attention'
+import { StatusBar } from './components/layout/StatusBar'
 import { Sidebar } from './components/layout/Sidebar'
 import { ChatsPanel } from './components/native-chat/ChatsPanel'
 import { CreateWorkspaceModal } from './components/workspace/CreateWorkspaceModal'
@@ -40,13 +41,16 @@ function Modals() {
 
 export function App() {
   return (
-    <div className="flex h-screen bg-background text-foreground">
+    <div className="flex h-screen flex-col bg-background text-foreground">
+      <div className="flex min-h-0 flex-1">
       <WorkspaceNotifier />
       <Modals />
       <Sidebar workspaces={<WorkspaceList />} />
       <main className="min-w-0 flex-1 overflow-hidden">
         <Page />
       </main>
+      </div>
+      <StatusBar />
     </div>
   )
 }
