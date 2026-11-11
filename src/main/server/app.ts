@@ -53,7 +53,8 @@ export function createRuntimeApp(options: AppOptions): { app: Hono; chats: ChatS
   // Exchange the token (sent once in the header) for an HttpOnly cookie, so EventSource and
   // WebSocket requests from the UI are authenticated too.
   app.post('/api/session', (c) => {
-    setCookie(c, TOKEN_COOKIE, security.token, { httpOnly: true, sameSite: 'Strict', path: '/' })
+    // Remembered for 30 days, so a browser restart does not disconnect you.
+    setCookie(c, TOKEN_COOKIE, security.token, { httpOnly: true, sameSite: 'Strict', path: '/', maxAge: 60 * 60 * 24 * 30 })
     return c.json({ ok: true })
   })
 

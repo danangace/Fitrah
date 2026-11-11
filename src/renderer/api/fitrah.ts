@@ -40,6 +40,7 @@ export type DocFile = z.infer<typeof DocFile>
 export const api = {
   getSettings: () => request('GET', API.settings, Settings),
   saveSettings: (settings: Settings) => request('PUT', API.settings, Settings, settings),
+  chromeProfiles: () => request('GET', '/api/system/chrome-profiles', z.array(z.object({ dir: z.string(), name: z.string() }))),
   listRepos: () => request('GET', API.repos, z.array(Repo)),
   addRepo: (input: RepoInput) => request('POST', API.repos, Repo, input),
   updateRepo: (id: string, input: Partial<RepoInput>) => request('PATCH', `${API.repos}/${id}`, Repo, input),

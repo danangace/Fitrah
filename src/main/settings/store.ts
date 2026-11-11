@@ -15,6 +15,7 @@ export const DEFAULT_SETTINGS: Settings = {
   workspacesDir: '~/fitrah/workspaces',
   branchPrefix: { feature: 'feat/tribe-2/', defect: 'fix/tribe-2/' },
   models: { claude: { list: ['sonnet', 'opus', 'haiku'], default: 'sonnet' } },
+  openIn: { kind: 'default' },
 }
 
 const SETTINGS_KEY = 'app'

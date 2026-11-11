@@ -13,6 +13,13 @@ export const AgentModels = z.object({
 })
 export type AgentModels = z.infer<typeof AgentModels>
 
+/** Where `fitrah start` / `fitrah open` open the UI. */
+export const OpenIn = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('default') }),
+  z.object({ kind: z.literal('chrome'), profile: z.string().min(1) }),
+])
+export type OpenIn = z.infer<typeof OpenIn>
+
 export const Settings = z.object({
   /** Markdown folder browsed read-only (e.g. the Obsidian vault). */
   docsRoot: nullableText,
@@ -25,6 +32,7 @@ export const Settings = z.object({
   /** Branch name prefixes, e.g. `feat/tribe-2/` → `feat/tribe-2/<workspace-name>`. */
   branchPrefix: z.object({ feature: z.string(), defect: z.string() }).default({ feature: 'feat/', defect: 'fix/' }),
   models: z.object({ claude: AgentModels }).catchall(AgentModels),
+  openIn: OpenIn.default({ kind: 'default' }),
 })
 export type Settings = z.infer<typeof Settings>
 

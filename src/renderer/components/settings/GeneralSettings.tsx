@@ -7,10 +7,12 @@ import { Card, Field, Input, Notice } from '../ui/Field'
 
 export function GeneralSettings() {
   const [settings, setSettings] = useState<Settings | null>(null)
+  const [profiles, setProfiles] = useState<{ dir: string; name: string }[]>([])
   const [message, setMessage] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null)
 
   useEffect(() => {
     api.getSettings().then(setSettings, (e: unknown) => setMessage({ tone: 'error', text: errorText(e) }))
+    api.chromeProfiles().then(setProfiles, () => setProfiles([]))
   }, [])
 
   if (!settings) return message ? <Notice tone="error">{message.text}</Notice> : null
@@ -44,6 +46,27 @@ export function GeneralSettings() {
           placeholder="~/Documents/Personal/Engineering/Engineering/sekolahmu"
           onChange={(e) => set({ docsRoot: e.target.value.trim() === '' ? null : e.target.value })}
         />
+      </Field>
+      <Field
+        label="Open Fitrah in"
+        hint="Used by `fitrah start` and `fitrah open`. Pick the Chrome profile you work in, so its login stays there."
+      >
+        <select
+          value={settings.openIn.kind === 'chrome' ? `chrome:${settings.openIn.profile}` : 'default'}
+          onChange={(e) =>
+            set({
+              openIn: e.target.value === 'default' ? { kind: 'default' } : { kind: 'chrome', profile: e.target.value.slice('chrome:'.length) },
+            })
+          }
+          className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-2.5 py-1.5 text-sm"
+        >
+          <option value="default">Default browser</option>
+          {profiles.map((p) => (
+            <option key={p.dir} value={`chrome:${p.dir}`}>
+              Chrome · {p.name}
+            </option>
+          ))}
+        </select>
       </Field>
       <Field label="Workspaces folder" hint="Where new git worktrees are created.">
         <Input value={settings.workspacesDir} onChange={(e) => set({ workspacesDir: e.target.value })} />

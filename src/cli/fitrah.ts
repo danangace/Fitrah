@@ -1,16 +1,18 @@
-import { spawn } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { parseArgs } from 'node:util'
 import { APP_INFO, appTitle } from '../shared/app-info'
 import { DEFAULT_PORT, HOST, WEB_ROOT, fitrahHome } from '../main/config'
 import { startRuntime } from '../main/index'
+import { getSettings } from '../main/settings/store'
+import { openDb } from '../main/sqlite/db'
+import { openUrl } from '../main/system/browsers'
 
 const USAGE = `${appTitle()}
 
 Usage:
   ${APP_INFO.cli} start [--port <n>] [--no-open]   start the runtime and open the UI
-  ${APP_INFO.cli} open [--port <n>] [--print]      open the UI of a running Fitrah in your default browser
+  ${APP_INFO.cli} open [--port <n>] [--print]      open the UI of a running Fitrah (browser / profile from Settings)
                                               (--print: only print the link, e.g. for another browser)
   ${APP_INFO.cli} help
 `
@@ -22,19 +24,15 @@ async function buildUi(): Promise<void> {
   await build({ configFile: join(import.meta.dirname, '../../vite.web.config.ts'), logLevel: 'warn' })
 }
 
-function openBrowser(url: string): void {
-  const opener = process.platform === 'darwin' ? 'open' : process.platform === 'win32' ? 'start' : 'xdg-open'
-  spawn(opener, [url], { stdio: 'ignore', detached: true }).unref()
-}
 
 async function start(port: number | undefined, open: boolean): Promise<void> {
   await buildUi()
   const { url, token, server, db } = await startRuntime(port)
-  const openUrl = `${url}/?token=${token}`
+  const openLink = `${url}/?token=${token}`
   console.info(`${APP_INFO.name} is running on ${url}`)
-  console.info(`Open: ${openUrl}`)
+  console.info(`Open: ${openLink}`)
   console.info('Stop with Ctrl+C.')
-  if (open) openBrowser(openUrl)
+  if (open) openUrl(openLink, getSettings(db).openIn)
   const stop = () => {
     server.close()
     db.close()
@@ -65,8 +63,11 @@ async function openUi(port: number, printOnly: boolean): Promise<void> {
     console.info('Keep this link private: it gives full access to your Fitrah.')
     return
   }
-  openBrowser(link)
-  console.info(`Opened ${url} in your default browser.`)
+  const db = openDb(join(fitrahHome(), 'fitrah.db'))
+  const openIn = getSettings(db).openIn
+  db.close()
+  openUrl(link, openIn)
+  console.info(`Opened ${url} in ${openIn.kind === 'chrome' ? `Chrome profile "${openIn.profile}"` : 'your default browser'}.`)
 }
 
 const { positionals, values } = parseArgs({

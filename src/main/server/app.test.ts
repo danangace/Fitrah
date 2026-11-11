@@ -38,6 +38,7 @@ describe('createApp', () => {
     const cookie = res.headers.get('set-cookie') ?? ''
     expect(cookie).toContain('HttpOnly')
     expect(cookie).toContain('SameSite=Strict')
+    expect(cookie).toContain('Max-Age=2592000')
     const later = await app.request('/api/nope', { headers: { ...host, cookie: cookie.split(';')[0] ?? '' } })
     expect(later.status).toBe(404) // authenticated, route just doesn't exist
   })
