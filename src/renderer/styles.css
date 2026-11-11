@@ -1,10 +1,10 @@
 @import 'tailwindcss';
-@import '@fontsource-variable/plus-jakarta-sans';
+@import '@fontsource-variable/inter';
 
-/* App font: Plus Jakarta Sans (bundled, works offline). Code keeps Tailwind's mono stack.
+/* App font: Inter (bundled, works offline; same as Orca). Code keeps Tailwind's mono stack.
    Colors: Orca's dark "neutral" palette (shadcn), as semantic tokens. */
 @theme {
-  --font-sans: 'Plus Jakarta Sans Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   --color-background: #0a0a0a;
   --color-foreground: #f0f0f0;
@@ -29,9 +29,15 @@
   --radius-lg: 0.625rem;
 }
 
+/* One step larger overall (rem-based sizes and spacing scale together). */
+html {
+  font-size: 17px;
+}
+
 html,
 body {
-  @apply bg-background font-sans text-sm text-foreground antialiased;
+  @apply bg-background font-sans text-[15px] text-foreground antialiased;
+  font-feature-settings: 'cv11', 'ss01';
 }
 
 ::selection {
