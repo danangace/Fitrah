@@ -1,6 +1,7 @@
 import { MessageSquarePlus } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import type { Account, Chat, Settings, Workspace } from '../../../shared/schemas'
+import { onChatEvent } from '../../api/chat-socket'
 import { api } from '../../api/fitrah'
 import { cn } from '../../lib/cn'
 import { errorText } from '../../lib/errors'
@@ -88,6 +89,14 @@ export function ChatsPanel({ workspace }: { workspace: Workspace }) {
     setActive(null)
     void load()
   }, [load])
+  // Keep the tab dots live.
+  useEffect(
+    () =>
+      onChatEvent((e) => {
+        if (e.type === 'status') setChats((list) => list.map((c) => (c.id === e.chatId ? { ...c, status: e.status } : c)))
+      }),
+    [],
+  )
 
   const current = chats.find((c) => c.id === active)
   return (

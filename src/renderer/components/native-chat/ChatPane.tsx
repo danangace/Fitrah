@@ -49,16 +49,16 @@ export function ChatPane({ chat }: { chat: Chat }) {
   const [error, setError] = useState<string | null>(null)
   const bottom = useRef<HTMLDivElement>(null)
 
+  // Load once per chat; live events append. (Status changes must not reload the history.)
   useEffect(() => {
     setEvents([])
-    setStatus(chat.status)
     api.chatEvents(chat.id).then(setEvents, (e: unknown) => setError(errorText(e)))
     return onChatEvent((e) => {
       if (e.chatId !== chat.id) return
       if (e.type === 'status') setStatus(e.status)
       setEvents((list) => [...list, e])
     })
-  }, [chat.id, chat.status])
+  }, [chat.id])
 
   const items = useMemo(() => toItems(events), [events])
   useEffect(() => {
@@ -120,11 +120,11 @@ export function ChatPane({ chat }: { chat: Chat }) {
           className="min-h-[2.5rem] flex-1 resize-y rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none"
         />
         {running ? (
-          <Button variant="danger" onClick={() => void api.stopChat(chat.id)}>
+          <Button key="stop" variant="danger" onClick={() => void api.stopChat(chat.id)}>
             <Square size={14} /> Stop
           </Button>
         ) : (
-          <Button variant="primary" disabled={!text.trim()} onClick={send}>
+          <Button key="send" variant="primary" disabled={!text.trim()} onClick={send}>
             <Send size={14} /> Send
           </Button>
         )}
