@@ -20,6 +20,7 @@ export const claudeAdapter: AgentAdapter = {
         cwd: options.cwd,
         env: claudeEnv(options.configDir),
         model: options.model,
+        effort: options.effort ?? undefined,
         resume: options.sessionId ?? undefined,
         // Claude Code's own system prompt + the workspace facts on every turn.
         systemPrompt: { type: 'preset', preset: 'claude_code', append: options.context },

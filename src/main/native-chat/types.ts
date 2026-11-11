@@ -1,5 +1,5 @@
 import type { ChatEvent } from '../../shared/events'
-import type { AgentId } from '../../shared/schemas'
+import type { AgentId, Effort } from '../../shared/schemas'
 
 /** What an agent wants to do that may need the user's OK. */
 export type ToolRequest = { tool: string; input: Record<string, unknown> }
@@ -16,6 +16,8 @@ export type TurnOptions = {
   /** Account login folder (CLAUDE_CONFIG_DIR / CODEX_HOME). */
   configDir: string
   model: string
+  /** Reasoning effort; null = the agent's default. */
+  effort: Effort | null
   /** Continue this agent session when set (resume). */
   sessionId: string | null
   prompt: string

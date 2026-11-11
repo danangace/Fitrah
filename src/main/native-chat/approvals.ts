@@ -21,7 +21,7 @@ export class ApprovalManager {
 
   decide = async (chat: Chat, request: ToolRequest): Promise<ApprovalAnswer> => {
     const ws = getWorkspace(this.db, chat.workspaceId)
-    const rule = approvalRule(request, ws.worktreePath)
+    const rule = approvalRule(request, ws.worktreePath, chat.permissionMode)
     if (rule.action === 'allow') return 'allow'
 
     const approvalId = randomUUID()

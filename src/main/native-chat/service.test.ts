@@ -49,6 +49,17 @@ describe('ChatService', () => {
     expect(restarted.events(chat.id)).toEqual([{ type: 'message.text', text: 'from transcript', chatId: chat.id }])
   })
 
+  it('updates model, effort and permission from the composer; next turn uses them', async () => {
+    const { service, chat, adapter } = await chatFixture()
+    expect(service.get(chat.id)).toMatchObject({ permissionMode: 'accept-edits', effort: null })
+    service.update(chat.id, { model: 'opus', effort: 'high', permissionMode: 'full' })
+    expect(service.get(chat.id)).toMatchObject({ model: 'opus', effort: 'high', permissionMode: 'full' })
+    service.send(chat.id, 'go')
+    await settle()
+    expect(adapter.calls[0]).toMatchObject({ model: 'opus', effort: 'high' })
+    expect(() => service.update(chat.id, { permissionMode: 'yolo' })).toThrow()
+  })
+
   it('keeps several chats per workspace (multiple chats)', async () => {
     const { service, chat, account, ws } = await chatFixture()
     const second = service.create({ workspaceId: ws.id, agent: 'claude', accountId: account.id, model: 'opus', title: 'plan' })

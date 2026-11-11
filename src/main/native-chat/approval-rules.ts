@@ -1,5 +1,6 @@
 import { existsSync, realpathSync } from 'node:fs'
 import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path'
+import type { PermissionMode } from '../../shared/schemas'
 import type { ToolRequest } from './types'
 
 export type RuleResult = { action: 'allow' } | { action: 'ask'; reason: string; forced: boolean }
@@ -50,18 +51,22 @@ export function isInside(worktree: string, path: string): boolean {
  * Fitrah's approval rules (OQ-22). Claude Code itself already lets read-only commands such as
  * `ls` through without asking (Spike - Login S4); everything that reaches here is checked.
  */
-export function approvalRule(request: ToolRequest, worktree: string): RuleResult {
+export function approvalRule(request: ToolRequest, worktree: string, mode: PermissionMode = 'accept-edits'): RuleResult {
   const { tool, input } = request
   if (tool === 'Bash') {
     const command = typeof input.command === 'string' ? input.command : ''
+    // git push / rm -rf always ask, in every mode (Danang's rule, AC-C5).
     if (alwaysAsk(command)) return { action: 'ask', reason: 'Always asks: git push / rm -rf', forced: true }
+    if (mode === 'full') return { action: 'allow' }
     return { action: 'ask', reason: 'Runs a command', forced: false }
   }
+  if (AUTO.has(tool)) return { action: 'allow' }
+  if (mode === 'full') return { action: 'allow' }
   if (EDIT.has(tool)) {
     const path = String(input.file_path ?? input.notebook_path ?? '')
-    if (path && isInside(worktree, path)) return { action: 'allow' }
-    return { action: 'ask', reason: 'Edits a file outside the workspace', forced: false }
+    const inside = Boolean(path) && isInside(worktree, path)
+    if (inside && mode === 'accept-edits') return { action: 'allow' }
+    return { action: 'ask', reason: inside ? 'Edits a file' : 'Edits a file outside the workspace', forced: false }
   }
-  if (AUTO.has(tool)) return { action: 'allow' }
   return { action: 'ask', reason: `Uses ${tool}`, forced: false }
 }

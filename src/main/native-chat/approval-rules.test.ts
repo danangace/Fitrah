@@ -47,6 +47,15 @@ describe('approvalRule', () => {
     expect(isInside(join(real, 'wt'), join(link, 'wt', 'new', 'file.ts'))).toBe(true)
   })
 
+  it('permission modes: ask asks for edits too, full access allows all but git push / rm -rf', () => {
+    expect(approvalRule({ tool: 'Edit', input: { file_path: `${wt}/a.ts` } }, wt, 'ask')).toMatchObject({ action: 'ask', reason: 'Edits a file' })
+    expect(approvalRule({ tool: 'Read', input: { file_path: '/x' } }, wt, 'ask')).toEqual({ action: 'allow' })
+    expect(approvalRule({ tool: 'Bash', input: { command: 'pnpm install' } }, wt, 'full')).toEqual({ action: 'allow' })
+    expect(approvalRule({ tool: 'Edit', input: { file_path: '/etc/hosts' } }, wt, 'full')).toEqual({ action: 'allow' })
+    expect(approvalRule({ tool: 'Bash', input: { command: 'git push' } }, wt, 'full')).toMatchObject({ action: 'ask', forced: true })
+    expect(approvalRule({ tool: 'Bash', input: { command: 'rm -rf dist' } }, wt, 'full')).toMatchObject({ action: 'ask', forced: true })
+  })
+
   it('checks containment by path segments', () => {
     expect(isInside('/ws/a', '/ws/a/b')).toBe(true)
     expect(isInside('/ws/a', '/ws/ab/c')).toBe(false)

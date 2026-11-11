@@ -139,6 +139,20 @@ export type Workspace = z.infer<typeof Workspace>
 export const ChatStatus = WorkspaceStatus
 export type ChatStatus = WorkspaceStatus
 
+/** How much a chat may do without asking (composer permission picker). */
+export const PermissionMode = z.enum(['ask', 'accept-edits', 'full'])
+export type PermissionMode = z.infer<typeof PermissionMode>
+
+export const Effort = z.enum(['low', 'medium', 'high', 'xhigh', 'max'])
+export type Effort = z.infer<typeof Effort>
+
+export const ChatSettingsInput = z.object({
+  model: z.string().min(1).optional(),
+  effort: Effort.nullable().optional(),
+  permissionMode: PermissionMode.optional(),
+})
+export type ChatSettingsInput = z.infer<typeof ChatSettingsInput>
+
 export const ChatInput = z.object({
   workspaceId: z.string(),
   agent: AgentId,
@@ -155,7 +169,8 @@ export const Chat = z.object({
   accountId: nullableText,
   model: z.string(),
   sessionId: nullableText,
-  permissionMode: z.string(),
+  permissionMode: PermissionMode.catch('accept-edits'),
+  effort: Effort.nullable(),
   status: ChatStatus,
   title: z.string(),
   createdAt: isoDate,

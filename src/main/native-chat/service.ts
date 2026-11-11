@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import type { ChatEvent } from '../../shared/events'
-import { type AgentId, type Chat, ChatInput, type ChatStatus } from '../../shared/schemas'
+import { type AgentId, type Chat, ChatInput, ChatSettingsInput, type ChatStatus, type Effort, type PermissionMode } from '../../shared/schemas'
 import { getAccount } from '../accounts/service'
 import { UserError } from '../errors'
 import { nowIso } from '../paths'
@@ -18,7 +18,8 @@ type ChatRow = {
   account_id: string | null
   model: string
   session_id: string | null
-  permission_mode: string
+  permission_mode: PermissionMode
+  effort: Effort | null
   status: ChatStatus
   title: string
   created_at: string
@@ -32,7 +33,8 @@ const toChat = (r: ChatRow): Chat => ({
   accountId: r.account_id,
   model: r.model,
   sessionId: r.session_id,
-  permissionMode: r.permission_mode,
+  permissionMode: r.permission_mode === ('default' as string) ? 'accept-edits' : r.permission_mode,
+  effort: r.effort,
   status: r.status,
   title: r.title,
   createdAt: r.created_at,
@@ -81,7 +83,7 @@ export class ChatService {
     const title = data.title?.trim() || `${data.agent} · ${data.model}`
     this.db
       .prepare(
-        'INSERT INTO chats (id, workspace_id, agent, account_id, model, title, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        "INSERT INTO chats (id, workspace_id, agent, account_id, model, title, permission_mode, created_at) VALUES (?, ?, ?, ?, ?, ?, 'accept-edits', ?)",
       )
       .run(id, ws.id, data.agent, account.id, data.model, title, nowIso())
     return this.get(id)
@@ -91,6 +93,18 @@ export class ChatService {
     const row = this.db.prepare('SELECT * FROM chats WHERE id = ?').get(id) as ChatRow | undefined
     if (!row) throw new UserError('chat_not_found', 'Chat not found', 404)
     return toChat(row)
+  }
+
+  /** Model / effort / permission from the composer pickers; used from the next turn (permission: right away). */
+  update(chatId: string, input: unknown): Chat {
+    this.get(chatId)
+    const parsed = ChatSettingsInput.safeParse(input)
+    if (!parsed.success) throw new UserError('invalid_chat_settings', parsed.error.issues[0]?.message ?? 'Invalid settings')
+    const { model, effort, permissionMode } = parsed.data
+    if (model !== undefined) this.db.prepare('UPDATE chats SET model = ? WHERE id = ?').run(model, chatId)
+    if (effort !== undefined) this.db.prepare('UPDATE chats SET effort = ? WHERE id = ?').run(effort, chatId)
+    if (permissionMode !== undefined) this.db.prepare('UPDATE chats SET permission_mode = ? WHERE id = ?').run(permissionMode, chatId)
+    return this.get(chatId)
   }
 
   list(workspaceId: string): Chat[] {
@@ -135,6 +149,7 @@ export class ChatService {
       cwd: ws.worktreePath,
       configDir: account.configDir,
       model: chat.model,
+      effort: chat.effort,
       sessionId: chat.sessionId,
       prompt: text,
       context: workspaceContext(
