@@ -8,7 +8,7 @@ const shot = (name: string) => `test-results/screens/${name}.png`
 test('start, accounts, docs, workspace and chat (AC-B1 smoke)', async ({ page }) => {
   // Start: the link from `fitrah start` carries the token; it becomes a cookie and leaves the URL.
   await page.goto(`/?token=${TOKEN}`)
-  await expect(page.locator('aside [title="Finance Iteration Tools, Review & Agent Hub"]')).toContainText('Fitrah')
+  await expect(page.locator('aside [title="Fitrah: Finance ITeration, Review and Agents Hub"]')).toContainText('Fitrah')
   await expect(page).not.toHaveURL(/token=/)
   await page.screenshot({ path: shot('1-home') })
 
@@ -27,6 +27,9 @@ test('start, accounts, docs, workspace and chat (AC-B1 smoke)', async ({ page })
   await page.screenshot({ path: shot('3-docs') })
   await page.getByRole('link', { name: 'Second note' }).click()
   await expect(page.getByRole('heading', { name: 'Second note' })).toBeVisible()
+
+  // Back to the main sidebar
+  await page.getByRole('button', { name: 'Back to Fitrah' }).click()
 
   // Workspace: the small modal, Free chat, default agent → the first chat is ready
   await page.locator('aside').getByRole('button', { name: 'New workspace', exact: true }).click()

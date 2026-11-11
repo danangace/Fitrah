@@ -1,11 +1,12 @@
 import { BookOpen, FolderPlus, Plus, Settings } from 'lucide-react'
 import { type PointerEvent, type ReactNode, useState } from 'react'
-import { APP_INFO } from '../../../shared/app-info'
+import { ACRONYM_PARTS, APP_INFO } from '../../../shared/app-info'
 import { cn } from '../../lib/cn'
 import { readNumber, writeNumber } from '../../lib/local-pref'
 import type { Route } from '../../lib/route'
 import { useRouter } from '../../store/router'
 import { useModal } from '../../store/ui'
+import { DocsSidebar } from '../docs-browser/DocsSidebar'
 import { AccountWarnings, EnableNotifications, WorkingCount } from './Attention'
 
 /** Orca-style nav row: 13px, icon at 30% until hover. */
@@ -81,25 +82,41 @@ export function Sidebar({ workspaces }: { workspaces?: ReactNode }) {
         }}
         className="absolute inset-y-0 -right-1 z-10 w-2 cursor-col-resize hover:bg-foreground/10"
       />
-      <div className="flex h-11 items-center gap-2 px-4" title={APP_INFO.acronym}>
-        <span className="flex size-5 items-center justify-center rounded-md bg-primary text-xs font-bold text-primary-foreground">F</span>
-        <span className="text-sm font-semibold tracking-tight text-foreground">{APP_INFO.name}</span>
+      <div className="flex items-center gap-2.5 px-4 py-2.5" title={`${APP_INFO.name}: ${APP_INFO.acronym}`}>
+        <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary text-sm font-bold text-primary-foreground">F</span>
+        <div className="min-w-0">
+          <div className="text-sm leading-tight font-semibold tracking-tight text-foreground">{APP_INFO.name}</div>
+          <div className="text-[11px] leading-tight text-muted-foreground">
+            {ACRONYM_PARTS.map(([letters, rest]) => (
+              <span key={letters}>
+                <b className="font-semibold text-foreground/90">{letters}</b>
+                {rest}
+              </span>
+            ))}
+          </div>
+        </div>
       </div>
-      <nav className="flex flex-col gap-0.5 px-2 pb-1">
-        <NavRow strong icon={<Plus />} label="New workspace" onClick={() => open({ kind: 'create-workspace' })} />
-        <NavRow icon={<FolderPlus />} label="Add project" onClick={() => open({ kind: 'add-project' })} />
-        <NavRow active={is('docs')} icon={<BookOpen />} label="Docs" onClick={() => navigate({ name: 'docs', path: '' })} />
-      </nav>
-      <div className="mt-2 flex h-8 items-center justify-between px-2">
-        <span className="pl-2 text-xs font-semibold text-muted-foreground/80 select-none">Projects</span>
-        <WorkingCount />
-      </div>
-      <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">{workspaces}</div>
-      <AccountWarnings />
-      <div className="flex flex-col gap-0.5 border-t border-border p-2">
-        <EnableNotifications />
-        <NavRow active={is('settings')} icon={<Settings />} label="Settings" onClick={() => navigate({ name: 'settings', section: 'general' })} />
-      </div>
+      {route.name === 'docs' ? (
+        <DocsSidebar path={route.path} />
+      ) : (
+        <>
+        <nav className="flex flex-col gap-0.5 px-2 pb-1">
+          <NavRow strong icon={<Plus />} label="New workspace" onClick={() => open({ kind: 'create-workspace' })} />
+          <NavRow icon={<FolderPlus />} label="Add project" onClick={() => open({ kind: 'add-project' })} />
+          <NavRow active={is('docs')} icon={<BookOpen />} label="Docs" onClick={() => navigate({ name: 'docs', path: '' })} />
+        </nav>
+        <div className="mt-2 flex h-8 items-center justify-between px-2">
+          <span className="pl-2 text-xs font-semibold text-muted-foreground/80 select-none">Projects</span>
+          <WorkingCount />
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">{workspaces}</div>
+        <AccountWarnings />
+        <div className="flex flex-col gap-0.5 border-t border-border p-2">
+          <EnableNotifications />
+          <NavRow active={is('settings')} icon={<Settings />} label="Settings" onClick={() => navigate({ name: 'settings', section: 'general' })} />
+        </div>
+        </>
+      )}
     </aside>
   )
 }

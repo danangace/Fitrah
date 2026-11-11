@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { DocNodeT } from '../../shared/schemas'
 import { type DocFile, api } from '../api/fitrah'
-import { DocTree } from '../components/docs-browser/DocTree'
 import { Markdown } from '../components/docs-browser/Markdown'
 import { Notice } from '../components/ui/Field'
 import { errorText } from '../lib/errors'
@@ -26,15 +24,9 @@ function Frontmatter({ data }: { data: Record<string, unknown> }) {
 /** Read-only docs browser (D-5): there is no edit or save action anywhere on this page. */
 export function DocsPage({ path }: { path: string }) {
   const navigate = useRouter((s) => s.navigate)
-  const [tree, setTree] = useState<DocNodeT[]>([])
   const [doc, setDoc] = useState<DocFile | null>(null)
   const [error, setError] = useState<string | null>(null)
   const open = useCallback((p: string) => navigate({ name: 'docs', path: p }), [navigate])
-
-  const loadTree = useCallback(() => {
-    api.docsTree().then(setTree, (e: unknown) => setError(errorText(e)))
-  }, [])
-  useEffect(loadTree, [loadTree])
 
   const load = useCallback(() => {
     if (!path) return setDoc(null)
@@ -52,18 +44,14 @@ export function DocsPage({ path }: { path: string }) {
   useAppEvents((event) => {
     if (event.type !== 'docs.changed') return
     if (event.path === path) load()
-    loadTree()
   })
 
   return (
     <div className="flex h-full">
-      <div className="w-72 shrink-0 overflow-y-auto border-r border-border bg-sidebar/50 p-2">
-        <DocTree nodes={tree} active={path} onOpen={open} />
-      </div>
       <div className="min-w-0 flex-1 overflow-y-auto">
         <div className="mx-auto max-w-4xl p-6">
           {error && <Notice tone="error">{error}</Notice>}
-          {!path && !error && <p className="text-sm text-muted-foreground">Pick a note on the left. Docs are read-only here; edit them in Obsidian.</p>}
+          {!path && !error && <p className="text-sm text-muted-foreground">Pick a note in the sidebar. Docs are read-only here; edit them in Obsidian.</p>}
           {doc && (
             <>
               <div className="mb-2 text-xs text-muted-foreground">{doc.path}</div>

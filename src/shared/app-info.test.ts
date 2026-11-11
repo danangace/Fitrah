@@ -1,17 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { APP_INFO, appTitle } from './app-info'
+import { ACRONYM_PARTS, APP_INFO, appTitle } from './app-info'
 
 describe('app-info', () => {
-  it('spells FITRAH with the acronym initials', () => {
-    const initials = APP_INFO.acronym
-      .split(/[\s,&]+/)
-      .filter(Boolean)
-      .map((word) => word[0])
-      .join('')
-    expect(initials).toBe('FITRAH')
+  it('spells FITRAH with the highlighted letters of the acronym', () => {
+    expect(ACRONYM_PARTS.map(([letters]) => letters).join('')).toBe('FITRAH')
+    expect(APP_INFO.name.toUpperCase()).toBe('FITRAH')
   })
 
   it('builds the title from name and acronym', () => {
-    expect(appTitle()).toBe('Fitrah: Finance Iteration Tools, Review & Agent Hub')
+    expect(APP_INFO.acronym).toBe('Finance ITeration, Review and Agents Hub')
+    expect(appTitle()).toBe('Fitrah: Finance ITeration, Review and Agents Hub')
   })
 })
