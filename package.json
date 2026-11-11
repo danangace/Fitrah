@@ -1,0 +1,40 @@
+{
+  "name": "fitrah",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Fitrah: Finance Iteration Tools, Review & Agent Hub. A personal agent orchestrator for doc-driven development.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=26"
+  },
+  "packageManager": "pnpm@11.24.0",
+  "scripts": {
+    "dev:runtime": "tsx watch src/main/index.ts",
+    "dev:ui": "vite --config vite.web.config.ts",
+    "build:ui": "vite build --config vite.web.config.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.6",
+    "hono": "^4.13.17",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.5",
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "oxlint": "^1.93.0",
+    "tailwindcss": "^4.3.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.7",
+    "vitest": "^5.1.0"
+  }
+}
