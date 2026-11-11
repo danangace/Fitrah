@@ -12,6 +12,7 @@ import { DocsWatcher } from '../docs/watch'
 import { EventBus } from '../events/bus'
 import { registerEventRoutes } from '../events/routes'
 import { claudeAdapter } from '../native-chat/claude/adapter'
+import { ApprovalManager } from '../native-chat/approvals'
 import { registerChatRoutes } from '../native-chat/routes'
 import { ChatService } from '../native-chat/service'
 import { registerSettingsRoutes } from '../settings/routes'
@@ -74,9 +75,10 @@ export function createRuntimeApp(options: AppOptions): { app: Hono; chats: ChatS
   registerEventRoutes(app, bus)
   registerWorkspaceRoutes(app, db, { setup: new SetupRunner(db, bus) })
   const chats = options.chats ?? new ChatService(db, { claude: claudeAdapter })
-  registerChatRoutes(app, chats, () => {
-    throw new UserError('approval_not_found', 'No pending approval with that id', 404)
-  })
+  const approvals = new ApprovalManager(db, chats)
+  chats.setDecider(approvals.decide)
+  chats.onStop((chatId) => approvals.cancelChat(chatId))
+  registerChatRoutes(app, chats, approvals.answer)
 
   app.all('/api/*', (c) => c.json({ error: 'not_found' }, 404))
 

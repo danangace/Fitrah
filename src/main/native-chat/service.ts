@@ -44,6 +44,7 @@ export class ChatService {
   private listeners = new Set<Listener>()
   private turns = new Map<string, Turn>()
   private history = new Map<string, ChatEvent[]>()
+  private stopHooks = new Set<(chatId: string) => void>()
 
   constructor(
     private db: Db,
@@ -132,7 +133,12 @@ export class ChatService {
   }
 
   stop(chatId: string): void {
+    for (const hook of this.stopHooks) hook(chatId)
     this.turns.get(chatId)?.stop()
+  }
+
+  onStop(hook: (chatId: string) => void): void {
+    this.stopHooks.add(hook)
   }
 
   /** Emit an event for a chat (also used by the approval manager). */
