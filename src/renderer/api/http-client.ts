@@ -5,8 +5,9 @@ export class ApiError extends Error {
   constructor(
     readonly status: number,
     readonly code: string,
+    readonly detail?: string,
   ) {
-    super(`${status} ${code}`)
+    super(detail ?? `${status} ${code}`)
   }
 }
 
@@ -28,8 +29,9 @@ export async function request<S extends z.ZodType>(
   })
   const json: unknown = res.headers.get('content-type')?.includes('json') ? await res.json() : null
   if (!res.ok) {
-    const code = json && typeof json === 'object' && 'error' in json ? String(json.error) : 'request_failed'
-    throw new ApiError(res.status, code)
+    const errBody = json && typeof json === 'object' ? (json as Record<string, unknown>) : {}
+    const code = typeof errBody.error === 'string' ? errBody.error : 'request_failed'
+    throw new ApiError(res.status, code, typeof errBody.message === 'string' ? errBody.message : undefined)
   }
   const parsed = schema.safeParse(json)
   if (!parsed.success) throw new ApiError(res.status, 'invalid_response')

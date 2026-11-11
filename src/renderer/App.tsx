@@ -1,5 +1,6 @@
 import { Sidebar } from './components/layout/Sidebar'
 import { Placeholder } from './pages/Placeholder'
+import { SettingsPage } from './pages/SettingsPage'
 import { useRouter } from './store/router'
 
 function Page() {
@@ -10,7 +11,7 @@ function Page() {
     case 'docs':
       return <Placeholder title="Docs" text="Read-only docs browser. (T12–T14)" />
     case 'settings':
-      return <Placeholder title="Settings" text="Docs root, repos, models and accounts. (T7–T11)" />
+      return <SettingsPage section={route.section} />
     case 'workspace':
       return <Placeholder title="Workspace" text={`Workspace ${route.id}. (T17)`} />
     case 'not-found':
