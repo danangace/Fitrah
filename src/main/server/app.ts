@@ -11,6 +11,9 @@ import { DocsService } from '../docs/service'
 import { DocsWatcher } from '../docs/watch'
 import { EventBus } from '../events/bus'
 import { registerEventRoutes } from '../events/routes'
+import { claudeAdapter } from '../native-chat/claude/adapter'
+import { registerChatRoutes } from '../native-chat/routes'
+import { ChatService } from '../native-chat/service'
 import { registerSettingsRoutes } from '../settings/routes'
 import { registerWorkspaceRoutes } from '../workspaces/routes'
 import { SetupRunner } from '../workspaces/setup-runner'
@@ -22,11 +25,17 @@ export type AppOptions = {
   db: Db
   docs?: DocsService
   bus?: EventBus
+  chats?: ChatService
   /** Folder with the built UI; when missing, only the API is served. */
   webRoot?: string
 }
 
 export function createApp(options: AppOptions): Hono {
+  return createRuntimeApp(options).app
+}
+
+/** The app plus the services the runtime wires together (chat, bus). */
+export function createRuntimeApp(options: AppOptions): { app: Hono; chats: ChatService; bus: EventBus } {
   const app = new Hono()
   const { security, webRoot, db } = options
 
@@ -35,8 +44,9 @@ export function createApp(options: AppOptions): Hono {
 
   app.get('/api/health', (c) => c.json({ ok: true, name: APP_INFO.name }))
 
-  // Everything else under /api needs the session token.
+  // Everything else under /api, and the chat socket, needs the session token.
   app.use('/api/*', tokenGuard(security))
+  app.use('/ws/*', tokenGuard(security))
 
   // Exchange the token (sent once in the header) for an HttpOnly cookie, so EventSource and
   // WebSocket requests from the UI are authenticated too.
@@ -63,6 +73,10 @@ export function createApp(options: AppOptions): Hono {
   registerDocsRoutes(app, docs)
   registerEventRoutes(app, bus)
   registerWorkspaceRoutes(app, db, { setup: new SetupRunner(db, bus) })
+  const chats = options.chats ?? new ChatService(db, { claude: claudeAdapter })
+  registerChatRoutes(app, chats, () => {
+    throw new UserError('approval_not_found', 'No pending approval with that id', 404)
+  })
 
   app.all('/api/*', (c) => c.json({ error: 'not_found' }, 404))
 
@@ -81,5 +95,5 @@ export function createApp(options: AppOptions): Hono {
     app.get('*', serveStatic({ root, path: 'index.html' }))
   }
 
-  return app
+  return { app, chats, bus }
 }

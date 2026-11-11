@@ -1,5 +1,6 @@
 import { join } from 'node:path'
 import { serve, type ServerType } from '@hono/node-server'
+import { WebSocketServer } from 'ws'
 import { appTitle } from '../shared/app-info'
 import { HOST, WEB_ROOT, fitrahHome, runtimePort } from './config'
 import { createApp } from './server/app'
@@ -19,7 +20,8 @@ export function startRuntime(port = runtimePort()): Promise<RuntimeHandle> {
   const app = createApp({ security: { token, allowedHosts: localHosts(port, devPort) }, db, webRoot: WEB_ROOT })
   return new Promise((resolveStart) => {
     // Bind to 127.0.0.1 only: never reachable from the network (AC-F1).
-    const server = serve({ fetch: app.fetch, hostname: HOST, port }, (info) => {
+    const wss = new WebSocketServer({ noServer: true })
+    const server = serve({ fetch: app.fetch, hostname: HOST, port, websocket: { server: wss } }, (info) => {
       resolveStart({ url: `http://${HOST}:${info.port}`, token, db, server })
     })
   })
