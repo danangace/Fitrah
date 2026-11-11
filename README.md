@@ -4,7 +4,7 @@
 
 You chat with Claude in git-worktree workspaces, read your markdown docs read-only, and keep the people gates (requirements, plan approval, MR approval) in your own hands. The architecture follows [Orca](https://github.com/stablyai/orca): a local runtime and a React UI that runs in the browser first.
 
-> **Status:** pre-alpha, working towards `v0.1.0-beta` (Claude only).
+> **Status:** `v0.1.0-beta`: Claude only, macOS, one user. **Start here: [docs/getting-started.md](docs/getting-started.md).**
 
 ## Requirements
 
@@ -12,13 +12,19 @@ You chat with Claude in git-worktree workspaces, read your markdown docs read-on
 - pnpm 11
 - Claude Code installed and logged in
 
-## Development
+## Quick start
 
 ```bash
 nvm use
 pnpm install
-pnpm dev:runtime   # local runtime
-pnpm dev:ui        # React UI (Vite)
+pnpm fitrah start      # builds the UI on first run, opens the browser
+```
+
+## Development
+
+```bash
+pnpm dev:runtime   # runtime (FITRAH_DEV=1)
+pnpm dev:ui        # React UI (Vite, proxies the runtime)
 pnpm typecheck && pnpm lint && pnpm test
 ```
 
@@ -30,6 +36,10 @@ pnpm typecheck && pnpm lint && pnpm test
 | `src/renderer/` | React UI |
 | `src/shared/` | contracts shared by the runtime, the UI and the CLI |
 | `src/cli/` | the `fitrah` command |
+
+## Credits
+
+Architecture inspired by [Orca](https://github.com/stablyai/orca) (MIT, © Lovecast Inc.).
 
 ## License
 
