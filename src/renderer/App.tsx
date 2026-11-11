@@ -1,10 +1,30 @@
-import { APP_INFO } from '../shared/app-info'
+import { Sidebar } from './components/layout/Sidebar'
+import { Placeholder } from './pages/Placeholder'
+import { useRouter } from './store/router'
+
+function Page() {
+  const route = useRouter((s) => s.route)
+  switch (route.name) {
+    case 'home':
+      return <Placeholder title="Workspaces" text="Create a workspace to start a chat. (T15–T18)" />
+    case 'docs':
+      return <Placeholder title="Docs" text="Read-only docs browser. (T12–T14)" />
+    case 'settings':
+      return <Placeholder title="Settings" text="Docs root, repos, models and accounts. (T7–T11)" />
+    case 'workspace':
+      return <Placeholder title="Workspace" text={`Workspace ${route.id}. (T17)`} />
+    case 'not-found':
+      return <Placeholder title="Not found" text="This page does not exist." />
+  }
+}
 
 export function App() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-2 bg-neutral-950 text-neutral-100">
-      <h1 className="text-3xl font-semibold">{APP_INFO.name}</h1>
-      <p className="text-neutral-400">{APP_INFO.acronym}</p>
-    </main>
+    <div className="flex h-screen bg-neutral-950 text-neutral-100">
+      <Sidebar />
+      <main className="min-w-0 flex-1 overflow-y-auto">
+        <Page />
+      </main>
+    </div>
   )
 }
