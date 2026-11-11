@@ -1,4 +1,5 @@
 import { Sidebar } from './components/layout/Sidebar'
+import { ChatsPanel } from './components/native-chat/ChatsPanel'
 import { WorkspaceList } from './components/workspace/WorkspaceList'
 import { DocsPage } from './pages/DocsPage'
 import { HomePage } from './pages/HomePage'
@@ -17,7 +18,7 @@ function Page() {
     case 'settings':
       return <SettingsPage section={route.section} />
     case 'workspace':
-      return <WorkspacePage id={route.id} />
+      return <WorkspacePage id={route.id} chats={(ws) => <ChatsPanel workspace={ws} />} />
     case 'not-found':
       return <Placeholder title="Not found" text="This page does not exist." />
   }

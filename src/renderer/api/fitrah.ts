@@ -3,6 +3,8 @@ import { API } from '../../shared/api'
 import {
   Account,
   type AgentId,
+  Chat,
+  type ChatInput,
   DetectedLogin,
   DocNode,
   Repo,
@@ -11,6 +13,7 @@ import {
   Workspace,
   type WorkspaceInput,
 } from '../../shared/schemas'
+import { ChatEvent } from '../../shared/events'
 import { request } from './http-client'
 
 const Ok = z.object({ ok: z.literal(true) })
@@ -56,6 +59,13 @@ export const api = {
   archiveWorkspace: (id: string, options: { deleteBranch: boolean; force: boolean }) =>
     request('POST', `${API.workspaces}/${id}/archive`, Ok, options),
   setupLog: (id: string) => request('GET', `${API.workspaces}/${id}/setup-log`, z.object({ log: z.string() })),
+  listChats: (workspaceId: string) => request('GET', `${API.chats}?workspaceId=${encodeURIComponent(workspaceId)}`, z.array(Chat)),
+  createChat: (input: ChatInput) => request('POST', API.chats, Chat, input),
+  chatEvents: (id: string) => request('GET', `${API.chats}/${id}/events`, z.array(ChatEvent)),
+  sendMessage: (id: string, text: string) => request('POST', `${API.chats}/${id}/messages`, Ok, { text }),
+  stopChat: (id: string) => request('POST', `${API.chats}/${id}/stop`, Ok),
+  answerApproval: (approvalId: string, decision: 'allow' | 'deny') =>
+    request('POST', `/api/approvals/${approvalId}`, Ok, { decision }),
   startLogin: (label: string) => request('POST', `${API.accounts}/login`, LoginView, { label }),
   getLogin: (id: string) => request('GET', `${API.accounts}/login/${id}`, LoginView),
   submitLoginCode: (id: string, code: string) => request('POST', `${API.accounts}/login/${id}/code`, LoginView, { code }),
