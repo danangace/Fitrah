@@ -2,11 +2,13 @@ import type { ReactNode } from 'react'
 import { AccountSettings } from '../components/settings/AccountSettings'
 import { GeneralSettings } from '../components/settings/GeneralSettings'
 import { ModelSettings } from '../components/settings/ModelSettings'
+import { WorkflowSettings } from '../components/workflows/WorkflowSettings'
 import { cn } from '../lib/cn'
 import { useRouter } from '../store/router'
 
 const SECTIONS: { id: string; label: string; render: () => ReactNode }[] = [
   { id: 'general', label: 'General', render: () => <GeneralSettings /> },
+  { id: 'workflows', label: 'Workflows', render: () => <WorkflowSettings /> },
   { id: 'accounts', label: 'Accounts', render: () => <AccountSettings /> },
   { id: 'models', label: 'Models', render: () => <ModelSettings /> },
 ]
