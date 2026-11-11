@@ -1,6 +1,16 @@
 import { z } from 'zod/v4'
 import { API } from '../../shared/api'
-import { Account, type AgentId, DetectedLogin, DocNode, Repo, type RepoInput, Settings } from '../../shared/schemas'
+import {
+  Account,
+  type AgentId,
+  DetectedLogin,
+  DocNode,
+  Repo,
+  type RepoInput,
+  Settings,
+  Workspace,
+  type WorkspaceInput,
+} from '../../shared/schemas'
 import { request } from './http-client'
 
 const Ok = z.object({ ok: z.literal(true) })
@@ -40,6 +50,10 @@ export const api = {
   removeAccount: (id: string) => request('DELETE', `${API.accounts}/${id}`, Ok),
   docsTree: () => request('GET', API.docsTree, z.array(DocNode)),
   docsFile: (path: string) => request('GET', `${API.docsFile}?path=${encodeURIComponent(path)}`, DocFile),
+  listWorkspaces: () => request('GET', API.workspaces, z.array(Workspace)),
+  getWorkspace: (id: string) => request('GET', `${API.workspaces}/${id}`, Workspace),
+  createWorkspace: (input: WorkspaceInput) => request('POST', API.workspaces, Workspace, input),
+  setupLog: (id: string) => request('GET', `${API.workspaces}/${id}/setup-log`, z.object({ log: z.string() })),
   startLogin: (label: string) => request('POST', `${API.accounts}/login`, LoginView, { label }),
   getLogin: (id: string) => request('GET', `${API.accounts}/login/${id}`, LoginView),
   submitLoginCode: (id: string, code: string) => request('POST', `${API.accounts}/login/${id}/code`, LoginView, { code }),
