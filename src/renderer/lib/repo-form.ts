@@ -19,7 +19,7 @@ export type SetupState = { label: string; tone: 'ok' | 'warn' }
 
 /** What the repo row badge says: is this repo ready for new workspaces? */
 export function setupState(repo: Repo): SetupState {
-  if (!repo.featureBase.trim()) return { label: 'No feature base', tone: 'warn' }
+  if (!repo.featureBase.trim()) return { label: 'No base branch', tone: 'warn' }
   if (!repo.setupScript.trim()) return { label: 'Ready · no setup script', tone: 'ok' }
   return { label: 'Ready · setup script', tone: 'ok' }
 }

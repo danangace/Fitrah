@@ -72,7 +72,7 @@ test('Add a project by browsing to a folder, then edit its settings (AC-P1)', as
   await expect(row.getByText('Added', { exact: true })).toBeVisible()
   await row.locator('textarea').first().fill('echo ready')
   await expect(row.getByText('Unsaved changes')).toBeVisible()
-  await row.getByRole('button', { name: 'Save repo' }).click()
+  await row.getByRole('button', { name: 'Save project' }).click()
   await expect(row.getByText('Saved', { exact: true })).toBeVisible()
   await page.screenshot({ path: 'test-results/screens/project-settings.png', fullPage: true })
 })

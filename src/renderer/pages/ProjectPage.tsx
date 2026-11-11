@@ -1,5 +1,5 @@
 import { useWorkspaces } from '../store/workspaces'
-import { RepoRow } from '../components/settings/RepoSettings'
+import { ProjectSettingsCard } from '../components/projects/ProjectSettingsCard'
 import { Notice } from '../components/ui/Field'
 
 /** One project: its settings (base, branch prefix, scripts). */
@@ -11,7 +11,7 @@ export function ProjectPage({ id }: { id: string }) {
     <div className="h-full overflow-y-auto">
       <div className="mx-auto max-w-3xl space-y-4 p-6">
         <h1 className="text-xl font-semibold text-white">Project settings</h1>
-        <RepoRow key={repo.id} repo={repo} onChange={() => void load()} />
+        <ProjectSettingsCard key={repo.id} repo={repo} onChange={() => void load()} />
       </div>
     </div>
   )

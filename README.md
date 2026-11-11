@@ -2,7 +2,7 @@
 
 **F**inance **I**teration **T**ools, **R**eview & **A**gent **H**ub: a personal agent orchestrator for doc-driven development.
 
-You chat with Claude in git-worktree workspaces, read your markdown docs read-only, and keep the people gates (requirements, plan approval, MR approval) in your own hands. The architecture follows [Orca](https://github.com/stablyai/orca): a local runtime and a React UI that runs in the browser first.
+Add your projects, start workspaces (git worktrees) with a free chat or a workflow template (e.g. Planning: PRD, Figma, iteration… sent to Claude every turn), read your markdown docs read-only, and keep the people gates in your own hands. The architecture follows [Orca](https://github.com/stablyai/orca): a local runtime and a React UI that runs in the browser first.
 
 > **Status:** `v0.1.0-beta`: Claude only, macOS, one user. **Start here: [docs/getting-started.md](docs/getting-started.md).**
 

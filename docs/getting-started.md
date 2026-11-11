@@ -36,27 +36,44 @@ Options: `fitrah start --port 4400`, `fitrah start --no-open` (prints the link i
 
 Already running and you closed the tab, or want **another browser**? Run `fitrah open` (opens your default browser) or `fitrah open --print` (prints the private link to paste into any browser). A browser without that link shows "This browser isn't connected"; that's the security guard, not an error.
 
-## 3. First-time setup (Settings)
+## 3. First-time setup
 
-1. **General:** set the **Docs root** to your markdown folder (e.g. your Obsidian vault). Docs are shown **read-only**; you keep editing them in Obsidian. Also set the **Workspaces folder** (default `~/fitrah/workspaces`).
-2. **Repos:** add a repo by path and fill in:
-   - **Setup script**: runs in every new workspace, e.g. `pnpm install && pnpm setup:env`.
-   - **Feature base**: where feature branches start, e.g. `origin/dev/tribe-2`.
+1. **Settings → General:** set the **Docs root** to your markdown folder (e.g. your Obsidian vault). Docs are shown **read-only**; you keep editing them in Obsidian. Also choose the **Workspaces folder** (default `~/fitrah/workspaces`) and where Fitrah opens (**Open Fitrah in**: your default browser or a Chrome profile).
+2. **Add a project** (sidebar → **Add project**):
+   - **Browse folder:** pick an existing git repo. Fitrah has its own folder browser: click into folders, or type / paste a path and press Enter.
+   - **Clone from URL:** a git URL + the folder to clone into.
+   - **Create new project:** an empty folder with `git init`.
 
-   Nothing is written into the repo; these settings stay in Fitrah.
-3. **Accounts:** Fitrah lists the Claude logins it found (e.g. `~/.claude`, `~/.claude-work`). Click **Attach** on the one you use. No login yet? **Sign in a new Claude account**: a browser tab opens; sign in with your Claude subscription and paste the code back if the page shows one. The ★ marks the default account.
-4. **Models:** the short list shown in the chat's model picker, plus the default (e.g. `sonnet`, `opus`, `haiku`).
+   Then set the project's **base branch** (where new workspaces start, e.g. `origin/dev/tribe-2`) and **branch prefix** (e.g. `feat/tribe-2/`). Later, the project's settings (sidebar → project name) also hold the **setup script** (runs in each new workspace, e.g. `cp …/.env .env`, `pnpm install`, `pnpm setup:env`) and an optional archive script. Nothing is written into the repo.
+3. **Settings → Accounts:** Fitrah lists the Claude logins it found (e.g. `~/.claude`, `~/.claude-work`); click **Attach**. No login yet? **Sign in a new Claude account** (a browser tab opens). ★ = default account.
+4. **Settings → Models:** the short list shown in the model picker, plus the default.
 
 ## 4. Workspaces
 
-**One workspace = one piece of work**: a git worktree on a new branch, with its chats.
+**One workspace = one git worktree on its own branch, with its chats.** Your project's main checkout is never touched.
 
-- **New workspace** (home page): pick the repo, then **feature** or **defect**, a name (`kelola-xyz`), and the base:
-  - feature → the repo's feature base (editable);
-  - defect → **you choose** `origin/dev/tribe-2`, `origin/main` or a tag. Fitrah never guesses it.
-- Fitrah fetches the base, runs `git worktree add -b <prefix><name>`, then the setup script, and streams its log into the workspace page.
-- Your main checkout is never touched.
-- **Archive** removes the worktree. The branch is deleted only if you tick the box. A worktree with uncommitted changes asks before discarding them.
+**New workspace** (sidebar, or **+** next to a project) opens a small modal:
+
+| Field | What it does |
+|---|---|
+| Project | which repo |
+| Workspace name (optional) | branch = project prefix + name; empty → `ws-<date>-<time>` |
+| Type | **Free chat**, or a **workflow** (e.g. Planning) whose fields you fill here |
+| Agent · Model | creates the first chat (your default account and model are preselected); **No agent** is possible |
+| Advanced | change the base branch for this workspace |
+
+The modal shows the branch it will create ("Branch feat/tribe-2/x from origin/dev/tribe-2"). **⌘↵** creates it. Fitrah fetches the base, runs `git worktree add -b`, then the project's setup script (its log streams into the workspace page). The first chat **waits for your first message**.
+
+**Archive** removes the worktree. The branch is deleted only if you tick the box; uncommitted changes ask before they are discarded.
+
+### Workflows: no more copy-pasting the PRD
+
+**Settings → Workflows** holds templates you define:
+
+- **Fields** the user fills when creating a workspace. Types: **text**, **link**, **docs folder** (suggestions from your vault), **branch** (used as the base branch), **choice**. Each can be required and have a default and help text.
+- **Instructions for Claude**, which can use the fields as `{Label}`, e.g. "Write the implementation plan for {Module} ({Iteration}) from the PRD ({PRD})…".
+
+Fitrah ships an editable **Planning** workflow (PRD, Figma, Iteration, Module, Target docs, Base branch). In a workflow workspace, Claude gets the workflow, every value and the filled-in instructions **with every message**. The workspace header shows the same values (links are clickable).
 
 ## 5. Chat with Claude
 
@@ -106,7 +123,8 @@ Fitrah never stores tokens or credentials, and removes `ANTHROPIC_API_KEY`-style
 | "This browser isn't connected to Fitrah" | Run `fitrah open`, or `fitrah open --print` and paste the link into that browser. |
 | Account shows **logged out** | `CLAUDE_CONFIG_DIR=<folder> claude auth login`, then **Re-check** in Accounts. |
 | Account shows **error** | Is `claude` on your `PATH` in the terminal where you ran `fitrah start`? |
-| Workspace creation fails with "Base not found" | Check the base name, e.g. `origin/dev/tribe-2`; Fitrah fetches it first. |
+| Workspace creation fails with "Base not found" | Check the project's base branch (or Advanced), e.g. `origin/dev/tribe-2`; Fitrah fetches it first. |
+| "Fill in: …" in the Create workspace modal | The chosen workflow has required fields; fill them or choose Free chat. |
 | Setup failed | Read the setup log on the workspace page. The workspace is kept; fix the problem and continue in a chat. |
 
 ## 10. Development
