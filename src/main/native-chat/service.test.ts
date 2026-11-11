@@ -10,6 +10,7 @@ describe('ChatService', () => {
     service.send(chat.id, 'hi')
     await settle()
     expect(adapter.calls[0]).toMatchObject({ cwd: ws.worktreePath, configDir: '/acc', model: 'haiku', sessionId: null, prompt: 'hi' })
+    expect(adapter.calls[0]?.context).toContain(`- Branch: ${ws.branch}`)
     expect(events.map((e) => e.type)).toEqual(['user.message', 'status', 'session.started', 'message.text', 'turn.done', 'status'])
     expect(service.get(chat.id)).toMatchObject({ sessionId: 'sess-1', status: 'done' })
   })

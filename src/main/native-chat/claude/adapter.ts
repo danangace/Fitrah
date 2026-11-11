@@ -21,6 +21,8 @@ export const claudeAdapter: AgentAdapter = {
         env: claudeEnv(options.configDir),
         model: options.model,
         resume: options.sessionId ?? undefined,
+        // Claude Code's own system prompt + the workspace facts on every turn.
+        systemPrompt: { type: 'preset', preset: 'claude_code', append: options.context },
         // Explicit: otherwise the user's own settings (e.g. acceptEdits) would apply.
         permissionMode: 'default',
         abortController,

@@ -19,6 +19,8 @@ export type TurnOptions = {
   /** Continue this agent session when set (resume). */
   sessionId: string | null
   prompt: string
+  /** Workspace facts (PRD, Figma, iteration, module, branch…) added to the agent's system prompt. */
+  context: string
   /** Every adapter event, already translated to Fitrah's event model. */
   onEvent: (event: AdapterEvent) => void
   /** Called for each tool use the agent asks permission for. */

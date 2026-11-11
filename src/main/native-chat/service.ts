@@ -5,7 +5,9 @@ import { getAccount } from '../accounts/service'
 import { UserError } from '../errors'
 import { nowIso } from '../paths'
 import type { Db } from '../sqlite/db'
+import { getRepo, getSettings } from '../settings/store'
 import { getWorkspace } from '../workspaces/service'
+import { workspaceContext } from './context'
 import type { AdapterEvent, AgentAdapter, ApprovalAnswer, ToolRequest, Turn } from './types'
 
 type ChatRow = {
@@ -134,6 +136,7 @@ export class ChatService {
       model: chat.model,
       sessionId: chat.sessionId,
       prompt: text,
+      context: workspaceContext(ws, getRepo(this.db, ws.repoId), getSettings(this.db)),
       onEvent: (event) => this.onAdapterEvent(chatId, event),
       onToolRequest: (request) => this.decide(this.get(chatId), request),
     })

@@ -7,6 +7,31 @@ import { Notice } from '../components/ui/Field'
 import { errorText } from '../lib/errors'
 import { useAppEvents } from '../store/events'
 
+function TaskLink({ label, url }: { label: string; url?: string }) {
+  return (
+    url ? (
+      <a href={url} target="_blank" rel="noreferrer" className="rounded bg-neutral-800 px-2 py-0.5 text-emerald-400 hover:underline">
+        {label} ↗
+      </a>
+    ) : (
+      <span className="rounded bg-amber-950 px-2 py-0.5 text-amber-300">{label}: not set</span>
+    )
+  )
+}
+
+/** The task facts Claude receives in every chat of this workspace (workspace context). */
+function TaskDetails({ workspace }: { workspace: Workspace }) {
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs" title="Claude gets these in every chat of this workspace">
+      <span className="text-neutral-500">Task:</span>
+      <span className="rounded bg-neutral-800 px-2 py-0.5 text-neutral-300">{workspace.iteration ?? 'iteration not set'}</span>
+      <span className="rounded bg-neutral-800 px-2 py-0.5 text-neutral-300">{workspace.module ?? 'module not set'}</span>
+      <TaskLink label="PRD" url={workspace.prdUrl} />
+      <TaskLink label="Figma" url={workspace.figmaUrl} />
+    </div>
+  )
+}
+
 function SetupLog({ workspace }: { workspace: Workspace }) {
   const [log, setLog] = useState('')
   const ref = useRef<HTMLPreElement>(null)
@@ -59,6 +84,7 @@ export function WorkspacePage({ id, chats }: { id: string; chats?: (ws: Workspac
           </div>
           <ArchiveButton workspace={workspace} />
         </div>
+        <TaskDetails workspace={workspace} />
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto p-6">
         <div className="space-y-4">
