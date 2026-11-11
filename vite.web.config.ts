@@ -18,5 +18,7 @@ export default defineConfig({
   build: {
     outDir: resolve(import.meta.dirname, 'out/web'),
     emptyOutDir: true,
+    // mermaid is lazy-loaded (docs diagrams only) and is the one large chunk.
+    chunkSizeWarningLimit: 3000,
   },
 })
