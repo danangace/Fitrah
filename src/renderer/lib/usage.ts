@@ -16,6 +16,19 @@ export function sortWindows(windows: UsageWindow[]): UsageWindow[] {
   return windows.toSorted((a, b) => (LABELS[a.key]?.order ?? 9) - (LABELS[b.key]?.order ?? 9))
 }
 
+/**
+ * Fitrah only learns usage from what Claude reports with a message, so a snapshot can outlive its
+ * window. Once a window's reset time has passed it is back to 0% (the next reset is unknown until
+ * the next message), instead of showing the old number.
+ */
+export function liveWindows(windows: UsageWindow[], nowMs = Date.now()): UsageWindow[] {
+  return sortWindows(
+    windows.map((w) =>
+      w.resetsAt !== null && w.resetsAt * 1000 <= nowMs ? { ...w, utilization: 0, resetsAt: null, status: 'allowed' } : w,
+    ),
+  )
+}
+
 export const percent = (w: UsageWindow) => Math.round(w.utilization * 100)
 
 /** Time until a reset, like the statusline: "56m", "2h 10m", "3d 21h". */

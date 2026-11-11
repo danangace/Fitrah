@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react'
 import type { Account, UsageWindow } from '../../../shared/schemas'
 import { api } from '../../api/fitrah'
 import { cn } from '../../lib/cn'
-import { formatReset, percent, sortWindows, timeAgo, usageTone, windowLabel } from '../../lib/usage'
+import { formatReset, liveWindows, percent, timeAgo, usageTone, windowLabel } from '../../lib/usage'
 import { useAppEvents } from '../../store/events'
 import { toast } from '../../store/toast'
 import { useRouter } from '../../store/router'
@@ -20,7 +20,7 @@ function Bar({ w, className }: { w: UsageWindow; className?: string }) {
 }
 
 function AccountUsageCard({ account, now }: { account: Account; now: number }) {
-  const windows = sortWindows(account.usage?.windows ?? [])
+  const windows = liveWindows(account.usage?.windows ?? [], now)
   return (
     <div className="rounded-lg border border-border bg-background/60 p-3">
       <div className="mb-2 flex items-center justify-between">
@@ -79,7 +79,7 @@ export function StatusBar() {
     )
   const claude = accounts.filter((a) => a.agent === 'claude')
   const main = claude.find((a) => a.isDefault && a.usage) ?? claude.find((a) => a.usage) ?? claude.find((a) => a.isDefault)
-  const windows = sortWindows(main?.usage?.windows ?? []).slice(0, 2)
+  const windows = liveWindows(main?.usage?.windows ?? [], now).slice(0, 2)
 
   return (
     <footer className="relative flex h-7 shrink-0 items-center gap-3 border-t border-border bg-sidebar px-3 text-xs text-muted-foreground">

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { formatReset, percent, sortWindows, timeAgo, usageTone, windowLabel } from './usage'
+import { formatReset, liveWindows, percent, sortWindows, timeAgo, usageTone, windowLabel } from './usage'
 
+const secs = (iso: string) => Date.parse(iso) / 1000
 const w = (key: string, utilization: number) => ({ key, utilization, resetsAt: null, status: 'allowed' })
 
 describe('usage helpers', () => {
@@ -19,6 +20,15 @@ describe('usage helpers', () => {
     expect(sortWindows([w('seven_day', 0.4), w('five_hour', 0.8)]).map((x) => x.key)).toEqual(['five_hour', 'seven_day'])
     expect(percent(w('five_hour', 0.826))).toBe(83)
     expect([usageTone(w('a', 0.3)), usageTone(w('a', 0.7)), usageTone(w('a', 0.9))]).toEqual(['ok', 'warn', 'high'])
+  })
+
+  it('treats a window as 0% once its reset time has passed', () => {
+    const now = Date.parse('2026-11-11T22:43:00Z')
+    const session = { key: 'five_hour', utilization: 0.9, resetsAt: secs('2026-11-11T18:40:00Z'), status: 'rejected' }
+    const weekly = { key: 'seven_day', utilization: 0.46, resetsAt: secs('2026-11-16T16:00:00Z'), status: 'allowed' }
+    const [five, week] = liveWindows([weekly, session], now)
+    expect(five).toMatchObject({ key: 'five_hour', utilization: 0, resetsAt: null, status: 'allowed' })
+    expect(week).toEqual(weekly)
   })
 
   it('says how old the numbers are', () => {
