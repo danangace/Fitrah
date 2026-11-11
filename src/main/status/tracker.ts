@@ -1,6 +1,6 @@
 import type { ChatEvent } from '../../shared/events'
 import type { ChatStatus, WorkspaceStatus } from '../../shared/schemas'
-import { setAccountWarning } from '../accounts/service'
+import { saveAccountUsage, setAccountWarning } from '../accounts/service'
 import type { EventBus } from '../events/bus'
 import type { ChatService } from '../native-chat/service'
 import type { Db } from '../sqlite/db'
@@ -47,6 +47,10 @@ export class StatusTracker {
         this.last.set(chat.workspace_id, status)
         this.bus.emit({ type: 'workspace.status', workspaceId: chat.workspace_id, status })
       }
+    }
+    if (chat.account_id && event.type === 'usage') {
+      const usage = saveAccountUsage(this.db, chat.account_id, event.windows)
+      if (usage) this.bus.emit({ type: 'account.usage', accountId: chat.account_id, usage })
     }
     if (chat.account_id && event.type === 'error' && event.kind === 'rate_limit') {
       const warning = `${RATE_LIMIT_PREFIX}${event.message}`

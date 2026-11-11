@@ -52,6 +52,20 @@ export type Repo = z.infer<typeof Repo>
 export const LoginStatus = z.enum(['logged_in', 'logged_out', 'unknown', 'error'])
 export type LoginStatus = z.infer<typeof LoginStatus>
 
+/** One usage limit window (e.g. 5-hour session, weekly), as the agent reports it. */
+export const UsageWindow = z.object({
+  key: z.string(),
+  /** 0–1 */
+  utilization: z.number(),
+  /** Unix seconds */
+  resetsAt: z.number().nullable(),
+  status: z.string(),
+})
+export type UsageWindow = z.infer<typeof UsageWindow>
+
+export const AccountUsage = z.object({ windows: z.array(UsageWindow), updatedAt: z.string() })
+export type AccountUsage = z.infer<typeof AccountUsage>
+
 /** An account is a folder holding an agent CLI login. Fitrah never stores tokens. */
 export const Account = z.object({
   id: z.string(),
@@ -65,6 +79,8 @@ export const Account = z.object({
   warning: nullableText,
   isDefault: z.boolean(),
   lastCheckedAt: nullableText,
+  /** Latest limits seen in a chat; null until the account has been used in Fitrah. */
+  usage: AccountUsage.nullable(),
 })
 export type Account = z.infer<typeof Account>
 

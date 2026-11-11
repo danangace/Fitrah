@@ -1,5 +1,5 @@
 import { z } from 'zod/v4'
-import { ChatStatus, WorkspaceStatus } from './schemas'
+import { AccountUsage, ChatStatus, UsageWindow, WorkspaceStatus } from './schemas'
 
 /**
  * Fitrah's own chat events. The UI only understands these; each agent adapter translates its
@@ -38,6 +38,8 @@ export const ChatEvent = z.discriminatedUnion('type', [
     decision: z.enum(['allow', 'deny']),
   }),
   z.object({ type: z.literal('status'), chatId: z.string(), status: ChatStatus }),
+  /** Usage limits reported with a turn (5-hour, weekly…); saved on the chat's account. */
+  z.object({ type: z.literal('usage'), chatId: z.string(), windows: z.array(UsageWindow) }),
   z.object({
     type: z.literal('turn.done'),
     chatId: z.string(),
@@ -67,5 +69,6 @@ export const AppEvent = z.discriminatedUnion('type', [
   z.object({ type: z.literal('workspace.setup'), workspaceId: z.string(), line: z.string(), done: z.boolean() }),
   z.object({ type: z.literal('docs.changed'), path: z.string() }),
   z.object({ type: z.literal('account.warning'), accountId: z.string(), warning: z.string().nullable() }),
+  z.object({ type: z.literal('account.usage'), accountId: z.string(), usage: AccountUsage }),
 ])
 export type AppEvent = z.infer<typeof AppEvent>

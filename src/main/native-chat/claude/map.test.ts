@@ -50,6 +50,30 @@ describe('mapClaudeMessage', () => {
     expect(mapClaudeMessage({ type: 'rate_limit_event', rate_limit_info: { status: 'allowed' } })).toEqual([])
   })
 
+  it('maps the usage windows every turn reports', () => {
+    // Shape seen from the SDK on 2026-11-11.
+    const events = mapClaudeMessage({
+      type: 'rate_limit_event',
+      rate_limit_info: {
+        status: 'allowed',
+        rateLimitType: 'five_hour',
+        unifiedWindows: {
+          five_hour: { utilization: 0.82, resetsAt: 1794422400, status: 'allowed' },
+          seven_day: { utilization: 0.46, resetsAt: 1794844800, status: 'allowed' },
+        },
+      },
+    })
+    expect(events).toEqual([
+      {
+        type: 'usage',
+        windows: [
+          { key: 'five_hour', utilization: 0.82, resetsAt: 1794422400, status: 'allowed' },
+          { key: 'seven_day', utilization: 0.46, resetsAt: 1794844800, status: 'allowed' },
+        ],
+      },
+    ])
+  })
+
   it('ignores other message types', () => {
     expect(mapClaudeMessage({ type: 'stream_event' })).toEqual([])
   })

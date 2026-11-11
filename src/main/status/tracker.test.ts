@@ -48,3 +48,26 @@ describe('StatusTracker', () => {
     expect(tracker.statusOf(chat.workspaceId)).toBe('error')
   })
 })
+
+describe('usage', () => {
+  it('saves the windows a turn reports on the account and tells the UI', async () => {
+    const reporting = fakeAdapter(async (_o, emit) => {
+      emit({ type: 'usage', windows: [{ key: 'five_hour', utilization: 0.82, resetsAt: 1794422400, status: 'allowed' }] })
+      emit({ type: 'usage', windows: [{ key: 'seven_day', utilization: 0.46, resetsAt: 1794844800, status: 'allowed' }] })
+      emit({ type: 'turn.done', ok: true, numTurns: 1 })
+    })
+    const { db, service, chat, account } = await chatFixture(reporting)
+    const bus = new EventBus()
+    const seen: AppEvent[] = []
+    bus.subscribe((e) => seen.push(e))
+    const tracker = new StatusTracker(db, bus, service)
+    service.send(chat.id, 'hi')
+    await new Promise((r) => setTimeout(r, 10))
+    expect(tracker).toBeTruthy()
+    expect(getAccount(db, account.id).usage?.windows.map((w) => [w.key, w.utilization])).toEqual([
+      ['five_hour', 0.82],
+      ['seven_day', 0.46],
+    ])
+    expect(seen.filter((e) => e.type === 'account.usage')).toHaveLength(2)
+  })
+})

@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import { type Account, AgentId } from '../../shared/schemas'
+import { type Account, AccountUsage, AgentId, type UsageWindow } from '../../shared/schemas'
 import { UserError } from '../errors'
 import { nowIso } from '../paths'
 import type { Db } from '../sqlite/db'
@@ -21,6 +21,14 @@ type AccountRow = {
   warning: string | null
   is_default: number
   last_checked_at: string | null
+  usage_json: string | null
+  usage_updated_at: string | null
+}
+
+const parseUsage = (r: AccountRow): Account['usage'] => {
+  if (!r.usage_json || !r.usage_updated_at) return null
+  const parsed = AccountUsage.safeParse({ windows: JSON.parse(r.usage_json), updatedAt: r.usage_updated_at })
+  return parsed.success ? parsed.data : null
 }
 
 const toAccount = (r: AccountRow): Account => ({
@@ -35,6 +43,7 @@ const toAccount = (r: AccountRow): Account => ({
   warning: r.warning,
   isDefault: r.is_default === 1,
   lastCheckedAt: r.last_checked_at,
+  usage: parseUsage(r),
 })
 
 export function listAccounts(db: Db, agent?: AgentId): Account[] {
@@ -89,6 +98,15 @@ export async function refreshAccount(db: Db, id: string, provider = providers[ge
     'UPDATE accounts SET login_status = ?, email = ?, login_expires_at = ?, warning = ?, last_checked_at = ? WHERE id = ?',
   ).run(s.loginStatus, s.email, s.loginExpiresAt, s.warning, nowIso(), id)
   return getAccount(db, id)
+}
+
+/** Save the limits a chat just reported (merged per window key). */
+export function saveAccountUsage(db: Db, id: string, windows: UsageWindow[]): Account['usage'] {
+  const current = getAccount(db, id).usage?.windows ?? []
+  const merged = [...current.filter((w) => !windows.some((n) => n.key === w.key)), ...windows]
+  const updatedAt = nowIso()
+  db.prepare('UPDATE accounts SET usage_json = ?, usage_updated_at = ? WHERE id = ?').run(JSON.stringify(merged), updatedAt, id)
+  return { windows: merged, updatedAt }
 }
 
 export function setAccountWarning(db: Db, id: string, warning: string | null): void {

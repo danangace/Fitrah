@@ -13,7 +13,13 @@ export type SdkLike = {
   num_turns?: number
   result?: string
   errors?: string[]
-  rate_limit_info?: { status?: string; rateLimitType?: string; resetsAt?: number }
+  rate_limit_info?: {
+    status?: string
+    rateLimitType?: string
+    resetsAt?: number
+    utilization?: number
+    unifiedWindows?: Record<string, { utilization?: number; resetsAt?: number; status?: string }>
+  }
 }
 
 const asText = (content: unknown): string => {
@@ -57,9 +63,24 @@ export function mapClaudeMessage(msg: SdkLike): AdapterEvent[] {
     }
     case 'rate_limit_event': {
       const info = msg.rate_limit_info
-      if (info?.status !== 'rejected') return []
-      const reset = info.resetsAt ? ` until ${new Date(info.resetsAt * 1000).toLocaleString()}` : ''
-      return [{ type: 'error', kind: 'rate_limit', message: `Usage limit reached (${info.rateLimitType ?? 'limit'})${reset}.` }]
+      if (!info) return []
+      const events: AdapterEvent[] = []
+      // Every turn reports the windows (5-hour, weekly…): verified 2026-11-11.
+      const windows = Object.entries(info.unifiedWindows ?? {}).map(([key, w]) => ({
+        key,
+        utilization: typeof w.utilization === 'number' ? w.utilization : 0,
+        resetsAt: typeof w.resetsAt === 'number' ? w.resetsAt : null,
+        status: w.status ?? 'allowed',
+      }))
+      if (windows.length === 0 && info.rateLimitType && typeof info.utilization === 'number') {
+        windows.push({ key: info.rateLimitType, utilization: info.utilization, resetsAt: info.resetsAt ?? null, status: info.status ?? 'allowed' })
+      }
+      if (windows.length > 0) events.push({ type: 'usage', windows })
+      if (info.status === 'rejected') {
+        const reset = info.resetsAt ? ` until ${new Date(info.resetsAt * 1000).toLocaleString()}` : ''
+        events.push({ type: 'error', kind: 'rate_limit', message: `Usage limit reached (${info.rateLimitType ?? 'limit'})${reset}.` })
+      }
+      return events
     }
     case 'result': {
       const ok = msg.subtype === 'success' && msg.is_error !== true
