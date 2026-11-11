@@ -122,7 +122,7 @@ export function ChatPane({ chat: initial }: { chat: Chat }) {
           {blocks.map((block, i) =>
             block.kind === 'user' ? (
               <div key={i} className="flex justify-end">
-                <div className="max-w-[80%] rounded-xl border border-white/10 bg-chat-user px-3.5 py-2.5 text-[15px] leading-relaxed whitespace-pre-wrap text-foreground">
+                <div className="max-w-[80%] rounded-xl border border-white/10 bg-chat-user px-3.5 py-2.5 text-sm leading-relaxed whitespace-pre-wrap text-foreground">
                   {block.items[0]?.kind === 'user' ? block.items[0].text : ''}
                 </div>
               </div>
@@ -170,7 +170,7 @@ export function ChatPane({ chat: initial }: { chat: Chat }) {
               onKeyDown={onKey}
               rows={2}
               placeholder={running ? 'Claude is working…' : 'Message Claude (Enter to send, Shift+Enter for a new line)'}
-              className="block max-h-60 min-h-14 w-full resize-none bg-transparent px-3.5 pt-3 pb-1 text-[15px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+              className="block max-h-60 min-h-14 w-full resize-none bg-transparent px-3.5 pt-3 pb-1 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
             />
             <div className="flex items-center gap-2 px-2.5 pb-2.5">
               <PermissionPicker chat={chat} onChange={setChat} />

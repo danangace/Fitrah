@@ -71,7 +71,7 @@ export function ModelPicker({ chat, onChange }: { chat: Chat; onChange: (c: Chat
     return q ? all.filter((m) => `${m} ${modelInfo(m).name}`.toLowerCase().includes(q)) : all
   }, [models, chat.model, query])
   const update = (patch: { model?: string; effort?: Effort | null }) => void api.updateChat(chat.id, patch).then(onChange)
-  const effortLabel = EFFORTS.find((e) => e.id === chat.effort)?.label
+  const effortInfo = EFFORTS.find((e) => e.id === chat.effort)
 
   return (
     <div className="relative">
@@ -79,10 +79,14 @@ export function ModelPicker({ chat, onChange }: { chat: Chat; onChange: (c: Chat
         type="button"
         aria-label="Model"
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[13px] text-foreground/80 hover:bg-secondary hover:text-foreground"
+        className="flex items-center gap-2 rounded-md px-2 py-1 text-[13px] hover:bg-secondary"
       >
-        {modelInfo(chat.model).name}
-        {effortLabel && <span className="text-muted-foreground">{effortLabel}</span>}
+        <span className="font-medium text-info">{modelInfo(chat.model).name}</span>
+        {effortInfo && (
+          <span className="rounded px-1.5 py-px text-xs font-semibold" style={{ color: effortInfo.color, backgroundColor: `${effortInfo.color}26` }}>
+            {effortInfo.label}
+          </span>
+        )}
         <ChevronDown className="size-3.5 opacity-60" />
       </button>
       <Popover open={open} onClose={() => setOpen(false)} align="right" className="w-96 p-0">
@@ -96,7 +100,7 @@ export function ModelPicker({ chat, onChange }: { chat: Chat; onChange: (c: Chat
             className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
           />
         </div>
-        <div className="max-h-64 overflow-y-auto p-1">
+        <div className="flex max-h-64 flex-col gap-1.5 overflow-y-auto p-2">
           {list.map((m) => {
             const info = modelInfo(m)
             return (
@@ -121,24 +125,23 @@ export function ModelPicker({ chat, onChange }: { chat: Chat; onChange: (c: Chat
           })}
           {list.length === 0 && <div className="px-3 py-2 text-[13px] text-muted-foreground">No model matches. Add models in Settings → Models.</div>}
         </div>
-        <div className="flex items-center gap-1 border-t border-border px-3 py-2">
+        <div className="flex items-center gap-1.5 border-t border-border px-3 py-2.5">
           <span className="mr-2 text-[13px] text-muted-foreground">Effort</span>
-          {EFFORTS.map((e) => (
-            <button
-              key={e.id}
-              type="button"
-              aria-pressed={chat.effort === e.id}
-              onClick={() => update({ effort: chat.effort === e.id ? null : e.id })}
-              className={cn(
-                'rounded-md px-2 py-1 text-[13px]',
-                chat.effort === e.id
-                  ? 'bg-primary font-semibold text-primary-foreground'
-                  : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
-              )}
-            >
-              {e.label}
-            </button>
-          ))}
+          {EFFORTS.map((e) => {
+            const selected = chat.effort === e.id
+            return (
+              <button
+                key={e.id}
+                type="button"
+                aria-pressed={selected}
+                onClick={() => update({ effort: selected ? null : e.id })}
+                style={selected ? { color: e.color, backgroundColor: `${e.color}2e`, boxShadow: `inset 0 0 0 1px ${e.color}99` } : { color: e.color }}
+                className={cn('rounded-md px-2 py-1 text-[13px]', selected ? 'font-semibold' : 'opacity-60 hover:opacity-100')}
+              >
+                {e.label}
+              </button>
+            )
+          })}
         </div>
       </Popover>
     </div>

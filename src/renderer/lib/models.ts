@@ -15,11 +15,11 @@ export function modelInfo(id: string): { name: string; description: string } {
 }
 
 export const EFFORTS = [
-  { id: 'low', label: 'Low' },
-  { id: 'medium', label: 'Med' },
-  { id: 'high', label: 'High' },
-  { id: 'xhigh', label: 'XHigh' },
-  { id: 'max', label: 'Max' },
+  { id: 'low', label: 'Low', color: '#3dd68c' },
+  { id: 'medium', label: 'Med', color: '#a3d639' },
+  { id: 'high', label: 'High', color: '#f5c524' },
+  { id: 'xhigh', label: 'XHigh', color: '#f5802a' },
+  { id: 'max', label: 'Max', color: '#e5484d' },
 ] as const
 
 export const PERMISSIONS = [
