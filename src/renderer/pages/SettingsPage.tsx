@@ -17,7 +17,7 @@ export function SettingsPage({ section }: { section: string }) {
   const navigate = useRouter((s) => s.navigate)
   const active = SECTIONS.find((s) => s.id === section) ?? SECTIONS[0]
   return (
-    <div className="mx-auto max-w-4xl space-y-4 p-6">
+    <div className="h-full overflow-y-auto"><div className="mx-auto max-w-4xl space-y-4 p-6">
       <h1 className="text-xl font-semibold text-white">Settings</h1>
       <div className="flex gap-1 border-b border-neutral-800">
         {SECTIONS.map((s) => (
@@ -35,6 +35,6 @@ export function SettingsPage({ section }: { section: string }) {
         ))}
       </div>
       {active?.render()}
-    </div>
+    </div></div>
   )
 }

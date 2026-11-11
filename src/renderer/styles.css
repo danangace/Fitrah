@@ -1,1 +1,23 @@
 @import 'tailwindcss';
+
+/* Read-only markdown view */
+.markdown { @apply text-sm leading-6 text-neutral-200; }
+.markdown h1 { @apply mt-2 mb-4 text-2xl font-semibold text-white; }
+.markdown h2 { @apply mt-8 mb-3 border-b border-neutral-800 pb-1 text-xl font-semibold text-white; }
+.markdown h3 { @apply mt-6 mb-2 text-base font-semibold text-white; }
+.markdown h4 { @apply mt-4 mb-2 font-semibold text-white; }
+.markdown p { @apply my-3; }
+.markdown a { @apply text-emerald-400 underline-offset-2 hover:underline; }
+.markdown ul { @apply my-3 list-disc pl-6; }
+.markdown ol { @apply my-3 list-decimal pl-6; }
+.markdown li { @apply my-1; }
+.markdown blockquote { @apply my-4 border-l-2 border-emerald-700 bg-neutral-900/60 px-4 py-2 text-neutral-300; }
+.markdown code { @apply rounded bg-neutral-800 px-1 py-0.5 text-[0.85em]; }
+.markdown pre { @apply my-4 overflow-x-auto rounded-md bg-neutral-900 p-3; }
+.markdown pre code { @apply bg-transparent p-0; }
+.markdown table { @apply my-4 block w-full overflow-x-auto border-collapse text-left; }
+.markdown th { @apply border border-neutral-800 bg-neutral-900 px-2 py-1 font-semibold; }
+.markdown td { @apply border border-neutral-800 px-2 py-1 align-top; }
+.markdown img { @apply my-3 max-w-full rounded; }
+.markdown hr { @apply my-6 border-neutral-800; }
+.markdown input[type='checkbox'] { @apply mr-1.5; }

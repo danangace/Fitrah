@@ -1,4 +1,5 @@
 import { Sidebar } from './components/layout/Sidebar'
+import { DocsPage } from './pages/DocsPage'
 import { Placeholder } from './pages/Placeholder'
 import { SettingsPage } from './pages/SettingsPage'
 import { useRouter } from './store/router'
@@ -9,7 +10,7 @@ function Page() {
     case 'home':
       return <Placeholder title="Workspaces" text="Create a workspace to start a chat. (T15–T18)" />
     case 'docs':
-      return <Placeholder title="Docs" text="Read-only docs browser. (T12–T14)" />
+      return <DocsPage path={route.path} />
     case 'settings':
       return <SettingsPage section={route.section} />
     case 'workspace':
@@ -23,7 +24,7 @@ export function App() {
   return (
     <div className="flex h-screen bg-neutral-950 text-neutral-100">
       <Sidebar />
-      <main className="min-w-0 flex-1 overflow-y-auto">
+      <main className="min-w-0 flex-1 overflow-hidden">
         <Page />
       </main>
     </div>
