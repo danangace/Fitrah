@@ -147,6 +147,8 @@ export const Workspace = z.object({
   stage: z.string(),
   setupStatus: z.enum(['pending', 'running', 'done', 'failed', 'skipped']),
   status: WorkspaceStatus,
+  /** The most recently used chat's agent + model (sidebar shows "Claude Sonnet"). */
+  agent: z.object({ agent: AgentId, model: z.string() }).nullable(),
   createdAt: isoDate,
   archivedAt: nullableText,
 })

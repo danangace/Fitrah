@@ -13,7 +13,7 @@ export const STATUS_LABEL: Record<WorkspaceStatus, string> = {
 const COLOR: Record<WorkspaceStatus, string> = {
   idle: 'bg-muted-foreground/50',
   working: 'bg-info animate-pulse',
-  needs_approval: 'bg-warning',
+  needs_approval: 'bg-warning animate-pulse',
   waiting: 'bg-foreground/70',
   done: 'bg-success',
   error: 'bg-destructive',

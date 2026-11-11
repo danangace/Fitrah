@@ -58,6 +58,8 @@ const agent = fakeAdapter(async (o, emit) => {
     ],
   })
   emit({ type: 'message.text', text: `Working on: ${o.prompt}` })
+  // A short "thinking" pause, so the UI's working state can be seen.
+  await new Promise((r) => setTimeout(r, 1200))
   emit({ type: 'tool.started', toolUseId: 't1', name: 'Bash', summary: 'touch smoke.txt' })
   const answer = await o.onToolRequest({ tool: 'Bash', input: { command: 'touch smoke.txt' } })
   emit({ type: 'tool.result', toolUseId: 't1', isError: answer === 'deny', summary: answer === 'deny' ? 'denied' : 'ok' })

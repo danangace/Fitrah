@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { existsSync, mkdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'
-import { type Workspace, WorkspaceInput, type WorkspaceStatus } from '../../shared/schemas'
+import { type AgentId, type Workspace, WorkspaceInput, type WorkspaceStatus } from '../../shared/schemas'
 import { getWorkflow, resolveValues } from '../workflows/service'
 import { UserError } from '../errors'
 import { expandHome, nowIso } from '../paths'
@@ -27,7 +27,17 @@ type WorkspaceRow = {
 /** Live status per workspace comes from its chats (T25); stored rows default to idle. */
 export type StatusLookup = (workspaceId: string) => WorkspaceStatus
 
-const toWorkspace = (r: WorkspaceRow, status: StatusLookup): Workspace => ({
+type AgentRow = { agent: AgentId; model: string }
+
+/** The chat used last in a workspace, for the sidebar's "Claude Sonnet" label. */
+function lastAgent(db: Db, workspaceId: string): Workspace['agent'] {
+  const row = db
+    .prepare('SELECT agent, model FROM chats WHERE workspace_id = ? ORDER BY COALESCE(last_active_at, created_at) DESC LIMIT 1')
+    .get(workspaceId) as AgentRow | undefined
+  return row ? { agent: row.agent, model: row.model } : null
+}
+
+const toWorkspace = (r: WorkspaceRow, status: StatusLookup, agent: Workspace['agent'] = null): Workspace => ({
   id: r.id,
   repoId: r.repo_id,
   name: r.name,
@@ -39,6 +49,7 @@ const toWorkspace = (r: WorkspaceRow, status: StatusLookup): Workspace => ({
   stage: r.stage,
   setupStatus: r.setup_status,
   status: status(r.id),
+  agent,
   createdAt: r.created_at,
   archivedAt: r.archived_at,
 })
@@ -47,13 +58,13 @@ const idle: StatusLookup = () => 'idle'
 
 export function listWorkspaces(db: Db, status: StatusLookup = idle): Workspace[] {
   const rows = db.prepare('SELECT * FROM workspaces WHERE archived_at IS NULL ORDER BY created_at').all() as WorkspaceRow[]
-  return rows.map((r) => toWorkspace(r, status))
+  return rows.map((r) => toWorkspace(r, status, lastAgent(db, r.id)))
 }
 
 export function getWorkspace(db: Db, id: string, status: StatusLookup = idle): Workspace {
   const row = db.prepare('SELECT * FROM workspaces WHERE id = ?').get(id) as WorkspaceRow | undefined
   if (!row) throw new UserError('workspace_not_found', 'Workspace not found', 404)
-  return toWorkspace(row, status)
+  return toWorkspace(row, status, lastAgent(db, id))
 }
 
 export function setSetupStatus(db: Db, id: string, status: Workspace['setupStatus']): void {

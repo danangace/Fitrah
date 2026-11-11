@@ -1,7 +1,8 @@
-import { ChevronDown, ChevronRight, ClipboardList, MessageSquare, Plus, Settings2 } from 'lucide-react'
+import { ChevronDown, ChevronRight, ClipboardList, Loader2, MessageSquare, Plus, Settings2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { Repo, Workspace } from '../../../shared/schemas'
 import { cn } from '../../lib/cn'
+import { modelInfo } from '../../lib/models'
 import { useAppEvents } from '../../store/events'
 import { useRouter } from '../../store/router'
 import { useModal } from '../../store/ui'
@@ -12,6 +13,7 @@ function WorkspaceRow({ ws, active, onClick }: { ws: Workspace; active: boolean;
   return (
     <button
       type="button"
+      data-testid={`workspace-row-${ws.name}`}
       onClick={onClick}
       className={cn(
         'group flex w-full items-center gap-2 rounded-md py-1.5 pr-2 pl-6 text-left transition-colors',
@@ -24,10 +26,23 @@ function WorkspaceRow({ ws, active, onClick }: { ws: Workspace; active: boolean;
         <MessageSquare className={cn('size-3.5 shrink-0', active ? 'text-foreground/70' : 'text-foreground/30')} />
       )}
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm leading-tight">{ws.name}</span>
-        <span className="block truncate font-mono text-[11.5px] leading-tight text-muted-foreground/60">{ws.branch}</span>
+        <span className="block truncate text-sm leading-snug">{ws.name}</span>
+        <span className="flex items-center gap-1 truncate text-xs leading-snug text-muted-foreground/70">
+          {ws.agent ? (
+            <>
+              <span className="size-1.5 shrink-0 rounded-full bg-[#d97757]" />
+              <span className="truncate">{modelInfo(ws.agent.model).name}</span>
+            </>
+          ) : (
+            <span className="truncate text-muted-foreground/50">No chat yet</span>
+          )}
+        </span>
       </span>
-      <StatusDot status={ws.status} />
+      {ws.status === 'working' ? (
+        <Loader2 aria-label="Working" className="size-3.5 shrink-0 animate-spin text-info" />
+      ) : (
+        <StatusDot status={ws.status} />
+      )}
     </button>
   )
 }
@@ -94,7 +109,11 @@ export function WorkspaceList() {
     void load()
   }, [load])
   useAppEvents((e) => {
-    if (e.type === 'workspace.status') patch(e.workspaceId, { status: e.status })
+    if (e.type === 'workspace.status') {
+      patch(e.workspaceId, { status: e.status })
+      // A turn started / ended: refresh the agent + model shown under the name.
+      void load()
+    }
     if (e.type === 'workspace.setup' && e.done) void load()
   })
 
