@@ -1,4 +1,4 @@
-import { ArrowUp, CheckCircle2, ChevronRight, CircleX, Loader2, ShieldCheck, Sparkles, Square, Wrench } from 'lucide-react'
+import { ArrowUp, CheckCircle2, ChevronRight, CircleX, Loader2, Sparkles, Square, Wrench } from 'lucide-react'
 import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react'
 import type { ChatEvent } from '../../../shared/events'
 import type { Chat } from '../../../shared/schemas'
@@ -10,6 +10,7 @@ import { type ToolItem, toItems } from '../../lib/transcript'
 import { useRouter } from '../../store/router'
 import { Markdown } from '../docs-browser/Markdown'
 import { ApprovalCard } from './ApprovalCard'
+import { ModelPicker, PermissionPicker } from './ComposerPickers'
 
 function ToolRow({ item }: { item: ToolItem }) {
   const [open, setOpen] = useState(false)
@@ -21,16 +22,16 @@ function ToolRow({ item }: { item: ToolItem }) {
     <CheckCircle2 className="size-3 text-success/80" />
   )
   return (
-    <div className="text-xs">
+    <div className="text-[13px]">
       <button type="button" onClick={() => setOpen(!open)} className="group flex w-full items-center gap-1.5 rounded py-0.5 text-left text-muted-foreground hover:text-foreground">
         <ChevronRight className={cn('size-3 shrink-0 text-muted-foreground/50 transition-transform', open && 'rotate-90')} />
         <Wrench className="size-3 shrink-0 text-muted-foreground/60" />
         <span className="font-medium text-foreground/80">{item.name}</span>
-        <span className="min-w-0 flex-1 truncate font-mono text-[11px]">{item.summary}</span>
+        <span className="min-w-0 flex-1 truncate font-mono text-xs">{item.summary}</span>
         {icon}
       </button>
       {open && item.result && (
-        <pre className="mt-1 ml-[18px] max-h-48 overflow-auto rounded-md border border-border bg-card px-2.5 py-1.5 text-[11px] whitespace-pre-wrap text-muted-foreground">
+        <pre className="mt-1 ml-[18px] max-h-48 overflow-auto rounded-md border border-border bg-card px-2.5 py-1.5 text-xs whitespace-pre-wrap text-muted-foreground">
           {item.result.summary || '(no output)'}
         </pre>
       )}
@@ -50,7 +51,8 @@ function AssistantRow({ children }: { children: React.ReactNode }) {
 }
 
 /** One chat, laid out like Orca's native chat: centered column, bubbles, quiet tool rows, composer. */
-export function ChatPane({ chat }: { chat: Chat }) {
+export function ChatPane({ chat: initial }: { chat: Chat }) {
+  const [chat, setChat] = useState(initial)
   const navigate = useRouter((s) => s.navigate)
   const [events, setEvents] = useState<ChatEvent[]>([])
   const [status, setStatus] = useState(chat.status)
@@ -114,13 +116,13 @@ export function ChatPane({ chat }: { chat: Chat }) {
               <div className="mx-auto mb-3 flex size-9 items-center justify-center rounded-lg bg-secondary text-foreground/70">
                 <Sparkles className="size-4" />
               </div>
-              <p className="text-[13px] text-muted-foreground">Say what Claude should do in this workspace.</p>
+              <p className="text-sm text-muted-foreground">Say what Claude should do in this workspace.</p>
             </div>
           )}
           {blocks.map((block, i) =>
             block.kind === 'user' ? (
               <div key={i} className="flex justify-end">
-                <div className="max-w-[80%] rounded-xl border border-white/10 bg-chat-user px-3.5 py-2.5 text-sm whitespace-pre-wrap text-foreground">
+                <div className="max-w-[80%] rounded-xl border border-white/10 bg-chat-user px-3.5 py-2.5 text-[15px] leading-relaxed whitespace-pre-wrap text-foreground">
                   {block.items[0]?.kind === 'user' ? block.items[0].text : ''}
                 </div>
               </div>
@@ -136,7 +138,7 @@ export function ChatPane({ chat }: { chat: Chat }) {
                       return <ApprovalCard key={j} item={item} />
                     case 'error':
                       return (
-                        <div key={j} className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-[13px] text-red-200">
+                        <div key={j} className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-red-200">
                           {item.errorKind === 'rate_limit' ? '⏳ ' : ''}
                           {item.message}
                         </div>
@@ -159,7 +161,7 @@ export function ChatPane({ chat }: { chat: Chat }) {
 
       <div className="shrink-0 px-6 pb-4">
         <div className="mx-auto max-w-3xl">
-          {error && <div className="mb-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-[13px] text-red-200">{error}</div>}
+          {error && <div className="mb-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-red-200">{error}</div>}
           <div className="rounded-xl border border-input bg-card shadow-lg shadow-black/20 focus-within:border-ring">
             <textarea
               ref={input}
@@ -168,13 +170,12 @@ export function ChatPane({ chat }: { chat: Chat }) {
               onKeyDown={onKey}
               rows={2}
               placeholder={running ? 'Claude is working…' : 'Message Claude (Enter to send, Shift+Enter for a new line)'}
-              className="block max-h-60 min-h-14 w-full resize-none bg-transparent px-3.5 pt-3 pb-1 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+              className="block max-h-60 min-h-14 w-full resize-none bg-transparent px-3.5 pt-3 pb-1 text-[15px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
             />
             <div className="flex items-center gap-2 px-2.5 pb-2.5">
-              <span className="flex items-center gap-1 rounded-md px-1.5 py-1 text-[11px] text-muted-foreground" title="Reading and edits inside the workspace run on their own; commands and anything outside ask first.">
-                <ShieldCheck className="size-3.5 text-success/80" /> Edits auto · commands ask
-              </span>
-              <span className="ml-auto text-[11px] text-muted-foreground">Claude · {chat.model}</span>
+              <PermissionPicker chat={chat} onChange={setChat} />
+              <span className="ml-auto" />
+              <ModelPicker chat={chat} onChange={setChat} />
               {running ? (
                 <button
                   key="stop"

@@ -134,3 +134,38 @@ test('Planning workflow: required fields, values shown, chat waits (AC-F2, AC-F4
   await expect(page.getByText('Say what Claude should do in this workspace.')).toBeVisible()
   await page.screenshot({ path: 'test-results/screens/workspace-planning.png' })
 })
+
+test('composer pickers: permission and model + effort (in the chat)', async ({ page }) => {
+  await page.goto(`/?token=${TOKEN}`)
+  await page.locator('aside').getByRole('button', { name: 'New workspace', exact: true }).click()
+  const dialog = page.getByRole('dialog', { name: 'Create workspace' })
+  await dialog.getByLabel('Project').selectOption({ label: 'repo' })
+  await dialog.getByLabel('Workspace name').fill('pickers')
+  await dialog.getByRole('button', { name: /Create workspace/ }).click()
+  await expect(page.getByRole('heading', { name: 'pickers' })).toBeVisible({ timeout: 20_000 })
+
+  // Permission: default Accept edits → Full access
+  await expect(page.getByRole('button', { name: 'Permission' })).toContainText('Accept edits')
+  await page.getByRole('button', { name: 'Permission' }).click()
+  await expect(page.getByRole('menuitemradio', { name: /Ask for approval/ })).toBeVisible()
+  await page.screenshot({ path: 'test-results/screens/permission-menu.png' })
+  await page.getByRole('menuitemradio', { name: /Full access/ }).click()
+  await expect(page.getByRole('button', { name: 'Permission' })).toContainText('Full access')
+
+  // Model: sonnet → opus, effort High
+  await page.getByRole('button', { name: 'Model' }).click()
+  await page.getByPlaceholder('Search models…').fill('op')
+  await expect(page.getByRole('menuitemradio')).toHaveCount(1)
+  await page.getByPlaceholder('Search models…').fill('')
+  await page.screenshot({ path: 'test-results/screens/model-menu.png' })
+  await page.getByRole('menuitemradio', { name: /Claude Opus/ }).click()
+  await page.getByRole('button', { name: 'High', exact: true }).click()
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('button', { name: 'Model' })).toContainText('Claude Opus')
+  await expect(page.getByRole('button', { name: 'Model' })).toContainText('High')
+
+  // Saved on the chat: still there after a reload.
+  await page.reload()
+  await expect(page.getByRole('button', { name: 'Permission' })).toContainText('Full access')
+  await expect(page.getByRole('button', { name: 'Model' })).toContainText('Claude Opus')
+})
