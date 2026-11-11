@@ -34,7 +34,8 @@ export class SetupRunner {
     emit(`$ ${script}`)
 
     return new Promise((resolveRun) => {
-      const child = spawn('sh', ['-c', script], { cwd: ws.worktreePath, env: process.env })
+      // -e: stop at the first failing line, so a broken step is reported as failed.
+      const child = spawn('sh', ['-ec', script], { cwd: ws.worktreePath, env: process.env })
       let partial = ''
       const onData = (chunk: Buffer) => {
         const lines = (partial + chunk.toString()).split(/\r?\n/)

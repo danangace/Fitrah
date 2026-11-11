@@ -5,13 +5,17 @@ import { api } from '../../api/fitrah'
 import { useWorkspaces } from '../../store/workspaces'
 import { errorText } from '../../lib/errors'
 import { Button } from '../ui/Button'
-import { Card, Field, Input, Notice } from '../ui/Field'
+import { Card, Field, Input, Notice, ScriptArea } from '../ui/Field'
 
-const emptyForm = { path: '', setupScript: '', featureBase: '', sharedDirs: '' }
+const emptyForm = { path: '', setupScript: '', archiveScript: '', featureBase: '', sharedDirs: '' }
+
+const SETUP_HINT = 'Runs once in each new workspace, line by line; stops at the first failing line. Keep long-running commands (dev servers) out.'
+const SETUP_PLACEHOLDER = 'cp ~/path/to/repo/.env .env\npnpm install\npnpm setup:env'
 
 function RepoRow({ repo, onChange }: { repo: Repo; onChange: () => void }) {
   const [form, setForm] = useState({
     setupScript: repo.setupScript,
+    archiveScript: repo.archiveScript,
     featureBase: repo.featureBase,
     sharedDirs: repo.sharedDirs.join(', '),
   })
@@ -20,6 +24,7 @@ function RepoRow({ repo, onChange }: { repo: Repo; onChange: () => void }) {
     try {
       await api.updateRepo(repo.id, {
         setupScript: form.setupScript,
+        archiveScript: form.archiveScript,
         featureBase: form.featureBase,
         sharedDirs: form.sharedDirs.split(',').map((s) => s.trim()).filter(Boolean),
       })
@@ -49,17 +54,19 @@ function RepoRow({ repo, onChange }: { repo: Repo; onChange: () => void }) {
         </Button>
       </div>
       {error && <Notice tone="error">{error}</Notice>}
-      <div className="grid gap-3 md:grid-cols-3">
-        <Field label="Setup script">
-          <Input value={form.setupScript} onChange={(e) => setForm({ ...form, setupScript: e.target.value })} />
-        </Field>
-        <Field label="Feature base">
-          <Input value={form.featureBase} onChange={(e) => setForm({ ...form, featureBase: e.target.value })} />
-        </Field>
-        <Field label="Shared dirs" hint="Comma separated">
-          <Input value={form.sharedDirs} onChange={(e) => setForm({ ...form, sharedDirs: e.target.value })} />
-        </Field>
-      </div>
+      <Field label="Feature base">
+        <Input value={form.featureBase} onChange={(e) => setForm({ ...form, featureBase: e.target.value })} />
+      </Field>
+      <Field label="Setup script" hint={SETUP_HINT}>
+        <ScriptArea
+          value={form.setupScript}
+          placeholder={SETUP_PLACEHOLDER}
+          onChange={(e) => setForm({ ...form, setupScript: e.target.value })}
+        />
+      </Field>
+      <Field label="Archive script" hint="Optional. Runs once in the workspace right before it is archived.">
+        <ScriptArea rows={2} value={form.archiveScript} onChange={(e) => setForm({ ...form, archiveScript: e.target.value })} />
+      </Field>
       <Button onClick={save}>Save repo</Button>
     </div>
   )
@@ -85,6 +92,7 @@ export function RepoSettings() {
       await api.addRepo({
         path: form.path,
         setupScript: form.setupScript,
+        archiveScript: form.archiveScript,
         featureBase: form.featureBase,
         sharedDirs: form.sharedDirs.split(',').map((s) => s.trim()).filter(Boolean),
       })
@@ -111,25 +119,20 @@ export function RepoSettings() {
             onChange={(e) => setForm({ ...form, path: e.target.value })}
           />
         </Field>
-        <div className="grid gap-3 md:grid-cols-3">
-          <Field label="Setup script">
-            <Input
-              value={form.setupScript}
-              placeholder="pnpm install && pnpm setup:env"
-              onChange={(e) => setForm({ ...form, setupScript: e.target.value })}
-            />
-          </Field>
-          <Field label="Feature base">
-            <Input
-              value={form.featureBase}
-              placeholder="origin/dev/tribe-2"
-              onChange={(e) => setForm({ ...form, featureBase: e.target.value })}
-            />
-          </Field>
-          <Field label="Shared dirs" hint="Comma separated">
-            <Input value={form.sharedDirs} onChange={(e) => setForm({ ...form, sharedDirs: e.target.value })} />
-          </Field>
-        </div>
+        <Field label="Feature base">
+          <Input
+            value={form.featureBase}
+            placeholder="origin/dev/tribe-2"
+            onChange={(e) => setForm({ ...form, featureBase: e.target.value })}
+          />
+        </Field>
+        <Field label="Setup script" hint={SETUP_HINT}>
+          <ScriptArea
+            value={form.setupScript}
+            placeholder={SETUP_PLACEHOLDER}
+            onChange={(e) => setForm({ ...form, setupScript: e.target.value })}
+          />
+        </Field>
         <Button variant="primary" onClick={add} disabled={!form.path || !form.featureBase}>
           Add repo
         </Button>

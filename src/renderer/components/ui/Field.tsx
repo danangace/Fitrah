@@ -1,4 +1,4 @@
-import type { InputHTMLAttributes, ReactNode } from 'react'
+import type { InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from 'react'
 import { cn } from '../../lib/cn'
 
 export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElement>) {
@@ -6,6 +6,21 @@ export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElem
     <input
       className={cn(
         'w-full rounded-md border border-neutral-700 bg-neutral-900 px-2.5 py-1.5 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-emerald-600 focus:outline-none',
+        className,
+      )}
+      {...props}
+    />
+  )
+}
+
+/** Multi-line, monospace: for shell scripts. */
+export function ScriptArea({ className, ...props }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  return (
+    <textarea
+      rows={4}
+      spellCheck={false}
+      className={cn(
+        'w-full resize-y rounded-md border border-neutral-700 bg-neutral-900 px-2.5 py-1.5 font-mono text-xs text-neutral-100 placeholder:text-neutral-600 focus:border-emerald-600 focus:outline-none',
         className,
       )}
       {...props}

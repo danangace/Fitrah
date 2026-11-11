@@ -37,6 +37,14 @@ describe('SetupRunner', () => {
     expect(runner.log(ws.id)).toContain('one')
   })
 
+  it('runs a multi-line script line by line and stops at the first failing line', async () => {
+    const { db, ws, bus, events } = await workspaceWith('echo first\nfalse\necho never')
+    expect(await new SetupRunner(db, bus).run(ws.id)).toBe('failed')
+    const lines = events.flatMap((e) => (e.type === 'workspace.setup' ? [e.line] : []))
+    expect(lines).toContain('first')
+    expect(lines).not.toContain('never')
+  })
+
   it('marks a failing script failed and keeps the workspace (AC-W3)', async () => {
     const { db, ws, bus, events } = await workspaceWith('echo boom >&2; exit 3')
     expect(await new SetupRunner(db, bus).run(ws.id)).toBe('failed')

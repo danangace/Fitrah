@@ -28,7 +28,7 @@ export async function archiveWorkspace(db: Db, id: string, input: unknown, run: 
       throw new UserError('worktree_dirty', 'The worktree has uncommitted changes', 409)
     }
     if (repo.archiveScript.trim()) {
-      spawnSync('sh', ['-c', repo.archiveScript], { cwd: ws.worktreePath, stdio: 'ignore', timeout: 120_000 })
+      spawnSync('sh', ['-ec', repo.archiveScript], { cwd: ws.worktreePath, stdio: 'ignore', timeout: 120_000 })
     }
     await removeWorktree(run, repo.path, ws.worktreePath, options.data.force)
   }
