@@ -2,12 +2,14 @@ import { mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { createApp } from './app'
+import { openDb } from '../sqlite/db'
+import { createApp as create } from './app'
 import { TOKEN_HEADER, localHosts } from './security'
 
 const token = 'a'.repeat(64)
 const security = { token, allowedHosts: localHosts(4317) }
 const host = { host: '127.0.0.1:4317' }
+const createApp = (o: { security: typeof security; webRoot?: string }) => create({ ...o, db: openDb(':memory:') })
 
 describe('createApp', () => {
   it('answers the health check without a token', async () => {

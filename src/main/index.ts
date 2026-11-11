@@ -16,7 +16,7 @@ export function startRuntime(port = runtimePort()): Promise<RuntimeHandle> {
   const token = loadOrCreateToken(home)
   const db = openDb(join(home, 'fitrah.db'))
   const devPort = process.env.FITRAH_DEV === '1' ? DEV_UI_PORT : undefined
-  const app = createApp({ security: { token, allowedHosts: localHosts(port, devPort) }, webRoot: WEB_ROOT })
+  const app = createApp({ security: { token, allowedHosts: localHosts(port, devPort) }, db, webRoot: WEB_ROOT })
   return new Promise((resolveStart) => {
     // Bind to 127.0.0.1 only: never reachable from the network (AC-F1).
     const server = serve({ fetch: app.fetch, hostname: HOST, port }, (info) => {
