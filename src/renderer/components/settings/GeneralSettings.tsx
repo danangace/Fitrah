@@ -3,12 +3,13 @@ import type { Settings } from '../../../shared/schemas'
 import { api } from '../../api/fitrah'
 import { errorText } from '../../lib/errors'
 import { Button } from '../ui/Button'
+import { toast } from '../../store/toast'
 import { Card, Field, Input, Notice } from '../ui/Field'
 
 export function GeneralSettings() {
   const [settings, setSettings] = useState<Settings | null>(null)
   const [profiles, setProfiles] = useState<{ dir: string; name: string }[]>([])
-  const [message, setMessage] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null)
+  const [message, setMessage] = useState<{ tone: 'error'; text: string } | null>(null)
 
   useEffect(() => {
     api.getSettings().then(setSettings, (e: unknown) => setMessage({ tone: 'error', text: errorText(e) }))
@@ -24,7 +25,7 @@ export function GeneralSettings() {
     setMessage(null)
     try {
       setSettings(await api.saveSettings(settings))
-      setMessage({ tone: 'ok', text: 'Saved.' })
+      toast.success('Settings saved', 'General settings are updated.')
     } catch (e) {
       setMessage({ tone: 'error', text: errorText(e) })
     }

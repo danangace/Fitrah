@@ -81,7 +81,7 @@ export function ModelPicker({ chat, onChange }: { chat: Chat; onChange: (c: Chat
         onClick={() => setOpen(!open)}
         className="flex items-center gap-2 rounded-md px-2 py-1 text-[13px] hover:bg-secondary"
       >
-        <span className="font-medium text-info">{modelInfo(chat.model).name}</span>
+        <span className="font-medium text-foreground/80">{modelInfo(chat.model).name}</span>
         {effortInfo && (
           <span className="rounded px-1.5 py-px text-xs font-semibold" style={{ color: effortInfo.color, backgroundColor: `${effortInfo.color}26` }}>
             {effortInfo.label}

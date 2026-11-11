@@ -8,7 +8,7 @@ const shot = (name: string) => `test-results/screens/${name}.png`
 test('start, accounts, docs, workspace and chat (AC-B1 smoke)', async ({ page }) => {
   // Start: the link from `fitrah start` carries the token; it becomes a cookie and leaves the URL.
   await page.goto(`/?token=${TOKEN}`)
-  await expect(page.locator('aside [title="Fitrah: Finance ITeration, Review and Agents Hub"]')).toContainText('Fitrah')
+  await expect(page.locator('aside [title="Fitrah: Finance Iteration Tools, Review & Agent Hub"]')).toContainText('Fitrah')
   await expect(page).not.toHaveURL(/token=/)
   await page.screenshot({ path: shot('1-home') })
 
@@ -127,6 +127,12 @@ test('Settings → Workflows: create a workflow with fields (AC-F1)', async ({ p
   await page.getByRole('button', { name: '{Ticket}' }).click()
   await page.getByRole('button', { name: 'Create workflow' }).click()
   await expect(page.getByText('Saved', { exact: true })).toBeVisible()
+  // Bottom-right alert confirms the save
+  const toastAlert = page.getByRole('alert').filter({ hasText: 'Workflow created' })
+  await expect(toastAlert).toBeVisible()
+  await page.screenshot({ path: 'test-results/screens/toast.png' })
+  await toastAlert.getByRole('button', { name: 'Dismiss' }).click()
+  await expect(toastAlert).toBeHidden()
   await expect(page.getByRole('button', { name: /Defect fix/ })).toBeVisible()
   await page.screenshot({ path: 'test-results/screens/workflows.png', fullPage: true })
 })

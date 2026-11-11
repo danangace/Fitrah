@@ -6,6 +6,7 @@ import { cn } from '../../lib/cn'
 import { errorText } from '../../lib/errors'
 import { Button } from '../ui/Button'
 import { Card, Notice } from '../ui/Field'
+import { toast } from '../../store/toast'
 import { useConfirm } from '../ui/confirm'
 import { ClaudeSignIn } from './ClaudeSignIn'
 
@@ -58,7 +59,7 @@ function AccountRow({ account, onChange, onError }: { account: Account; onChange
         >
           <Star size={14} fill={account.isDefault ? 'currentColor' : 'none'} />
         </Button>
-        <Button variant="ghost" aria-label="Re-check login" title="Re-check login" onClick={act(() => api.checkAccount(account.id))}>
+        <Button variant="ghost" aria-label="Re-check login" title="Re-check login" onClick={act(() => api.checkAccount(account.id).then((a) => toast.success('Account refreshed', `${a.label}: login is ${a.loginStatus.replace('_', ' ')}.`)))}>
           <RefreshCw size={14} />
         </Button>
         <Button variant="ghost" aria-label="Remove account" title="Remove" onClick={remove}>

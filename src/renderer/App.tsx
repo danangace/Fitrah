@@ -1,6 +1,7 @@
 import { WorkspaceNotifier } from './components/layout/Attention'
 import { StatusBar } from './components/layout/StatusBar'
 import { Sidebar } from './components/layout/Sidebar'
+import { Toaster } from './components/ui/Toaster'
 import { ChatsPanel } from './components/native-chat/ChatsPanel'
 import { CreateWorkspaceModal } from './components/workspace/CreateWorkspaceModal'
 import { WorkspaceList } from './components/workspace/WorkspaceList'
@@ -51,6 +52,7 @@ export function App() {
       </main>
       </div>
       <StatusBar />
+      <Toaster />
     </div>
   )
 }

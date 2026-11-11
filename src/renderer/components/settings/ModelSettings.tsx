@@ -5,13 +5,14 @@ import { api } from '../../api/fitrah'
 import { cn } from '../../lib/cn'
 import { errorText } from '../../lib/errors'
 import { Button } from '../ui/Button'
+import { toast } from '../../store/toast'
 import { Card, Input, Notice } from '../ui/Field'
 
 /** Short model list per agent with one default (OQ-21). V1: Claude only. */
 export function ModelSettings() {
   const [settings, setSettings] = useState<Settings | null>(null)
   const [draft, setDraft] = useState('')
-  const [message, setMessage] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null)
+  const [message, setMessage] = useState<{ tone: 'error'; text: string } | null>(null)
 
   useEffect(() => {
     api.getSettings().then(setSettings, (e: unknown) => setMessage({ tone: 'error', text: errorText(e) }))
@@ -36,7 +37,8 @@ export function ModelSettings() {
   const save = async () => {
     try {
       setSettings(await api.saveSettings(settings))
-      setMessage({ tone: 'ok', text: 'Saved.' })
+      setMessage(null)
+      toast.success('Models saved', 'The Claude model list is updated.')
     } catch (e) {
       setMessage({ tone: 'error', text: errorText(e) })
     }

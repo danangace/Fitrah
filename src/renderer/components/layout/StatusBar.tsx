@@ -5,6 +5,7 @@ import { api } from '../../api/fitrah'
 import { cn } from '../../lib/cn'
 import { formatReset, percent, sortWindows, timeAgo, usageTone, windowLabel } from '../../lib/usage'
 import { useAppEvents } from '../../store/events'
+import { toast } from '../../store/toast'
 import { useRouter } from '../../store/router'
 import { Popover } from '../ui/Popover'
 
@@ -67,6 +68,15 @@ export function StatusBar() {
   useAppEvents((e) => {
     if (e.type === 'account.usage' || e.type === 'account.warning') void load()
   })
+  const refresh = () =>
+    api.listAccounts().then(
+      (list) => {
+        setAccounts(list)
+        setNow(Date.now())
+        toast.success('Usage refreshed', 'Showing the latest limits Claude reported.')
+      },
+      () => toast.error('Could not refresh usage', 'The Fitrah runtime did not answer. Try again.'),
+    )
   const claude = accounts.filter((a) => a.agent === 'claude')
   const main = claude.find((a) => a.isDefault && a.usage) ?? claude.find((a) => a.usage) ?? claude.find((a) => a.isDefault)
   const windows = sortWindows(main?.usage?.windows ?? []).slice(0, 2)
@@ -93,7 +103,7 @@ export function StatusBar() {
       <Popover open={open} onClose={() => setOpen(false)} className="w-[22rem] p-3">
         <div className="mb-2 flex items-center justify-between">
           <span className="text-sm font-semibold text-foreground">Usage</span>
-          <button type="button" aria-label="Refresh usage" title="Refresh" onClick={() => void load()} className="text-muted-foreground hover:text-foreground">
+          <button type="button" aria-label="Refresh usage" title="Refresh" onClick={() => void refresh()} className="text-muted-foreground hover:text-foreground">
             <RefreshCw className="size-3.5" />
           </button>
         </div>

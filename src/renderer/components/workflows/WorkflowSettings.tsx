@@ -7,6 +7,7 @@ import { errorText } from '../../lib/errors'
 import { FIELD_TYPE_LABEL, keyFromLabel, parseOptions } from '../../lib/workflow-form'
 import { Button } from '../ui/Button'
 import { Card, Field, Input, Notice, ScriptArea } from '../ui/Field'
+import { toast } from '../../store/toast'
 import { useConfirm } from '../ui/confirm'
 
 type Draft = { name: string; description: string; fields: WorkflowField[]; instructions: string }
@@ -109,6 +110,7 @@ function Editor({
       const input: WorkflowInput = { name: draft.name, description: draft.description, fields: draft.fields, instructions: draft.instructions }
       const result = workflow ? await api.updateWorkflow(workflow.id, input) : await api.createWorkflow(input)
       setSaved(true)
+      toast.success(workflow ? 'Workflow saved' : 'Workflow created', `"${result.name}" is ${workflow ? 'updated' : 'ready to use'}.`)
       onSaved(result)
     } catch (e) {
       setError(errorText(e))

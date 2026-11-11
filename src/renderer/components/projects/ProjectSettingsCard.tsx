@@ -8,6 +8,7 @@ import { errorText } from '../../lib/errors'
 import { type RepoForm, formFromRepo, isDirty, setupState } from '../../lib/repo-form'
 import { Button } from '../ui/Button'
 import { Field, Input, Notice, ScriptArea } from '../ui/Field'
+import { toast } from '../../store/toast'
 import { useConfirm } from '../ui/confirm'
 
 const SETUP_HINT = 'Runs once in each new workspace, line by line; stops at the first failing line. Keep long-running commands (dev servers) out.'
@@ -47,6 +48,7 @@ export function ProjectSettingsCard({ repo, onChange }: { repo: Repo; onChange: 
     try {
       await api.updateRepo(repo.id, form)
       setSavedAt(Date.now())
+      toast.success('Project saved', `${repo.name} settings are updated.`)
       onChange()
     } catch (e) {
       setError(errorText(e))
