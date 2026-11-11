@@ -1,4 +1,4 @@
-import { CheckCircle2, ChevronRight, CircleX, Loader2, Send, Square, Wrench } from 'lucide-react'
+import { ArrowUp, CheckCircle2, ChevronRight, CircleX, Loader2, ShieldCheck, Sparkles, Square, Wrench } from 'lucide-react'
 import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react'
 import type { ChatEvent } from '../../../shared/events'
 import type { Chat } from '../../../shared/schemas'
@@ -9,30 +9,28 @@ import { errorText } from '../../lib/errors'
 import { type ToolItem, toItems } from '../../lib/transcript'
 import { useRouter } from '../../store/router'
 import { Markdown } from '../docs-browser/Markdown'
-import { Button } from '../ui/Button'
-import { Notice } from '../ui/Field'
 import { ApprovalCard } from './ApprovalCard'
 
 function ToolRow({ item }: { item: ToolItem }) {
   const [open, setOpen] = useState(false)
   const icon = !item.result ? (
-    <Loader2 size={12} className="animate-spin text-info" />
+    <Loader2 className="size-3 animate-spin text-info" />
   ) : item.result.isError ? (
-    <CircleX size={12} className="text-destructive" />
+    <CircleX className="size-3 text-destructive" />
   ) : (
-    <CheckCircle2 size={12} className="text-success" />
+    <CheckCircle2 className="size-3 text-success/80" />
   )
   return (
-    <div className="rounded border border-border bg-card text-xs">
-      <button type="button" onClick={() => setOpen(!open)} className="flex w-full items-center gap-1.5 px-2 py-1 text-left">
-        <ChevronRight size={12} className={cn('transition-transform', open && 'rotate-90')} />
-        <Wrench size={12} className="text-muted-foreground" />
+    <div className="text-xs">
+      <button type="button" onClick={() => setOpen(!open)} className="group flex w-full items-center gap-1.5 rounded py-0.5 text-left text-muted-foreground hover:text-foreground">
+        <ChevronRight className={cn('size-3 shrink-0 text-muted-foreground/50 transition-transform', open && 'rotate-90')} />
+        <Wrench className="size-3 shrink-0 text-muted-foreground/60" />
         <span className="font-medium text-foreground/80">{item.name}</span>
-        <span className="min-w-0 flex-1 truncate text-muted-foreground">{item.summary}</span>
+        <span className="min-w-0 flex-1 truncate font-mono text-[11px]">{item.summary}</span>
         {icon}
       </button>
       {open && item.result && (
-        <pre className="max-h-48 overflow-auto border-t border-border px-2 py-1 whitespace-pre-wrap text-muted-foreground">
+        <pre className="mt-1 ml-[18px] max-h-48 overflow-auto rounded-md border border-border bg-card px-2.5 py-1.5 text-[11px] whitespace-pre-wrap text-muted-foreground">
           {item.result.summary || '(no output)'}
         </pre>
       )}
@@ -40,7 +38,18 @@ function ToolRow({ item }: { item: ToolItem }) {
   )
 }
 
-/** One chat: streaming messages, collapsed tool calls, approval cards, input. */
+function AssistantRow({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex gap-3">
+      <div className="flex size-6 shrink-0 items-center justify-center rounded-md bg-secondary text-foreground/70">
+        <Sparkles className="size-3.5" />
+      </div>
+      <div className="min-w-0 flex-1 space-y-1.5 pt-0.5">{children}</div>
+    </div>
+  )
+}
+
+/** One chat, laid out like Orca's native chat: centered column, bubbles, quiet tool rows, composer. */
 export function ChatPane({ chat }: { chat: Chat }) {
   const navigate = useRouter((s) => s.navigate)
   const [events, setEvents] = useState<ChatEvent[]>([])
@@ -48,6 +57,7 @@ export function ChatPane({ chat }: { chat: Chat }) {
   const [text, setText] = useState('')
   const [error, setError] = useState<string | null>(null)
   const bottom = useRef<HTMLDivElement>(null)
+  const input = useRef<HTMLTextAreaElement>(null)
 
   // Load once per chat; live events append. (Status changes must not reload the history.)
   useEffect(() => {
@@ -64,6 +74,13 @@ export function ChatPane({ chat }: { chat: Chat }) {
   useEffect(() => {
     bottom.current?.scrollIntoView({ block: 'end' })
   }, [items.length])
+  // Auto-grow the composer up to ~10 lines.
+  useEffect(() => {
+    const el = input.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${Math.min(el.scrollHeight, 240)}px`
+  }, [text])
 
   const running = status === 'working' || status === 'needs_approval'
   const send = () => {
@@ -78,56 +95,113 @@ export function ChatPane({ chat }: { chat: Chat }) {
     }
   }
 
+  // Group consecutive assistant / tool / approval items under one avatar.
+  const blocks: { kind: 'user' | 'assistant'; items: typeof items }[] = []
+  for (const item of items) {
+    const kind = item.kind === 'user' ? 'user' : 'assistant'
+    if (item.kind === 'turn') continue
+    const last = blocks.at(-1)
+    if (last && last.kind === kind && kind === 'assistant') last.items.push(item)
+    else blocks.push({ kind, items: [item] })
+  }
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex-1 space-y-3 overflow-y-auto p-4">
-        {items.length === 0 && <p className="text-sm text-muted-foreground">Say what Claude should do in this workspace.</p>}
-        {items.map((item, i) => {
-          switch (item.kind) {
-            case 'user':
-              return (
-                <div key={i} className="ml-auto max-w-[85%] rounded-lg bg-emerald-900/40 px-3 py-2 text-sm whitespace-pre-wrap text-foreground">
-                  {item.text}
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="mx-auto max-w-3xl space-y-5 px-6 py-6">
+          {blocks.length === 0 && (
+            <div className="pt-[18vh] text-center">
+              <div className="mx-auto mb-3 flex size-9 items-center justify-center rounded-lg bg-secondary text-foreground/70">
+                <Sparkles className="size-4" />
+              </div>
+              <p className="text-[13px] text-muted-foreground">Say what Claude should do in this workspace.</p>
+            </div>
+          )}
+          {blocks.map((block, i) =>
+            block.kind === 'user' ? (
+              <div key={i} className="flex justify-end">
+                <div className="max-w-[80%] rounded-xl border border-white/10 bg-chat-user px-3.5 py-2.5 text-sm whitespace-pre-wrap text-foreground">
+                  {block.items[0]?.kind === 'user' ? block.items[0].text : ''}
                 </div>
-              )
-            case 'assistant':
-              return <Markdown key={i} source={item.text} onOpenDoc={(path) => navigate({ name: 'docs', path })} />
-            case 'tool':
-              return <ToolRow key={i} item={item} />
-            case 'approval':
-              return <ApprovalCard key={i} item={item} />
-            case 'error':
-              return (
-                <Notice key={i} tone="error">
-                  {item.errorKind === 'rate_limit' ? '⏳ ' : ''}
-                  {item.message}
-                </Notice>
-              )
-            case 'turn':
-              return <div key={i} className="border-t border-border" />
-          }
-        })}
-        <div ref={bottom} />
+              </div>
+            ) : (
+              <AssistantRow key={i}>
+                {block.items.map((item, j) => {
+                  switch (item.kind) {
+                    case 'assistant':
+                      return <Markdown key={j} source={item.text} onOpenDoc={(path) => navigate({ name: 'docs', path })} />
+                    case 'tool':
+                      return <ToolRow key={j} item={item} />
+                    case 'approval':
+                      return <ApprovalCard key={j} item={item} />
+                    case 'error':
+                      return (
+                        <div key={j} className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-[13px] text-red-200">
+                          {item.errorKind === 'rate_limit' ? '⏳ ' : ''}
+                          {item.message}
+                        </div>
+                      )
+                    default:
+                      return null
+                  }
+                })}
+              </AssistantRow>
+            ),
+          )}
+          {running && status === 'working' && (
+            <div className="flex items-center gap-2 pl-9 text-xs text-muted-foreground">
+              <Loader2 className="size-3 animate-spin" /> Claude is working…
+            </div>
+          )}
+          <div ref={bottom} />
+        </div>
       </div>
-      {error && <div className="px-4 pb-2"><Notice tone="error">{error}</Notice></div>}
-      <div className="flex items-end gap-2 border-t border-border p-3">
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={onKey}
-          rows={2}
-          placeholder={running ? 'Claude is working…' : 'Message Claude (Enter to send, Shift+Enter for a new line)'}
-          className="min-h-[2.5rem] flex-1 resize-y rounded-md border border-input bg-card px-3 py-2 text-sm focus:border-ring focus:outline-none"
-        />
-        {running ? (
-          <Button key="stop" variant="danger" onClick={() => void api.stopChat(chat.id)}>
-            <Square size={14} /> Stop
-          </Button>
-        ) : (
-          <Button key="send" variant="primary" disabled={!text.trim()} onClick={send}>
-            <Send size={14} /> Send
-          </Button>
-        )}
+
+      <div className="shrink-0 px-6 pb-4">
+        <div className="mx-auto max-w-3xl">
+          {error && <div className="mb-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-[13px] text-red-200">{error}</div>}
+          <div className="rounded-xl border border-input bg-card shadow-lg shadow-black/20 focus-within:border-ring">
+            <textarea
+              ref={input}
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              onKeyDown={onKey}
+              rows={2}
+              placeholder={running ? 'Claude is working…' : 'Message Claude (Enter to send, Shift+Enter for a new line)'}
+              className="block max-h-60 min-h-14 w-full resize-none bg-transparent px-3.5 pt-3 pb-1 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+            />
+            <div className="flex items-center gap-2 px-2.5 pb-2.5">
+              <span className="flex items-center gap-1 rounded-md px-1.5 py-1 text-[11px] text-muted-foreground" title="Reading and edits inside the workspace run on their own; commands and anything outside ask first.">
+                <ShieldCheck className="size-3.5 text-success/80" /> Edits auto · commands ask
+              </span>
+              <span className="ml-auto text-[11px] text-muted-foreground">Claude · {chat.model}</span>
+              {running ? (
+                <button
+                  key="stop"
+                  type="button"
+                  aria-label="Stop"
+                  title="Stop"
+                  onClick={() => void api.stopChat(chat.id)}
+                  className="flex size-8 items-center justify-center rounded-full bg-secondary text-foreground hover:bg-accent"
+                >
+                  <Square className="size-3.5 fill-current" />
+                </button>
+              ) : (
+                <button
+                  key="send"
+                  type="button"
+                  aria-label="Send"
+                  title="Send (Enter)"
+                  disabled={!text.trim()}
+                  onClick={send}
+                  className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-30"
+                >
+                  <ArrowUp className="size-4" />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )
