@@ -17,6 +17,10 @@ export function registerChatRoutes(app: Hono, chats: ChatService, approve: Appro
   app.post(API.chats, async (c) => c.json(chats.create(await c.req.json()), 201))
   app.get(`${API.chats}/:id`, (c) => c.json(chats.get(c.req.param('id'))))
   app.patch(`${API.chats}/:id`, async (c) => c.json(chats.update(c.req.param('id'), await c.req.json())))
+  app.delete(`${API.chats}/:id`, (c) => {
+    chats.delete(c.req.param('id'))
+    return c.json({ ok: true })
+  })
   app.get(`${API.chats}/:id/events`, (c) => c.json(chats.events(c.req.param('id'))))
   app.post(`${API.chats}/:id/messages`, async (c) => {
     const body = z.object({ text: z.string() }).safeParse(await c.req.json())

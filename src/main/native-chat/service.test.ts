@@ -24,6 +24,18 @@ describe('ChatService', () => {
     expect(adapter.calls[1]?.sessionId).toBe('sess-1')
   })
 
+  it('deletes a chat with its history and tells listeners which workspace changed', async () => {
+    const { service, chat } = await chatFixture()
+    service.send(chat.id, 'hi')
+    await settle()
+    const seen: string[] = []
+    service.onDelete((workspaceId) => seen.push(workspaceId))
+    service.delete(chat.id)
+    expect(seen).toEqual([chat.workspaceId])
+    expect(service.list(chat.workspaceId)).toEqual([])
+    expect(() => service.get(chat.id)).toThrow(/not found/)
+  })
+
   it('refuses a second message while a turn runs', async () => {
     let release: (() => void) | undefined
     const slow = fakeAdapter(async (_o, emit) => {

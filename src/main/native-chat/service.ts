@@ -50,6 +50,7 @@ export class ChatService {
   private turns = new Map<string, Turn>()
   private history = new Map<string, ChatEvent[]>()
   private stopHooks = new Set<(chatId: string) => void>()
+  private deleteHooks = new Set<(workspaceId: string) => void>()
 
   constructor(
     private db: Db,
@@ -168,6 +169,28 @@ export class ChatService {
   stop(chatId: string): void {
     for (const hook of this.stopHooks) hook(chatId)
     this.turns.get(chatId)?.stop()
+  }
+
+  /** Stops a running turn and removes the chat with its approvals; the agent's own transcript is left alone. */
+  delete(chatId: string): void {
+    const chat = this.get(chatId)
+    this.stop(chatId)
+    this.turns.delete(chatId)
+    this.history.delete(chatId)
+    this.db.exec('BEGIN')
+    try {
+      this.db.prepare('DELETE FROM approvals WHERE chat_id = ?').run(chatId)
+      this.db.prepare('DELETE FROM chats WHERE id = ?').run(chatId)
+      this.db.exec('COMMIT')
+    } catch (error) {
+      this.db.exec('ROLLBACK')
+      throw error
+    }
+    for (const hook of this.deleteHooks) hook(chat.workspaceId)
+  }
+
+  onDelete(hook: (workspaceId: string) => void): void {
+    this.deleteHooks.add(hook)
   }
 
   onStop(hook: (chatId: string) => void): void {

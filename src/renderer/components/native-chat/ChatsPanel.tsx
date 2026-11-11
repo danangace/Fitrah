@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react'
+import { Plus, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Account, Chat, Settings, Workspace } from '../../../shared/schemas'
 import { onChatEvent } from '../../api/chat-socket'
@@ -108,6 +108,20 @@ export function ChatsPanel({ workspace }: { workspace: Workspace }) {
       }),
     [],
   )
+  const remove = async (chat: Chat) => {
+    const busy = chat.status === 'working' || chat.status === 'needs_approval'
+    const what = busy ? `"${chat.title}" is still running. Stop and delete this chat?` : `Delete the chat "${chat.title}"? This cannot be undone.`
+    if (!window.confirm(what)) return
+    try {
+      await api.deleteChat(chat.id)
+    } catch (e) {
+      window.alert(errorText(e))
+      return
+    }
+    const rest = chats.filter((c) => c.id !== chat.id)
+    setChats(rest)
+    setActive((cur) => (cur === chat.id ? (rest.at(-1)?.id ?? null) : cur))
+  }
   const closePicker = useCallback(() => setPicker(false), [])
   const current = chats.find((c) => c.id === active)
 
@@ -115,18 +129,27 @@ export function ChatsPanel({ workspace }: { workspace: Workspace }) {
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="relative flex h-9 shrink-0 items-end gap-0.5 border-b border-border bg-sidebar/40 px-2">
         {chats.map((c) => (
-          <button
+          <div
             key={c.id}
-            type="button"
-            onClick={() => setActive(c.id)}
             className={cn(
-              '-mb-px flex h-8 max-w-48 items-center gap-1.5 rounded-t-md border border-b-0 px-3 text-[13px]',
+              'group -mb-px flex h-8 max-w-52 items-center rounded-t-md border border-b-0 text-[13px]',
               c.id === active ? 'border-border bg-background text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground',
             )}
           >
-            <StatusDot status={c.status} />
-            <span className="truncate">{c.title}</span>
-          </button>
+            <button type="button" onClick={() => setActive(c.id)} className="flex min-w-0 items-center gap-1.5 py-1 pr-1 pl-3">
+              <StatusDot status={c.status} />
+              <span className="truncate">{c.title}</span>
+            </button>
+            <button
+              type="button"
+              aria-label={`Delete chat ${c.title}`}
+              title="Delete chat"
+              onClick={() => void remove(c)}
+              className="mr-1.5 flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground/60 hover:bg-secondary hover:text-destructive"
+            >
+              <X className="size-3.5" />
+            </button>
+          </div>
         ))}
         <div className="relative mb-1">
           <button

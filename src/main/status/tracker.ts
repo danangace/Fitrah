@@ -28,11 +28,19 @@ export class StatusTracker {
     chats: ChatService,
   ) {
     chats.subscribe((event) => this.onChatEvent(event))
+    chats.onDelete((workspaceId) => this.refresh(workspaceId))
   }
 
   statusOf = (workspaceId: string): WorkspaceStatus => {
     const rows = this.db.prepare('SELECT status FROM chats WHERE workspace_id = ?').all(workspaceId) as { status: ChatStatus }[]
     return aggregate(rows.map((r) => r.status))
+  }
+
+  private refresh(workspaceId: string): void {
+    const status = this.statusOf(workspaceId)
+    if (this.last.get(workspaceId) === status) return
+    this.last.set(workspaceId, status)
+    this.bus.emit({ type: 'workspace.status', workspaceId, status })
   }
 
   private onChatEvent(event: ChatEvent): void {

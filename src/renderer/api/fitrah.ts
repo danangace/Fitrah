@@ -92,6 +92,7 @@ export const api = {
   listChats: (workspaceId: string) => request('GET', `${API.chats}?workspaceId=${encodeURIComponent(workspaceId)}`, z.array(Chat)),
   createChat: (input: ChatInput) => request('POST', API.chats, Chat, input),
   updateChat: (id: string, input: ChatSettingsInput) => request('PATCH', `${API.chats}/${id}`, Chat, input),
+  deleteChat: (id: string) => request('DELETE', `${API.chats}/${id}`, Ok),
   chatEvents: (id: string) => request('GET', `${API.chats}/${id}/events`, z.array(ChatEvent)),
   sendMessage: (id: string, text: string) => request('POST', `${API.chats}/${id}/messages`, Ok, { text }),
   stopChat: (id: string) => request('POST', `${API.chats}/${id}/stop`, Ok),

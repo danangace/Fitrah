@@ -106,13 +106,16 @@ export function ModelPicker({ chat, onChange }: { chat: Chat; onChange: (c: Chat
                 role="menuitemradio"
                 aria-checked={m === chat.model}
                 onClick={() => update({ model: m })}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left hover:bg-secondary"
+                className={cn(
+                  'flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left hover:bg-secondary',
+                  m === chat.model && 'bg-primary/15 ring-1 ring-primary/50',
+                )}
               >
                 <span className="min-w-0 flex-1">
-                  <span className="block text-sm text-foreground">{info.name}</span>
+                  <span className={cn('block text-sm', m === chat.model ? 'font-semibold text-foreground' : 'text-foreground')}>{info.name}</span>
                   {info.description && <span className="block text-[13px] text-muted-foreground">{info.description}</span>}
                 </span>
-                {m === chat.model && <Check className="size-4 text-foreground/80" />}
+                {m === chat.model && <Check className="size-4 text-primary" />}
               </button>
             )
           })}
@@ -124,10 +127,13 @@ export function ModelPicker({ chat, onChange }: { chat: Chat; onChange: (c: Chat
             <button
               key={e.id}
               type="button"
+              aria-pressed={chat.effort === e.id}
               onClick={() => update({ effort: chat.effort === e.id ? null : e.id })}
               className={cn(
                 'rounded-md px-2 py-1 text-[13px]',
-                chat.effort === e.id ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:text-foreground',
+                chat.effort === e.id
+                  ? 'bg-primary font-semibold text-primary-foreground'
+                  : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
               )}
             >
               {e.label}
