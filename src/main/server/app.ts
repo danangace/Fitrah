@@ -8,6 +8,9 @@ import { UserError } from '../errors'
 import { registerAccountRoutes } from '../accounts/routes'
 import { registerDocsRoutes } from '../docs/routes'
 import { DocsService } from '../docs/service'
+import { DocsWatcher } from '../docs/watch'
+import { EventBus } from '../events/bus'
+import { registerEventRoutes } from '../events/routes'
 import { registerSettingsRoutes } from '../settings/routes'
 import type { Db } from '../sqlite/db'
 import { TOKEN_COOKIE, type SecurityConfig, hostGuard, tokenGuard } from './security'
@@ -16,6 +19,7 @@ export type AppOptions = {
   security: SecurityConfig
   db: Db
   docs?: DocsService
+  bus?: EventBus
   /** Folder with the built UI; when missing, only the API is served. */
   webRoot?: string
 }
@@ -39,9 +43,23 @@ export function createApp(options: AppOptions): Hono {
     return c.json({ ok: true })
   })
 
+  const bus = options.bus ?? new EventBus()
+  const docs = options.docs ?? new DocsService(db)
+  const watcher = new DocsWatcher(docs, bus)
+  watcher.sync()
+
+  // Restart the docs watcher when the docs root changes.
+  app.use('/api/settings', async (c, next) => {
+    await next()
+    if (c.req.method === 'PUT' && c.res.ok) {
+      docs.invalidate()
+      watcher.sync()
+    }
+  })
   registerSettingsRoutes(app, db)
   registerAccountRoutes(app, db)
-  registerDocsRoutes(app, options.docs ?? new DocsService(db))
+  registerDocsRoutes(app, docs)
+  registerEventRoutes(app, bus)
 
   app.all('/api/*', (c) => c.json({ error: 'not_found' }, 404))
 

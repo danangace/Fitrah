@@ -6,6 +6,7 @@ import { Markdown } from '../components/docs-browser/Markdown'
 import { Notice } from '../components/ui/Field'
 import { errorText } from '../lib/errors'
 import { wikiToMarkdown } from '../lib/wiki'
+import { useAppEvents } from '../store/events'
 import { useRouter } from '../store/router'
 
 function Frontmatter({ data }: { data: Record<string, unknown> }) {
@@ -30,9 +31,10 @@ export function DocsPage({ path }: { path: string }) {
   const [error, setError] = useState<string | null>(null)
   const open = useCallback((p: string) => navigate({ name: 'docs', path: p }), [navigate])
 
-  useEffect(() => {
+  const loadTree = useCallback(() => {
     api.docsTree().then(setTree, (e: unknown) => setError(errorText(e)))
   }, [])
+  useEffect(loadTree, [loadTree])
 
   const load = useCallback(() => {
     if (!path) return setDoc(null)
@@ -45,6 +47,13 @@ export function DocsPage({ path }: { path: string }) {
     )
   }, [path])
   useEffect(load, [load])
+
+  // Live reload when the note (or the tree) changes on disk, e.g. saved in Obsidian (AC-D6).
+  useAppEvents((event) => {
+    if (event.type !== 'docs.changed') return
+    if (event.path === path) load()
+    loadTree()
+  })
 
   return (
     <div className="flex h-full">
