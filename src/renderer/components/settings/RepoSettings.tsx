@@ -2,6 +2,7 @@ import { Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { Repo } from '../../../shared/schemas'
 import { api } from '../../api/fitrah'
+import { useWorkspaces } from '../../store/workspaces'
 import { errorText } from '../../lib/errors'
 import { Button } from '../ui/Button'
 import { Card, Field, Input, Notice } from '../ui/Field'
@@ -69,7 +70,12 @@ export function RepoSettings() {
   const [repos, setRepos] = useState<Repo[]>([])
   const [form, setForm] = useState(emptyForm)
   const [error, setError] = useState<string | null>(null)
-  const load = () => api.listRepos().then(setRepos, (e: unknown) => setError(errorText(e)))
+  const load = () =>
+    api.listRepos().then((list) => {
+      setRepos(list)
+      // Keep the shared list (New workspace form, sidebar) in sync without a page reload.
+      void useWorkspaces.getState().load()
+    }, (e: unknown) => setError(errorText(e)))
   useEffect(() => {
     void load()
   }, [])

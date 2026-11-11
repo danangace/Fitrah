@@ -22,6 +22,11 @@ export function NewWorkspaceForm() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Always start from the latest repos (they may have been added in Settings since the app opened).
+  useEffect(() => {
+    void load()
+  }, [load])
+
   const repo = repos.find((r) => r.id === repoId)
   useEffect(() => {
     if (!repoId && repos[0]) setRepoId(repos[0].id)
