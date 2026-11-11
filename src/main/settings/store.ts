@@ -13,6 +13,7 @@ export const DEFAULT_SETTINGS: Settings = {
     oqFile: 'Open Questions.md',
   },
   workspacesDir: '~/fitrah/workspaces',
+  branchPrefix: { feature: 'feat/tribe-2/', defect: 'fix/tribe-2/' },
   models: { claude: { list: ['sonnet', 'opus', 'haiku'], default: 'sonnet' } },
 }
 

@@ -12,6 +12,7 @@ import { DocsWatcher } from '../docs/watch'
 import { EventBus } from '../events/bus'
 import { registerEventRoutes } from '../events/routes'
 import { registerSettingsRoutes } from '../settings/routes'
+import { registerWorkspaceRoutes } from '../workspaces/routes'
 import type { Db } from '../sqlite/db'
 import { TOKEN_COOKIE, type SecurityConfig, hostGuard, tokenGuard } from './security'
 
@@ -60,6 +61,7 @@ export function createApp(options: AppOptions): Hono {
   registerAccountRoutes(app, db)
   registerDocsRoutes(app, docs)
   registerEventRoutes(app, bus)
+  registerWorkspaceRoutes(app, db)
 
   app.all('/api/*', (c) => c.json({ error: 'not_found' }, 404))
 

@@ -22,6 +22,8 @@ export const Settings = z.object({
     oqFile: z.string(),
   }),
   workspacesDir: z.string().min(1),
+  /** Branch name prefixes, e.g. `feat/tribe-2/` → `feat/tribe-2/<workspace-name>`. */
+  branchPrefix: z.object({ feature: z.string(), defect: z.string() }).default({ feature: 'feat/', defect: 'fix/' }),
   models: z.object({ claude: AgentModels }).catchall(AgentModels),
 })
 export type Settings = z.infer<typeof Settings>
