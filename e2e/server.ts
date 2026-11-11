@@ -2,9 +2,9 @@
  * Smoke-test server: the real runtime app on temp data, with a fake agent (no Claude usage).
  * Started by Playwright (see playwright.config.ts).
  */
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, renameSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { serve } from '@hono/node-server'
 import { WebSocketServer } from 'ws'
 import { WEB_ROOT } from '../src/main/config'
@@ -34,6 +34,11 @@ writeFileSync(join(vault, 'notes', 'Second note.md'), '# Second note\n\nHello fr
 const db = openDb(':memory:')
 saveSettings(db, { ...DEFAULT_SETTINGS, docsRoot: vault, workspacesDir: join(home, 'workspaces') })
 const { repo } = makeRepoWithOrigin()
+const extra = makeRepoWithOrigin()
+// A distinct folder name, so it is easy to pick in the repo dropdown.
+const extraRepo = join(dirname(extra.repo), 'extra-repo')
+renameSync(extra.repo, extraRepo)
+writeFileSync(join(import.meta.dirname, '.state.json'), JSON.stringify({ extraRepo }))
 await addRepo(db, { path: repo, featureBase: 'origin/dev/tribe-2' })
 const accountDir = join(home, 'claude-account')
 mkdirSync(accountDir)

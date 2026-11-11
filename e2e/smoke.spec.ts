@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { expect, test } from '@playwright/test'
 
 const TOKEN = 'e'.repeat(64)
@@ -45,4 +47,25 @@ test('start, accounts, docs, workspace and chat (AC-B1 smoke)', async ({ page })
   await expect(page.getByText('Denied: Bash')).toBeVisible()
   await expect(page.locator('aside [title="done"]').first()).toBeVisible()
   await page.screenshot({ path: shot('5-chat-done') })
+})
+
+test('a repo added in Settings can be used for a new workspace without reloading', async ({ page }) => {
+  const { extraRepo } = JSON.parse(readFileSync(join(import.meta.dirname, '.state.json'), 'utf8')) as { extraRepo: string }
+  await page.goto(`/?token=${TOKEN}`)
+  await page.locator('aside').getByRole('button', { name: 'Settings' }).click()
+  await page.getByRole('button', { name: 'Repos', exact: true }).click()
+  await page.getByPlaceholder('~/Documents/Sekolahmu/Modularity/website-cf-monorepo').fill(extraRepo)
+  await page.getByPlaceholder('origin/dev/tribe-2').last().fill('origin/main')
+  await page.getByRole('button', { name: 'Add repo' }).click()
+  await expect(page.getByText(extraRepo)).toBeVisible()
+
+  // Same page session, no reload: the new repo is selectable and usable.
+  await page.locator('aside').getByRole('button', { name: 'New workspace' }).click()
+  const repoName = extraRepo.split('/').pop() ?? ''
+  const select = page.locator('select').first()
+  await expect(select.locator('option')).toHaveCount(2)
+  await select.selectOption({ label: repoName })
+  await page.getByPlaceholder('kelola-xyz').fill('from-new-repo')
+  await page.getByRole('button', { name: 'Create workspace' }).click()
+  await expect(page.getByText('feat/tribe-2/from-new-repo ← origin/main')).toBeVisible({ timeout: 20_000 })
 })
