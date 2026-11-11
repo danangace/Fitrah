@@ -1,25 +1,27 @@
-import { MessageSquarePlus } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { Plus } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Account, Chat, Settings, Workspace } from '../../../shared/schemas'
 import { onChatEvent } from '../../api/chat-socket'
 import { api } from '../../api/fitrah'
 import { cn } from '../../lib/cn'
 import { errorText } from '../../lib/errors'
 import { useRouter } from '../../store/router'
-import { StatusDot } from '../workspace/StatusDot'
 import { Button } from '../ui/Button'
-import { Card, Notice } from '../ui/Field'
+import { Notice } from '../ui/Field'
+import { StatusDot } from '../workspace/StatusDot'
 import { ChatPane } from './ChatPane'
 
-const selectClass = 'rounded-md border border-input bg-card px-2 py-1.5 text-sm'
+const selectClass = 'h-8 w-full rounded-md border border-input bg-transparent px-2 text-[13px] text-foreground'
 
-function NewChat({ workspace, onCreated }: { workspace: Workspace; onCreated: (chat: Chat) => void }) {
+/** "+" in the tab bar: pick account + model, start a chat (Orca's agent picker, simplified). */
+function NewChatPopover({ workspace, onCreated, onClose }: { workspace: Workspace; onCreated: (chat: Chat) => void; onClose: () => void }) {
   const navigate = useRouter((s) => s.navigate)
   const [accounts, setAccounts] = useState<Account[]>([])
   const [settings, setSettings] = useState<Settings | null>(null)
   const [accountId, setAccountId] = useState('')
   const [model, setModel] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     Promise.all([api.listAccounts(), api.getSettings()]).then(([a, s]) => {
@@ -29,54 +31,63 @@ function NewChat({ workspace, onCreated }: { workspace: Workspace; onCreated: (c
       setAccountId((claude.find((x) => x.isDefault) ?? claude[0])?.id ?? '')
       setModel(s.models.claude.default)
     }, (e: unknown) => setError(errorText(e)))
-  }, [])
-
-  if (error) return <Notice tone="error">{error}</Notice>
-  if (!settings) return null
-  if (accounts.length === 0) {
-    return (
-      <Notice tone="info">
-        Attach a Claude account first in{' '}
-        <button type="button" className="underline" onClick={() => navigate({ name: 'settings', section: 'accounts' })}>
-          Settings → Accounts
-        </button>
-        .
-      </Notice>
-    )
-  }
-  const create = () =>
-    api.createChat({ workspaceId: workspace.id, agent: 'claude', accountId, model }).then(onCreated, (e: unknown) => setError(errorText(e)))
+    const onDown = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose()
+    }
+    window.addEventListener('mousedown', onDown)
+    return () => window.removeEventListener('mousedown', onDown)
+  }, [onClose])
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <span className="text-sm text-foreground/80">Claude</span>
-      <select aria-label="Account" value={accountId} onChange={(e) => setAccountId(e.target.value)} className={selectClass}>
-        {accounts.map((a) => (
-          <option key={a.id} value={a.id}>
-            {a.label}
-            {a.isDefault ? ' ★' : ''}
-            {a.loginStatus !== 'logged_in' ? ` (${a.loginStatus.replace('_', ' ')})` : ''}
-          </option>
-        ))}
-      </select>
-      <select aria-label="Model" value={model} onChange={(e) => setModel(e.target.value)} className={selectClass}>
-        {settings.models.claude.list.map((m) => (
-          <option key={m} value={m}>
-            {m}
-          </option>
-        ))}
-      </select>
-      <Button variant="primary" onClick={create}>
-        <MessageSquarePlus size={14} /> New chat
-      </Button>
+    <div ref={ref} className="absolute top-9 left-0 z-30 w-64 space-y-2 rounded-lg border border-border bg-popover p-3 shadow-xl shadow-black/40">
+      <div className="text-xs font-semibold text-muted-foreground">New chat</div>
+      {error && <Notice tone="error">{error}</Notice>}
+      {settings && accounts.length === 0 && (
+        <Notice tone="info">
+          Attach a Claude account in{' '}
+          <button type="button" className="underline" onClick={() => navigate({ name: 'settings', section: 'accounts' })}>
+            Settings → Accounts
+          </button>
+          .
+        </Notice>
+      )}
+      {accounts.length > 0 && settings && (
+        <>
+          <select aria-label="Account" className={selectClass} value={accountId} onChange={(e) => setAccountId(e.target.value)}>
+            {accounts.map((a) => (
+              <option key={a.id} value={a.id}>
+                Claude · {a.label}
+                {a.isDefault ? ' ★' : ''}
+              </option>
+            ))}
+          </select>
+          <select aria-label="Model" className={selectClass} value={model} onChange={(e) => setModel(e.target.value)}>
+            {settings.models.claude.list.map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
+          </select>
+          <Button
+            variant="primary"
+            className="w-full"
+            onClick={() =>
+              api.createChat({ workspaceId: workspace.id, agent: 'claude', accountId, model }).then(onCreated, (e: unknown) => setError(errorText(e)))
+            }
+          >
+            Start chat
+          </Button>
+        </>
+      )}
     </div>
   )
 }
 
-/** All chats of a workspace as tabs + the active chat (several chats per workspace, T24). */
+/** Chats of a workspace as tabs (like Orca's tab bar) + the active chat filling the space. */
 export function ChatsPanel({ workspace }: { workspace: Workspace }) {
   const [chats, setChats] = useState<Chat[]>([])
   const [active, setActive] = useState<string | null>(null)
+  const [picker, setPicker] = useState(false)
   const load = useCallback(
     (select?: string) =>
       api.listChats(workspace.id).then((list) => {
@@ -97,29 +108,60 @@ export function ChatsPanel({ workspace }: { workspace: Workspace }) {
       }),
     [],
   )
-
+  const closePicker = useCallback(() => setPicker(false), [])
   const current = chats.find((c) => c.id === active)
+
   return (
-    <Card title="Chats" actions={<NewChat workspace={workspace} onCreated={(c) => void load(c.id)} />}>
-      {chats.length > 0 && (
-        <div className="flex flex-wrap gap-1">
-          {chats.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              onClick={() => setActive(c.id)}
-              className={cn(
-                'flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs',
-                c.id === active ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:bg-secondary',
-              )}
-            >
-              <StatusDot status={c.status} />
-              {c.title}
-            </button>
-          ))}
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="relative flex h-9 shrink-0 items-end gap-0.5 border-b border-border bg-sidebar/40 px-2">
+        {chats.map((c) => (
+          <button
+            key={c.id}
+            type="button"
+            onClick={() => setActive(c.id)}
+            className={cn(
+              '-mb-px flex h-8 max-w-48 items-center gap-1.5 rounded-t-md border border-b-0 px-3 text-[12.5px]',
+              c.id === active ? 'border-border bg-background text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground',
+            )}
+          >
+            <StatusDot status={c.status} />
+            <span className="truncate">{c.title}</span>
+          </button>
+        ))}
+        <div className="relative mb-1">
+          <button
+            type="button"
+            aria-label="New chat"
+            title="New chat"
+            onClick={() => setPicker(!picker)}
+            className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground"
+          >
+            <Plus className="size-4" />
+          </button>
+          {picker && (
+            <NewChatPopover
+              workspace={workspace}
+              onClose={closePicker}
+              onCreated={(c) => {
+                setPicker(false)
+                void load(c.id)
+              }}
+            />
+          )}
+        </div>
+      </div>
+      {current ? (
+        <ChatPane key={current.id} chat={current} />
+      ) : (
+        <div className="flex flex-1 items-center justify-center">
+          <div className="space-y-3 text-center">
+            <p className="text-[13px] text-muted-foreground">No chat in this workspace yet.</p>
+            <Button variant="primary" onClick={() => setPicker(true)}>
+              <Plus className="size-4" /> New chat
+            </Button>
+          </div>
         </div>
       )}
-      {current ? <ChatPane key={current.id} chat={current} /> : <p className="text-sm text-muted-foreground">No chat yet.</p>}
-    </Card>
+    </div>
   )
 }

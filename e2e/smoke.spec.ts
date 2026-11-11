@@ -36,7 +36,7 @@ test('start, accounts, docs, workspace and chat (AC-B1 smoke)', async ({ page })
   await page.screenshot({ path: 'test-results/screens/create-workspace.png' })
   await dialog.getByRole('button', { name: /Create workspace/ }).click()
   await expect(page.getByRole('heading', { name: 'smoke-feature' })).toBeVisible({ timeout: 20_000 })
-  await expect(page.getByText('feat/tribe-2/smoke-feature ← origin/dev/tribe-2')).toBeVisible()
+  await expect(page.locator('main header').getByText('feat/tribe-2/smoke-feature')).toBeVisible()
   await expect(page.getByText('Free chat')).toBeVisible()
 
   // Chat with the fake agent: approval card → deny

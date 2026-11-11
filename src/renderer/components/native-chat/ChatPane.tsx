@@ -79,7 +79,7 @@ export function ChatPane({ chat }: { chat: Chat }) {
   }
 
   return (
-    <div className="flex h-[70vh] flex-col rounded-lg border border-border">
+    <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex-1 space-y-3 overflow-y-auto p-4">
         {items.length === 0 && <p className="text-sm text-muted-foreground">Say what Claude should do in this workspace.</p>}
         {items.map((item, i) => {
