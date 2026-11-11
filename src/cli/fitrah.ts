@@ -13,9 +13,9 @@ Usage:
   ${APP_INFO.cli} help
 `
 
-async function buildUiIfMissing(): Promise<void> {
-  if (existsSync(join(WEB_ROOT, 'index.html'))) return
-  console.info('Building the UI (first run)…')
+/** Build the UI on every start (about a second), so an updated checkout never serves a stale UI. */
+async function buildUi(): Promise<void> {
+  console.info(existsSync(join(WEB_ROOT, 'index.html')) ? 'Building the UI…' : 'Building the UI (first run)…')
   const { build } = await import('vite')
   await build({ configFile: join(import.meta.dirname, '../../vite.web.config.ts'), logLevel: 'warn' })
 }
@@ -26,7 +26,7 @@ function openBrowser(url: string): void {
 }
 
 async function start(port: number | undefined, open: boolean): Promise<void> {
-  await buildUiIfMissing()
+  await buildUi()
   const { url, token, server, db } = await startRuntime(port)
   const openUrl = `${url}/?token=${token}`
   console.info(`${APP_INFO.name} is running on ${url}`)
