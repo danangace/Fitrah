@@ -24,7 +24,7 @@ export function migrate(db: Db, dir = MIGRATIONS_DIR): number[] {
   )
   const files = readdirSync(dir)
     .filter((f) => /^\d{3}_.+\.sql$/.test(f))
-    .sort()
+    .toSorted()
   const ran: number[] = []
   for (const file of files) {
     const version = Number(file.slice(0, 3))
@@ -37,7 +37,7 @@ export function migrate(db: Db, dir = MIGRATIONS_DIR): number[] {
       db.exec('COMMIT')
     } catch (error) {
       db.exec('ROLLBACK')
-      throw new Error(`Migration ${file} failed: ${(error as Error).message}`)
+      throw new Error(`Migration ${file} failed: ${(error as Error).message}`, { cause: error })
     }
     ran.push(version)
   }
