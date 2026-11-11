@@ -16,6 +16,7 @@ import { ApprovalManager } from '../native-chat/approvals'
 import { registerChatRoutes } from '../native-chat/routes'
 import { ChatService } from '../native-chat/service'
 import { registerSettingsRoutes } from '../settings/routes'
+import { StatusTracker } from '../status/tracker'
 import { registerWorkspaceRoutes } from '../workspaces/routes'
 import { SetupRunner } from '../workspaces/setup-runner'
 import type { Db } from '../sqlite/db'
@@ -73,8 +74,9 @@ export function createRuntimeApp(options: AppOptions): { app: Hono; chats: ChatS
   registerAccountRoutes(app, db)
   registerDocsRoutes(app, docs)
   registerEventRoutes(app, bus)
-  registerWorkspaceRoutes(app, db, { setup: new SetupRunner(db, bus) })
   const chats = options.chats ?? new ChatService(db, { claude: claudeAdapter })
+  const tracker = new StatusTracker(db, bus, chats)
+  registerWorkspaceRoutes(app, db, { setup: new SetupRunner(db, bus), status: tracker.statusOf })
   const approvals = new ApprovalManager(db, chats)
   chats.setDecider(approvals.decide)
   chats.onStop((chatId) => approvals.cancelChat(chatId))
