@@ -1,6 +1,7 @@
 import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 import type { Workspace } from '../../shared/schemas'
 import { api } from '../api/fitrah'
+import { ArchiveButton } from '../components/workspace/ArchiveButton'
 import { STATUS_LABEL, StatusDot } from '../components/workspace/StatusDot'
 import { Notice } from '../components/ui/Field'
 import { errorText } from '../lib/errors'
@@ -52,8 +53,11 @@ export function WorkspacePage({ id, chats }: { id: string; chats?: (ws: Workspac
           <span className="rounded bg-neutral-800 px-1.5 py-0.5 text-xs text-neutral-300">{workspace.kind}</span>
           <span className="text-xs text-neutral-500">{STATUS_LABEL[workspace.status]}</span>
         </div>
-        <div className="mt-1 text-xs text-neutral-500">
-          {workspace.branch} ← {workspace.base} · {workspace.worktreePath}
+        <div className="mt-1 flex items-start justify-between gap-4">
+          <div className="text-xs text-neutral-500">
+            {workspace.branch} ← {workspace.base} · {workspace.worktreePath}
+          </div>
+          <ArchiveButton workspace={workspace} />
         </div>
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto p-6">
