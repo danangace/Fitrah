@@ -77,7 +77,7 @@ export function FolderBrowser({
               <Folder size={14} className="shrink-0 text-muted-foreground" />
               <span className="min-w-0 flex-1 truncate">{d.name}</span>
               {d.isGitRepo && (
-                <span className="flex items-center gap-1 rounded bg-success/10 px-1.5 py-0.5 text-[10px] text-success">
+                <span className="flex items-center gap-1 rounded bg-success/10 px-1.5 py-0.5 text-[11px] text-success">
                   <GitBranch size={10} /> git
                 </span>
               )}
@@ -89,7 +89,7 @@ export function FolderBrowser({
         <button
           type="button"
           onClick={() => onPick(listing.path)}
-          className="h-8 w-full rounded-md bg-primary px-3 text-[13px] font-medium text-primary-foreground hover:bg-primary/90"
+          className="h-8 w-full rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
         >
           {pickLabel}: <span className="font-mono text-xs">{listing.path.split('/').pop() || listing.path}</span>
         </button>

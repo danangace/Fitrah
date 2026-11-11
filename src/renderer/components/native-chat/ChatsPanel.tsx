@@ -11,7 +11,7 @@ import { Notice } from '../ui/Field'
 import { StatusDot } from '../workspace/StatusDot'
 import { ChatPane } from './ChatPane'
 
-const selectClass = 'h-8 w-full rounded-md border border-input bg-transparent px-2 text-[13px] text-foreground'
+const selectClass = 'h-8 w-full rounded-md border border-input bg-transparent px-2 text-sm text-foreground'
 
 /** "+" in the tab bar: pick account + model, start a chat (Orca's agent picker, simplified). */
 function NewChatPopover({ workspace, onCreated, onClose }: { workspace: Workspace; onCreated: (chat: Chat) => void; onClose: () => void }) {
@@ -120,7 +120,7 @@ export function ChatsPanel({ workspace }: { workspace: Workspace }) {
             type="button"
             onClick={() => setActive(c.id)}
             className={cn(
-              '-mb-px flex h-8 max-w-48 items-center gap-1.5 rounded-t-md border border-b-0 px-3 text-[12.5px]',
+              '-mb-px flex h-8 max-w-48 items-center gap-1.5 rounded-t-md border border-b-0 px-3 text-[13px]',
               c.id === active ? 'border-border bg-background text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground',
             )}
           >
@@ -155,7 +155,7 @@ export function ChatsPanel({ workspace }: { workspace: Workspace }) {
       ) : (
         <div className="flex flex-1 items-center justify-center">
           <div className="space-y-3 text-center">
-            <p className="text-[13px] text-muted-foreground">No chat in this workspace yet.</p>
+            <p className="text-sm text-muted-foreground">No chat in this workspace yet.</p>
             <Button variant="primary" onClick={() => setPicker(true)}>
               <Plus className="size-4" /> New chat
             </Button>

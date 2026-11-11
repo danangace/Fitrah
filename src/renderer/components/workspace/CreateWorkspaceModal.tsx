@@ -221,7 +221,7 @@ export function CreateWorkspaceModal({ projectId, onClose }: { projectId?: strin
             <div className="flex justify-end">
               <Button variant="primary" disabled={!canCreate} onClick={() => void create()}>
                 {busy && <Loader2 size={14} className="animate-spin" />}
-                {busy ? 'Creating…' : 'Create workspace'} <span className="text-[10px] opacity-70">⌘↵</span>
+                {busy ? 'Creating…' : 'Create workspace'} <span className="text-[11px] opacity-70">⌘↵</span>
               </Button>
             </div>
           </>

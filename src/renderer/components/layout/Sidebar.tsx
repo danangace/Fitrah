@@ -28,13 +28,13 @@ export function NavRow({
       type="button"
       onClick={onClick}
       className={cn(
-        'group flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] font-medium tracking-tight transition-colors',
+        'group flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm font-medium tracking-tight transition-colors',
         active ? 'bg-secondary text-foreground' : strong ? 'bg-foreground/5 text-foreground/80 hover:bg-foreground/10' : 'text-foreground/60 hover:bg-foreground/5 hover:text-foreground',
       )}
     >
       <span className={cn('shrink-0 [&>svg]:size-4', active ? 'text-foreground/70' : 'text-foreground/30 group-hover:text-foreground/60')}>{icon}</span>
       <span className="flex-1 truncate">{label}</span>
-      {hint && <span className="hidden text-[10px] text-muted-foreground/60 group-hover:inline">{hint}</span>}
+      {hint && <span className="hidden text-[11px] text-muted-foreground/60 group-hover:inline">{hint}</span>}
     </button>
   )
 }
@@ -46,8 +46,8 @@ export function Sidebar({ workspaces }: { workspaces?: ReactNode }) {
   return (
     <aside className="flex w-64 shrink-0 flex-col border-r border-border bg-sidebar">
       <div className="flex h-11 items-center gap-2 px-4" title={APP_INFO.acronym}>
-        <span className="flex size-5 items-center justify-center rounded-md bg-primary text-[11px] font-bold text-primary-foreground">F</span>
-        <span className="text-[13px] font-semibold tracking-tight text-foreground">{APP_INFO.name}</span>
+        <span className="flex size-5 items-center justify-center rounded-md bg-primary text-xs font-bold text-primary-foreground">F</span>
+        <span className="text-sm font-semibold tracking-tight text-foreground">{APP_INFO.name}</span>
       </div>
       <nav className="flex flex-col gap-0.5 px-2 pb-1">
         <NavRow strong icon={<Plus />} label="New workspace" onClick={() => open({ kind: 'create-workspace' })} />

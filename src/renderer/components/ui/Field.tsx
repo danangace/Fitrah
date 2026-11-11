@@ -31,9 +31,9 @@ export function ScriptArea({ className, ...props }: TextareaHTMLAttributes<HTMLT
 export function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
   return (
     <label className="block space-y-1.5">
-      <span className="text-xs font-medium text-muted-foreground">{label}</span>
+      <span className="text-[13px] font-medium text-muted-foreground">{label}</span>
       {children}
-      {hint && <span className="block text-[11px] text-muted-foreground/70">{hint}</span>}
+      {hint && <span className="block text-xs text-muted-foreground/70">{hint}</span>}
     </label>
   )
 }
@@ -56,5 +56,5 @@ export function Notice({ tone, children }: { tone: 'error' | 'ok' | 'info'; chil
     ok: 'border-success/25 bg-success/10 text-success',
     info: 'border-border bg-secondary/60 text-foreground/80',
   }
-  return <div className={cn('rounded-md border px-3 py-2 text-[13px]', tones[tone])}>{children}</div>
+  return <div className={cn('rounded-md border px-3 py-2 text-sm', tones[tone])}>{children}</div>
 }

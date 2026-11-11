@@ -62,7 +62,7 @@ function FieldRow({
           />
         )}
       </div>
-      <div className="text-[10px] text-muted-foreground/60">key: {field.key}</div>
+      <div className="text-[11px] text-muted-foreground/60">key: {field.key}</div>
     </div>
   )
 }
@@ -162,7 +162,7 @@ function Editor({
       {draft.fields.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {draft.fields.map((f) => (
-            <button key={f.key} type="button" onClick={() => insert(f.label)} className="rounded bg-secondary px-1.5 py-0.5 font-mono text-[11px] text-success hover:bg-secondary">
+            <button key={f.key} type="button" onClick={() => insert(f.label)} className="rounded bg-secondary px-1.5 py-0.5 font-mono text-xs text-success hover:bg-secondary">
               {`{${f.label}}`}
             </button>
           ))}
@@ -220,7 +220,7 @@ export function WorkflowSettings() {
             className={cn('block w-full truncate rounded-md px-2.5 py-1.5 text-left text-sm', w.id === selected ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:bg-secondary')}
           >
             {w.name}
-            <span className="ml-1 text-[11px] text-muted-foreground/60">{w.fields.length} fields</span>
+            <span className="ml-1 text-xs text-muted-foreground/60">{w.fields.length} fields</span>
           </button>
         ))}
         <button type="button" onClick={() => setSelected('new')} className="flex w-full items-center gap-1.5 rounded-md px-2.5 py-1.5 text-left text-sm text-success hover:bg-secondary">

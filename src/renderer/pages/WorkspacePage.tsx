@@ -34,16 +34,16 @@ function useWorkflow(workflowId: string | null) {
 
 function WorkflowChip({ workflowId }: { workflowId: string }) {
   const workflow = useWorkflow(workflowId)
-  return <span className="rounded bg-info/10 px-1.5 py-0.5 text-[11px] font-medium text-info">{workflow?.name ?? 'Workflow'}</span>
+  return <span className="rounded bg-info/10 px-1.5 py-0.5 text-xs font-medium text-info">{workflow?.name ?? 'Workflow'}</span>
 }
 
 /** The workflow values Claude receives in every chat of this workspace (workspace context). */
 function TaskDetails({ workspace }: { workspace: Workspace }) {
   const workflow = useWorkflow(workspace.workflowId)
-  if (!workspace.workflowId) return <div className="text-[13px] text-foreground/80">Free chat</div>
+  if (!workspace.workflowId) return <div className="text-sm text-foreground/80">Free chat</div>
   return (
-    <dl className="space-y-1.5 text-[12px]" title="Claude gets these in every chat of this workspace">
-      <div className="mb-1 text-[13px] font-medium text-info">{workflow?.name ?? 'Workflow'}</div>
+    <dl className="space-y-1.5 text-[13px]" title="Claude gets these in every chat of this workspace">
+      <div className="mb-1 text-sm font-medium text-info">{workflow?.name ?? 'Workflow'}</div>
       {(workflow?.fields ?? []).map((f) => (
         <div key={f.key} className="grid grid-cols-[88px_1fr] gap-2">
           <dt className="truncate text-muted-foreground">{f.label}</dt>
@@ -71,8 +71,8 @@ function SetupLog({ workspace }: { workspace: Workspace }) {
   if (workspace.setupStatus === 'skipped') return null
   return (
     <details open={workspace.setupStatus !== 'done'} className="rounded-md border border-border bg-background/40">
-      <summary className="cursor-pointer px-2.5 py-1.5 text-[12px] text-foreground/80">{workspace.setupStatus}</summary>
-      <pre ref={ref} className="max-h-56 overflow-y-auto border-t border-border p-2.5 text-[11px] whitespace-pre-wrap text-muted-foreground">
+      <summary className="cursor-pointer px-2.5 py-1.5 text-[13px] text-foreground/80">{workspace.setupStatus}</summary>
+      <pre ref={ref} className="max-h-56 overflow-y-auto border-t border-border p-2.5 text-xs whitespace-pre-wrap text-muted-foreground">
         {log || 'Waiting for output…'}
       </pre>
     </details>
@@ -94,7 +94,7 @@ function CopyLine({ value }: { value: string }) {
       type="button"
       title="Copy"
       onClick={() => void navigator.clipboard.writeText(value)}
-      className="block w-full truncate rounded bg-secondary/60 px-2 py-1 text-left font-mono text-[11px] text-foreground/80 hover:bg-secondary"
+      className="block w-full truncate rounded bg-secondary/60 px-2 py-1 text-left font-mono text-xs text-foreground/80 hover:bg-secondary"
     >
       {value}
     </button>
@@ -110,7 +110,7 @@ function DetailsPanel({ workspace }: { workspace: Workspace }) {
       </DetailsSection>
       <DetailsSection title="Branch">
         <CopyLine value={workspace.branch} />
-        <div className="text-[11px] text-muted-foreground">from {workspace.base}</div>
+        <div className="text-xs text-muted-foreground">from {workspace.base}</div>
       </DetailsSection>
       <DetailsSection title="Folder">
         <CopyLine value={workspace.worktreePath} />
@@ -150,10 +150,10 @@ export function WorkspacePage({ id, chats }: { id: string; chats?: (ws: Workspac
     <div className="flex h-full flex-col">
       <header className="flex h-11 shrink-0 items-center gap-2 border-b border-border px-4">
         <StatusDot status={workspace.status} />
-        <h1 className="truncate text-[13px] font-semibold text-foreground">{workspace.name}</h1>
-        <span className="truncate font-mono text-[11px] text-muted-foreground/70">{workspace.branch}</span>
+        <h1 className="truncate text-sm font-semibold text-foreground">{workspace.name}</h1>
+        <span className="truncate font-mono text-xs text-muted-foreground/70">{workspace.branch}</span>
         {workspace.workflowId && <WorkflowChip workflowId={workspace.workflowId} />}
-        <span className="text-[11px] text-muted-foreground">{STATUS_LABEL[workspace.status]}</span>
+        <span className="text-xs text-muted-foreground">{STATUS_LABEL[workspace.status]}</span>
         <button
           type="button"
           aria-label={details ? 'Hide details' : 'Show details'}

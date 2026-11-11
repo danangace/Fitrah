@@ -15,7 +15,7 @@ export function ApprovalCard({ item }: { item: ApprovalItem }) {
     return (
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
         {allowed ? <ShieldCheck className="size-3.5 text-success/80" /> : <ShieldX className="size-3.5 text-destructive" />}
-        {allowed ? 'Allowed' : 'Denied'}: {item.tool} · <span className="truncate font-mono text-[11px]">{item.summary}</span>
+        {allowed ? 'Allowed' : 'Denied'}: {item.tool} · <span className="truncate font-mono text-xs">{item.summary}</span>
       </div>
     )
   }

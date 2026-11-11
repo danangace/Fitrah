@@ -40,7 +40,7 @@ export function WorkingCount() {
   const waiting = workspaces.filter((w) => w.status === 'needs_approval').length
   if (!working && !waiting) return null
   return (
-    <div className="text-[11px] text-muted-foreground">
+    <div className="text-xs text-muted-foreground">
       {working > 0 && <span className="text-info">{working} working</span>}
       {working > 0 && waiting > 0 && ' · '}
       {waiting > 0 && <span className="text-warning">{waiting} need you</span>}
@@ -68,7 +68,7 @@ export function AccountWarnings() {
           key={a.id}
           type="button"
           onClick={() => navigate({ name: 'settings', section: 'accounts' })}
-          className="flex w-full items-start gap-1.5 rounded-md bg-warning/10 px-2 py-1.5 text-left text-[11px] text-warning"
+          className="flex w-full items-start gap-1.5 rounded-md bg-warning/10 px-2 py-1.5 text-left text-xs text-warning"
         >
           <TriangleAlert size={12} className="mt-0.5 shrink-0" />
           <span>

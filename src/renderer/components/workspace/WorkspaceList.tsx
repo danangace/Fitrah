@@ -24,8 +24,8 @@ function WorkspaceRow({ ws, active, onClick }: { ws: Workspace; active: boolean;
         <MessageSquare className={cn('size-3.5 shrink-0', active ? 'text-foreground/70' : 'text-foreground/30')} />
       )}
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[13px] leading-tight">{ws.name}</span>
-        <span className="block truncate font-mono text-[10.5px] leading-tight text-muted-foreground/60">{ws.branch}</span>
+        <span className="block truncate text-sm leading-tight">{ws.name}</span>
+        <span className="block truncate font-mono text-[11.5px] leading-tight text-muted-foreground/60">{ws.branch}</span>
       </span>
       <StatusDot status={ws.status} />
     </button>
@@ -51,7 +51,7 @@ function ProjectGroup({ repo, workspaces }: { repo: Repo; workspaces: Workspace[
         <button
           type="button"
           onClick={() => navigate({ name: 'project', id: repo.id })}
-          className="min-w-0 flex-1 truncate text-left text-[13px] font-medium tracking-tight text-foreground/80 hover:text-foreground"
+          className="min-w-0 flex-1 truncate text-left text-sm font-medium tracking-tight text-foreground/80 hover:text-foreground"
         >
           {repo.name}
         </button>
@@ -76,7 +76,7 @@ function ProjectGroup({ repo, workspaces }: { repo: Repo; workspaces: Workspace[
       </div>
       {!collapsed && (
         <div className="mt-0.5 space-y-0.5">
-          {workspaces.length === 0 && <div className="py-1 pl-7 text-[11px] text-muted-foreground/50">No workspaces</div>}
+          {workspaces.length === 0 && <div className="py-1 pl-7 text-xs text-muted-foreground/50">No workspaces</div>}
           {workspaces.map((w) => (
             <WorkspaceRow key={w.id} ws={w} active={route.name === 'workspace' && route.id === w.id} onClick={() => navigate({ name: 'workspace', id: w.id })} />
           ))}
@@ -103,7 +103,7 @@ export function WorkspaceList() {
       <button
         type="button"
         onClick={() => open({ kind: 'add-project' })}
-        className="flex w-full items-center gap-2 rounded-md border border-dashed border-input px-2 py-2 text-[12px] text-muted-foreground hover:text-foreground"
+        className="flex w-full items-center gap-2 rounded-md border border-dashed border-input px-2 py-2 text-[13px] text-muted-foreground hover:text-foreground"
       >
         <Plus className="size-3.5" /> Add your first project
       </button>

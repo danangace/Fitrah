@@ -19,7 +19,7 @@ function Badge({ tone, children }: { tone: 'ok' | 'warn' | 'muted' | 'info'; chi
     muted: 'bg-secondary text-muted-foreground',
     info: 'bg-info/10 text-info',
   }
-  return <span className={cn('rounded px-1.5 py-0.5 text-[11px]', tones[tone])}>{children}</span>
+  return <span className={cn('rounded px-1.5 py-0.5 text-xs', tones[tone])}>{children}</span>
 }
 
 /** Project settings: base, branch prefix, setup / archive scripts (D-14). Stored in Fitrah, never in the repo. */

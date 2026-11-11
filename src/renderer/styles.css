@@ -31,7 +31,7 @@
 
 html,
 body {
-  @apply bg-background font-sans text-[13px] text-foreground antialiased;
+  @apply bg-background font-sans text-sm text-foreground antialiased;
 }
 
 ::selection {
@@ -45,7 +45,7 @@ body {
 }
 
 /* Read-only markdown view */
-.markdown { @apply text-sm leading-6 text-foreground/90; }
+.markdown { @apply text-[15px] leading-7 text-foreground/90; }
 .markdown h1 { @apply mt-2 mb-4 text-2xl font-semibold text-foreground; }
 .markdown h2 { @apply mt-8 mb-3 border-b border-border pb-1 text-xl font-semibold text-foreground; }
 .markdown h3 { @apply mt-6 mb-2 text-base font-semibold text-foreground; }
