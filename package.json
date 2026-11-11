@@ -10,7 +10,7 @@
   },
   "packageManager": "pnpm@11.24.0",
   "scripts": {
-    "dev:runtime": "tsx watch src/main/index.ts",
+    "dev:runtime": "FITRAH_DEV=1 tsx watch src/main/index.ts",
     "dev:ui": "vite --config vite.web.config.ts",
     "build:ui": "vite build --config vite.web.config.ts",
     "typecheck": "tsc --noEmit",
