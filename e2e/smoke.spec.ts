@@ -80,7 +80,7 @@ test('a repo added in Settings can be used for a new workspace without reloading
   await select.selectOption({ label: repoName })
   await page.getByPlaceholder('kelola-xyz').fill('from-new-repo')
   await page.getByRole('button', { name: 'Create workspace' }).click()
-  await expect(page.getByText('feat/tribe-2/from-new-repo ← origin/main')).toBeVisible({ timeout: 20_000 })
+  await expect(page.getByText('from-new-repo ← origin/main')).toBeVisible({ timeout: 20_000 })
 })
 
 test('a browser without the session sees how to connect', async ({ browser }) => {

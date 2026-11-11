@@ -7,6 +7,7 @@ import { nowIso } from '../paths'
 import type { Db } from '../sqlite/db'
 import { getRepo, getSettings } from '../settings/store'
 import { getWorkspace } from '../workspaces/service'
+import { getWorkflow } from '../workflows/service'
 import { workspaceContext } from './context'
 import type { AdapterEvent, AgentAdapter, ApprovalAnswer, ToolRequest, Turn } from './types'
 
@@ -136,7 +137,12 @@ export class ChatService {
       model: chat.model,
       sessionId: chat.sessionId,
       prompt: text,
-      context: workspaceContext(ws, getRepo(this.db, ws.repoId), getSettings(this.db)),
+      context: workspaceContext(
+        ws,
+        getRepo(this.db, ws.repoId),
+        getSettings(this.db),
+        ws.workflowId ? getWorkflow(this.db, ws.workflowId) : null,
+      ),
       onEvent: (event) => this.onAdapterEvent(chatId, event),
       onToolRequest: (request) => this.decide(this.get(chatId), request),
     })

@@ -13,7 +13,6 @@ export const DEFAULT_SETTINGS: Settings = {
     oqFile: 'Open Questions.md',
   },
   workspacesDir: '~/fitrah/workspaces',
-  branchPrefix: { feature: 'feat/tribe-2/', defect: 'fix/tribe-2/' },
   models: { claude: { list: ['sonnet', 'opus', 'haiku'], default: 'sonnet' } },
   openIn: { kind: 'default' },
 }
@@ -53,6 +52,7 @@ type RepoRow = {
   setup_script: string
   archive_script: string
   feature_base: string
+  branch_prefix: string
   shared_dirs: string
   created_at: string
 }
@@ -64,6 +64,7 @@ const toRepo = (r: RepoRow): Repo => ({
   setupScript: r.setup_script,
   archiveScript: r.archive_script,
   featureBase: r.feature_base,
+  branchPrefix: r.branch_prefix,
   sharedDirs: JSON.parse(r.shared_dirs) as string[],
   createdAt: r.created_at,
 })
@@ -89,8 +90,8 @@ export async function addRepo(db: Db, input: unknown): Promise<Repo> {
   }
   const repo: Repo = { ...parsed.data, path, id: randomUUID(), name: basename(path), createdAt: nowIso() }
   db.prepare(
-    `INSERT INTO repos (id, name, path, setup_script, archive_script, feature_base, shared_dirs, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO repos (id, name, path, setup_script, archive_script, feature_base, branch_prefix, shared_dirs, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   ).run(
     repo.id,
     repo.name,
@@ -98,6 +99,7 @@ export async function addRepo(db: Db, input: unknown): Promise<Repo> {
     repo.setupScript,
     repo.archiveScript,
     repo.featureBase,
+    repo.branchPrefix,
     JSON.stringify(repo.sharedDirs),
     repo.createdAt,
   )
@@ -110,8 +112,8 @@ export function updateRepo(db: Db, id: string, input: unknown): Repo {
   if (!parsed.success) throw new UserError('invalid_repo', parsed.error.issues[0]?.message ?? 'Invalid repo')
   const d = parsed.data
   db.prepare(
-    'UPDATE repos SET setup_script = ?, archive_script = ?, feature_base = ?, shared_dirs = ? WHERE id = ?',
-  ).run(d.setupScript, d.archiveScript, d.featureBase, JSON.stringify(d.sharedDirs), id)
+    'UPDATE repos SET setup_script = ?, archive_script = ?, feature_base = ?, branch_prefix = ?, shared_dirs = ? WHERE id = ?',
+  ).run(d.setupScript, d.archiveScript, d.featureBase, d.branchPrefix, JSON.stringify(d.sharedDirs), id)
   return getRepo(db, id)
 }
 

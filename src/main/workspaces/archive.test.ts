@@ -13,7 +13,7 @@ async function setup() {
   const { repo } = makeRepoWithOrigin()
   saveSettings(db, { ...DEFAULT_SETTINGS, workspacesDir: mkdtempSync(join(tmpdir(), 'fitrah-ws-')) })
   const r = await addRepo(db, { path: repo, featureBase: 'origin/dev/tribe-2' })
-  const ws = await createWorkspace(db, { repoId: r.id, kind: 'feature', name: 'w', base: 'origin/dev/tribe-2' })
+  const ws = await createWorkspace(db, { repoId: r.id, name: 'w', base: 'origin/dev/tribe-2' })
   const branches = () => gitOut(repo, 'branch', '--list', ws.branch)
   return { db, repo, ws, branches }
 }

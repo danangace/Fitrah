@@ -7,27 +7,25 @@ import { Notice } from '../components/ui/Field'
 import { errorText } from '../lib/errors'
 import { useAppEvents } from '../store/events'
 
-function TaskLink({ label, url }: { label: string; url?: string }) {
-  return (
-    url ? (
-      <a href={url} target="_blank" rel="noreferrer" className="rounded bg-neutral-800 px-2 py-0.5 text-emerald-400 hover:underline">
-        {label} ↗
-      </a>
-    ) : (
-      <span className="rounded bg-amber-950 px-2 py-0.5 text-amber-300">{label}: not set</span>
-    )
+function TaskLink({ label, value }: { label: string; value: string }) {
+  return /^https?:\/\//.test(value) ? (
+    <a href={value} target="_blank" rel="noreferrer" className="rounded bg-neutral-800 px-2 py-0.5 text-emerald-400 hover:underline">
+      {label} ↗
+    </a>
+  ) : (
+    <span className="rounded bg-neutral-800 px-2 py-0.5 text-neutral-300">{value}</span>
   )
 }
 
-/** The task facts Claude receives in every chat of this workspace (workspace context). */
+/** The workflow values Claude receives in every chat of this workspace (workspace context). */
 function TaskDetails({ workspace }: { workspace: Workspace }) {
+  const entries = Object.entries(workspace.values).filter(([, v]) => v)
+  if (!workspace.workflowId) return <div className="mt-2 text-xs text-neutral-500">Free chat</div>
   return (
     <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs" title="Claude gets these in every chat of this workspace">
-      <span className="text-neutral-500">Task:</span>
-      <span className="rounded bg-neutral-800 px-2 py-0.5 text-neutral-300">{workspace.iteration ?? 'iteration not set'}</span>
-      <span className="rounded bg-neutral-800 px-2 py-0.5 text-neutral-300">{workspace.module ?? 'module not set'}</span>
-      <TaskLink label="PRD" url={workspace.prdUrl} />
-      <TaskLink label="Figma" url={workspace.figmaUrl} />
+      {entries.map(([key, value]) => (
+        <TaskLink key={key} label={key} value={value} />
+      ))}
     </div>
   )
 }
@@ -75,7 +73,6 @@ export function WorkspacePage({ id, chats }: { id: string; chats?: (ws: Workspac
         <div className="flex items-center gap-2">
           <StatusDot status={workspace.status} />
           <h1 className="text-lg font-semibold text-white">{workspace.name}</h1>
-          <span className="rounded bg-neutral-800 px-1.5 py-0.5 text-xs text-neutral-300">{workspace.kind}</span>
           <span className="text-xs text-neutral-500">{STATUS_LABEL[workspace.status]}</span>
         </div>
         <div className="mt-1 flex items-start justify-between gap-4">

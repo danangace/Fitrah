@@ -9,6 +9,7 @@ const repo: Repo = {
   setupScript: 'pnpm install',
   archiveScript: '',
   featureBase: 'origin/dev/tribe-2',
+  branchPrefix: 'feat/tribe-2/',
   sharedDirs: [],
   createdAt: 't',
 }

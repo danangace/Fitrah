@@ -13,11 +13,10 @@ describe('contracts', () => {
     expect(ClientMessage.safeParse({ type: 'approve', approvalId: 'a', decision: 'allow' }).success).toBe(true)
   })
 
-  it('requires a base branch and a slug name for workspaces', () => {
-    const ok = { repoId: 'r', kind: 'defect', name: 'invoice-total-null', base: 'origin/main' }
-    expect(WorkspaceInput.safeParse(ok).success).toBe(true)
-    expect(WorkspaceInput.safeParse({ ...ok, base: '' }).success).toBe(false)
-    expect(WorkspaceInput.safeParse({ ...ok, name: 'Invoice Total' }).success).toBe(false)
+  it('accepts a workspace with only a project, and checks the name', () => {
+    expect(WorkspaceInput.safeParse({ repoId: 'r' }).success).toBe(true)
+    expect(WorkspaceInput.safeParse({ repoId: 'r', name: 'invoice-total-null', workflowId: 'planning', values: { prd: 'x' } }).success).toBe(true)
+    expect(WorkspaceInput.safeParse({ repoId: 'r', name: 'Invoice Total' }).success).toBe(false)
   })
 
   it('requires a claude model list in settings', () => {

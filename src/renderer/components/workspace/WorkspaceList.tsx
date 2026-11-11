@@ -1,4 +1,4 @@
-import { Bug, GitBranch } from 'lucide-react'
+import { ClipboardList, MessageSquare } from 'lucide-react'
 import { useEffect } from 'react'
 import { cn } from '../../lib/cn'
 import { useAppEvents } from '../../store/events'
@@ -40,10 +40,10 @@ export function WorkspaceList() {
                       : 'text-neutral-300 hover:bg-neutral-900',
                   )}
                 >
-                  {w.kind === 'defect' ? (
-                    <Bug size={13} className="shrink-0 text-red-400" />
+                  {w.workflowId ? (
+                    <ClipboardList size={13} className="shrink-0 text-sky-400" />
                   ) : (
-                    <GitBranch size={13} className="shrink-0 text-emerald-400" />
+                    <MessageSquare size={13} className="shrink-0 text-emerald-400" />
                   )}
                   <span className="min-w-0 flex-1 truncate">{w.name}</span>
                   <StatusDot status={w.status} />

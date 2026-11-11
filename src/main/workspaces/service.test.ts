@@ -5,7 +5,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_SETTINGS, addRepo, saveSettings } from '../settings/store'
 import { openDb } from '../sqlite/db'
-import { createWorkspace, listWorkspaces } from './service'
+import { autoName, createWorkspace, listWorkspaces } from './service'
 import { gitOut, makeRepoWithOrigin } from './testing'
 
 async function setup(setupScript = '') {
@@ -13,46 +13,70 @@ async function setup(setupScript = '') {
   const { repo, origin } = makeRepoWithOrigin()
   const workspacesDir = mkdtempSync(join(tmpdir(), 'fitrah-ws-'))
   saveSettings(db, { ...DEFAULT_SETTINGS, workspacesDir })
-  const r = await addRepo(db, { path: repo, featureBase: 'origin/dev/tribe-2', setupScript })
+  const r = await addRepo(db, { path: repo, featureBase: 'origin/dev/tribe-2', branchPrefix: 'feat/tribe-2/', setupScript })
   return { db, repo, origin, repoId: r.id, workspacesDir }
 }
 
+const planningValues = { prd: 'https://p', figma: 'https://f', iteration: 'i-16', module: 'kelola' }
+
 describe('createWorkspace', () => {
-  it('creates a feature worktree from the fetched remote base (AC-W1)', async () => {
+  it('creates a free-chat worktree: prefix + name, from the fetched project base', async () => {
     const { db, repo, origin, repoId, workspacesDir } = await setup()
-    // A new commit lands on origin after the clone: the workspace must start from it.
+    // A newer commit lands on origin after the clone: the workspace must start from it.
     const other = join(mkdtempSync(join(tmpdir(), 'fitrah-other-')), 'c')
     execFileSync('git', ['clone', '-q', '-b', 'dev/tribe-2', origin, other], { stdio: 'pipe' })
     writeFileSync(join(other, 'new.txt'), 'x')
-    execFileSync('git', ['-c', 'user.email=t@e', '-c', 'user.name=T', 'commit', '-q', '-am', 'x', '--allow-empty'], { cwd: other })
     execFileSync('git', ['add', '.'], { cwd: other })
     execFileSync('git', ['-c', 'user.email=t@e', '-c', 'user.name=T', 'commit', '-q', '-m', 'new'], { cwd: other })
     execFileSync('git', ['push', '-q', 'origin', 'dev/tribe-2'], { cwd: other, stdio: 'pipe' })
 
-    const ws = await createWorkspace(db, { repoId, kind: 'feature', name: 'kelola-xyz', base: 'origin/dev/tribe-2' })
-    expect(ws.branch).toBe('feat/tribe-2/kelola-xyz')
-    expect(ws.worktreePath).toBe(join(workspacesDir, 'repo', 'kelola-xyz'))
+    const ws = await createWorkspace(db, { repoId, name: 'rapikan-tabel' })
+    expect(ws).toMatchObject({ branch: 'feat/tribe-2/rapikan-tabel', base: 'origin/dev/tribe-2', workflowId: null, values: {} })
+    expect(ws.worktreePath).toBe(join(workspacesDir, 'repo', 'rapikan-tabel'))
     expect(existsSync(join(ws.worktreePath, 'new.txt'))).toBe(true)
-    expect(gitOut(ws.worktreePath, 'rev-parse', '--abbrev-ref', 'HEAD')).toBe('feat/tribe-2/kelola-xyz')
-    // The main checkout is untouched (AC-W6).
     expect(gitOut(repo, 'rev-parse', '--abbrev-ref', 'HEAD')).toBe('main')
     expect(gitOut(repo, 'status', '--porcelain')).toBe('')
     expect(ws.setupStatus).toBe('skipped')
   })
 
-  it('creates a defect worktree only from an explicit base (AC-W2)', async () => {
+  it('generates a name when none is given (AC-W1)', async () => {
+    const { db, repoId } = await setup()
+    const a = await createWorkspace(db, { repoId })
+    const b = await createWorkspace(db, { repoId })
+    expect(a.name).toMatch(/^ws-\d{4}-\d{4}$/)
+    expect(b.name).toBe(`${a.name}-2`)
+    expect(a.branch).toBe(`feat/tribe-2/${a.name}`)
+  })
+
+  it('uses a workflow: required fields, values stored, base from its branch field (AC-F2)', async () => {
     const { db, repoId } = await setup('echo hi')
-    await expect(createWorkspace(db, { repoId, kind: 'defect', name: 'invoice-null' })).rejects.toThrow()
-    const ws = await createWorkspace(db, { repoId, kind: 'defect', name: 'invoice-null', base: 'origin/main' })
-    expect(ws.branch).toBe('fix/tribe-2/invoice-null')
-    expect(ws.setupStatus).toBe('pending')
+    await expect(createWorkspace(db, { repoId, workflowId: 'planning', values: { prd: 'https://p' } })).rejects.toThrow(
+      /Fill in: Figma, Iteration, Module/,
+    )
+    const ws = await createWorkspace(db, { repoId, name: 'plan', workflowId: 'planning', values: { ...planningValues, base: 'origin/main' } })
+    expect(ws).toMatchObject({ workflowId: 'planning', base: 'origin/main', setupStatus: 'pending' })
+    expect(ws.values).toMatchObject(planningValues)
+  })
+
+  it('an Advanced base wins over the workflow field and the project base', async () => {
+    const { db, repoId } = await setup()
+    const ws = await createWorkspace(db, { repoId, name: 'x', workflowId: 'planning', values: { ...planningValues, base: 'origin/dev/tribe-2' }, base: 'origin/main' })
+    expect(ws.base).toBe('origin/main')
   })
 
   it('rejects a duplicate name and an unknown base', async () => {
     const { db, repoId } = await setup()
-    await createWorkspace(db, { repoId, kind: 'feature', name: 'a', base: 'origin/dev/tribe-2' })
-    await expect(createWorkspace(db, { repoId, kind: 'feature', name: 'a', base: 'origin/dev/tribe-2' })).rejects.toThrow(/exists/)
-    await expect(createWorkspace(db, { repoId, kind: 'feature', name: 'b', base: 'origin/nope' })).rejects.toThrow(/Base not found/)
+    await createWorkspace(db, { repoId, name: 'a' })
+    await expect(createWorkspace(db, { repoId, name: 'a' })).rejects.toThrow(/exists/)
+    await expect(createWorkspace(db, { repoId, name: 'b', base: 'origin/nope' })).rejects.toThrow(/Base not found/)
     expect(listWorkspaces(db)).toHaveLength(1)
+  })
+})
+
+describe('autoName', () => {
+  it('formats the time and adds a suffix when taken', () => {
+    const now = new Date(2026, 10, 11, 21, 40)
+    expect(autoName(() => false, now)).toBe('ws-1111-2140')
+    expect(autoName((n) => n === 'ws-1111-2140', now)).toBe('ws-1111-2140-2')
   })
 })

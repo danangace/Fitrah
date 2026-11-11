@@ -17,6 +17,7 @@ import { registerChatRoutes } from '../native-chat/routes'
 import { ChatService } from '../native-chat/service'
 import { registerSettingsRoutes } from '../settings/routes'
 import { StatusTracker } from '../status/tracker'
+import { registerWorkflowRoutes } from '../workflows/routes'
 import { registerWorkspaceRoutes } from '../workspaces/routes'
 import { SetupRunner } from '../workspaces/setup-runner'
 import type { Db } from '../sqlite/db'
@@ -73,6 +74,7 @@ export function createRuntimeApp(options: AppOptions): { app: Hono; chats: ChatS
   })
   registerSettingsRoutes(app, db)
   registerAccountRoutes(app, db)
+  registerWorkflowRoutes(app, db)
   registerDocsRoutes(app, docs)
   registerEventRoutes(app, bus)
   const chats = options.chats ?? new ChatService(db, { claude: claudeAdapter })

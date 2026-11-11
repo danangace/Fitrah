@@ -29,8 +29,6 @@ export const Settings = z.object({
     oqFile: z.string(),
   }),
   workspacesDir: z.string().min(1),
-  /** Branch name prefixes, e.g. `feat/tribe-2/` → `feat/tribe-2/<workspace-name>`. */
-  branchPrefix: z.object({ feature: z.string(), defect: z.string() }).default({ feature: 'feat/', defect: 'fix/' }),
   models: z.object({ claude: AgentModels }).catchall(AgentModels),
   openIn: OpenIn.default({ kind: 'default' }),
 })
@@ -40,7 +38,10 @@ export const RepoInput = z.object({
   path: z.string().min(1),
   setupScript: z.string().default(''),
   archiveScript: z.string().default(''),
+  /** Default base for new workspaces, e.g. `origin/dev/tribe-2`. */
   featureBase: z.string().min(1),
+  /** Branch name = prefix + workspace name, e.g. `feat/tribe-2/` + `rapikan-tabel`. */
+  branchPrefix: z.string().default(''),
   sharedDirs: z.array(z.string()).default([]),
 })
 export type RepoInput = z.input<typeof RepoInput>
@@ -70,31 +71,62 @@ export type Account = z.infer<typeof Account>
 export const DetectedLogin = z.object({ agent: AgentId, configDir: z.string(), attached: z.boolean() })
 export type DetectedLogin = z.infer<typeof DetectedLogin>
 
-export const WorkspaceKind = z.enum(['feature', 'defect'])
-export type WorkspaceKind = z.infer<typeof WorkspaceKind>
-
 export const WorkspaceStatus = z.enum(['idle', 'working', 'needs_approval', 'waiting', 'done', 'error'])
 export type WorkspaceStatus = z.infer<typeof WorkspaceStatus>
 
+/** Field types a workflow can ask for (D-16). */
+export const FieldType = z.enum(['text', 'link', 'docsFolder', 'branch', 'choice'])
+export type FieldType = z.infer<typeof FieldType>
+
+export const WorkflowField = z.object({
+  /** Stable id used to store values. */
+  key: z.string().regex(/^[a-z0-9_]+$/, 'key: lowercase letters, numbers, _'),
+  /** Shown in the modal and usable in instructions as {Label}. */
+  label: z.string().min(1),
+  type: FieldType,
+  required: z.boolean().default(false),
+  default: z.string().optional(),
+  help: z.string().optional(),
+  /** Choices for type `choice`. */
+  options: z.array(z.string().min(1)).optional(),
+})
+export type WorkflowField = z.infer<typeof WorkflowField>
+
+export const WorkflowInput = z.object({
+  name: z.string().trim().min(1),
+  description: z.string().default(''),
+  fields: z.array(WorkflowField),
+  instructions: z.string().default(''),
+})
+export type WorkflowInput = z.input<typeof WorkflowInput>
+
+export const Workflow = WorkflowInput.extend({ id: z.string(), createdAt: isoDate, updatedAt: isoDate })
+export type Workflow = z.infer<typeof Workflow>
+
+const slug = z
+  .string()
+  .regex(/^[a-z0-9][a-z0-9-]*$/, 'use lowercase letters, numbers and dashes')
+
 export const WorkspaceInput = z.object({
   repoId: z.string().min(1),
-  kind: WorkspaceKind,
-  name: z
-    .string()
-    .min(1)
-    .regex(/^[a-z0-9][a-z0-9-]*$/, 'use lowercase letters, numbers and dashes'),
-  /** Required: Fitrah never guesses the base branch (OQ-13). */
-  base: z.string().min(1),
-  iteration: z.string().optional(),
-  module: z.string().optional(),
-  prdUrl: z.string().optional(),
-  figmaUrl: z.string().optional(),
+  /** Optional; Fitrah generates one when empty. */
+  name: slug.optional(),
+  /** null / missing = Free chat. */
+  workflowId: z.string().nullable().optional(),
+  values: z.record(z.string(), z.string()).default({}),
+  /** Advanced: override the base branch. */
+  base: z.string().optional(),
 })
-export type WorkspaceInput = z.infer<typeof WorkspaceInput>
+export type WorkspaceInput = z.input<typeof WorkspaceInput>
 
-export const Workspace = WorkspaceInput.extend({
+export const Workspace = z.object({
   id: z.string(),
+  repoId: z.string(),
+  name: z.string(),
+  workflowId: nullableText,
+  values: z.record(z.string(), z.string()),
   branch: z.string(),
+  base: z.string(),
   worktreePath: z.string(),
   stage: z.string(),
   setupStatus: z.enum(['pending', 'running', 'done', 'failed', 'skipped']),

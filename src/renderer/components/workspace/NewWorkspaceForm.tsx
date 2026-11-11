@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import type { WorkspaceKind } from '../../../shared/schemas'
 import { api } from '../../api/fitrah'
 import { cn } from '../../lib/cn'
 import { errorText } from '../../lib/errors'
@@ -15,7 +14,7 @@ export function NewWorkspaceForm() {
   const { repos, load } = useWorkspaces()
   const navigate = useRouter((s) => s.navigate)
   const [repoId, setRepoId] = useState('')
-  const [kind, setKind] = useState<WorkspaceKind>('feature')
+  const [kind, setKind] = useState<'feature' | 'defect'>('feature')
   const [name, setName] = useState('')
   const [base, setBase] = useState('')
   const [meta, setMeta] = useState({ iteration: '', module: '', prdUrl: '', figmaUrl: '' })
@@ -42,13 +41,8 @@ export function NewWorkspaceForm() {
     try {
       const ws = await api.createWorkspace({
         repoId,
-        kind,
-        name: name.trim(),
-        base: base.trim(),
-        iteration: opt(meta.iteration),
-        module: opt(meta.module),
-        prdUrl: opt(meta.prdUrl),
-        figmaUrl: opt(meta.figmaUrl),
+        name: opt(name),
+        base: opt(base),
       })
       await load()
       navigate({ name: 'workspace', id: ws.id })
