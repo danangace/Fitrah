@@ -1,11 +1,12 @@
 import { RefreshCw, Star, Trash2 } from 'lucide-react'
-import { type ReactNode, useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { Account, DetectedLogin } from '../../../shared/schemas'
 import { api } from '../../api/fitrah'
 import { cn } from '../../lib/cn'
 import { errorText } from '../../lib/errors'
 import { Button } from '../ui/Button'
 import { Card, Notice } from '../ui/Field'
+import { ClaudeSignIn } from './ClaudeSignIn'
 
 const statusStyle: Record<Account['loginStatus'], string> = {
   logged_in: 'bg-emerald-950 text-emerald-300',
@@ -64,7 +65,7 @@ function AccountRow({ account, onChange, onError }: { account: Account; onChange
 }
 
 /** Settings → Accounts (D-11). V1: Claude only; Codex comes after the beta (D-13). */
-export function AccountSettings({ signIn }: { signIn?: ReactNode }) {
+export function AccountSettings() {
   const [accounts, setAccounts] = useState<Account[]>([])
   const [found, setFound] = useState<DetectedLogin[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -107,7 +108,7 @@ export function AccountSettings({ signIn }: { signIn?: ReactNode }) {
           </ul>
         )}
       </div>
-      {signIn}
+      <ClaudeSignIn onDone={load} />
     </Card>
   )
 }
