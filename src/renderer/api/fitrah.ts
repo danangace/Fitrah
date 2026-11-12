@@ -15,6 +15,7 @@ import {
   type WorkflowInput,
   Workspace,
   type WorkspaceInput,
+  type WorkspaceUpdate,
 } from '../../shared/schemas'
 import { ChatEvent } from '../../shared/events'
 import { request } from './http-client'
@@ -87,6 +88,7 @@ export const api = {
   listWorkspaces: () => request('GET', API.workspaces, z.array(Workspace)),
   getWorkspace: (id: string) => request('GET', `${API.workspaces}/${id}`, Workspace),
   createWorkspace: (input: WorkspaceInput) => request('POST', API.workspaces, Workspace, input),
+  updateWorkspace: (id: string, input: WorkspaceUpdate) => request('PATCH', `${API.workspaces}/${id}`, Workspace, input),
   archiveWorkspace: (id: string, options: { deleteBranch: boolean; force: boolean }) =>
     request('POST', `${API.workspaces}/${id}/archive`, Ok, options),
   setupLog: (id: string) => request('GET', `${API.workspaces}/${id}/setup-log`, z.object({ log: z.string() })),

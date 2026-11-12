@@ -32,7 +32,7 @@ test('start, accounts, docs, workspace and chat (AC-B1 smoke)', async ({ page })
   await page.getByRole('button', { name: 'Back to Fitrah' }).click()
 
   // Workspace: the small modal, Free chat, default agent → the first chat is ready
-  await page.locator('aside').getByRole('button', { name: 'New workspace', exact: true }).click()
+  await page.getByRole('button', { name: 'New workspace in repo', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: 'Create workspace' })
   await dialog.getByLabel('Workspace name').fill('smoke-feature')
   await expect(dialog.getByText('Branch feat/tribe-2/smoke-feature from origin/dev/tribe-2')).toBeVisible()
@@ -139,7 +139,7 @@ test('Settings → Workflows: create a workflow with fields (AC-F1)', async ({ p
 
 test('Planning workflow: required fields, values shown, chat waits (AC-F2, AC-F4)', async ({ page }) => {
   await page.goto(`/?token=${TOKEN}`)
-  await page.locator('aside').getByRole('button', { name: 'New workspace', exact: true }).click()
+  await page.getByRole('button', { name: 'New workspace in repo', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: 'Create workspace' })
   await dialog.getByLabel('Project').selectOption({ label: 'repo' })
   await dialog.getByLabel('Workspace name').fill('plan-kelola')
@@ -166,7 +166,7 @@ test('Planning workflow: required fields, values shown, chat waits (AC-F2, AC-F4
 
 test('composer pickers: permission and model + effort (in the chat)', async ({ page }) => {
   await page.goto(`/?token=${TOKEN}`)
-  await page.locator('aside').getByRole('button', { name: 'New workspace', exact: true }).click()
+  await page.getByRole('button', { name: 'New workspace in repo', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: 'Create workspace' })
   await dialog.getByLabel('Project').selectOption({ label: 'repo' })
   await dialog.getByLabel('Workspace name').fill('pickers')
@@ -201,7 +201,7 @@ test('composer pickers: permission and model + effort (in the chat)', async ({ p
 
 test('the chat follows new output to the bottom, and offers "Jump to latest" after scrolling up', async ({ page }) => {
   await page.goto(`/?token=${TOKEN}`)
-  await page.locator('aside').getByRole('button', { name: 'New workspace', exact: true }).click()
+  await page.getByRole('button', { name: 'New workspace in repo', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: 'Create workspace' })
   await dialog.getByLabel('Project').selectOption({ label: 'repo' })
   await dialog.getByLabel('Workspace name').fill('scrolling')
@@ -229,6 +229,33 @@ test('the chat follows new output to the bottom, and offers "Jump to latest" aft
   await page.getByRole('button', { name: /Jump to latest/ }).click()
   await expect(done.last()).toBeInViewport()
   await expect(page.getByRole('button', { name: /Jump to latest/ })).toBeHidden()
+})
+
+test('edit a workspace: turn a free chat into Planning and fill Iteration / Module later', async ({ page }) => {
+  await page.goto(`/?token=${TOKEN}`)
+  // The only way to start a workspace is the project's "+"; the project row shows a folder icon.
+  await expect(page.locator('aside').getByRole('button', { name: 'New workspace', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Collapse repo', exact: true })).toBeVisible()
+
+  await page.getByTestId('workspace-row-smoke-feature').click()
+  await expect(page.getByRole('heading', { name: 'smoke-feature' })).toBeVisible()
+  await expect(page.getByText('Free chat', { exact: true })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Edit workspace' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Edit workspace' })
+  await dialog.getByLabel('Type').selectOption({ label: 'Planning' })
+  await dialog.getByLabel('Iteration').fill('i-17')
+  await dialog.getByLabel('Module').fill('invoice')
+  // PRD / Figma are still empty: saving is allowed, with a reminder.
+  await expect(dialog.getByText(/Still empty: PRD, Figma/)).toBeVisible()
+  await page.screenshot({ path: 'test-results/screens/edit-workspace.png' })
+  await dialog.getByRole('button', { name: /Save/ }).click()
+
+  await expect(dialog).toBeHidden()
+  await expect(page.locator('main header').getByText('Planning', { exact: true })).toBeVisible()
+  await expect(page.getByText('i-17', { exact: true })).toBeVisible()
+  await expect(page.getByText('frontend/modules/i-17/invoice', { exact: true })).toBeVisible()
+  await page.screenshot({ path: 'test-results/screens/workspace-edited.png' })
 })
 
 test('the sidebar can be resized and remembers its width', async ({ page }) => {

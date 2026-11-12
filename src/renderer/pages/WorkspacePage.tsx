@@ -1,10 +1,11 @@
-import { Check, Copy, FileText, PanelRight } from 'lucide-react'
+import { Check, Copy, FileText, PanelRight, Pencil } from 'lucide-react'
 import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 import { resolveDocPath } from '../../shared/doc-paths'
 import type { Settings, Workflow, Workspace } from '../../shared/schemas'
 import { useRouter } from '../store/router'
 import { api } from '../api/fitrah'
 import { ArchiveButton } from '../components/workspace/ArchiveButton'
+import { EditWorkspaceModal } from '../components/workspace/EditWorkspaceModal'
 import { STATUS_LABEL, StatusDot } from '../components/workspace/StatusDot'
 import { Notice } from '../components/ui/Field'
 import { cn } from '../lib/cn'
@@ -36,7 +37,7 @@ function CopyButton({ value, label }: { value: string; label: string }) {
  * One topic per row: the name on top, the full value below (wrapped, never cut off) and a copy button,
  * so a long PRD / Figma link or doc path can be read and copied whole.
  */
-function DetailRow({ label, value, copy, open, note }: { label: string; value: string; copy?: string; open?: ReactNode; note?: string }) {
+function DetailRow({ label, value, copy, open, note }: { label: string; value: string; copy?: string; open?: ReactNode; note?: ReactNode }) {
   const isUrl = /^https?:\/\//.test(value)
   return (
     <div className="rounded-md border border-border/60 bg-background/40 px-2.5 py-1.5">
@@ -93,7 +94,7 @@ function TaskDetails({ workspace }: { workspace: Workspace }) {
 }
 
 /** Your doc paths (Settings → General) filled for this workspace: the same list Claude is told. */
-function DocLocations({ workspace }: { workspace: Workspace }) {
+function DocLocations({ workspace, onEdit }: { workspace: Workspace; onEdit: () => void }) {
   const workflow = useWorkflow(workspace.workflowId)
   const navigate = useRouter((s) => s.navigate)
   const [settings, setSettings] = useState<Settings | null>(null)
@@ -116,7 +117,16 @@ function DocLocations({ workspace }: { workspace: Workspace }) {
             label={p.label}
             value={r.path}
             copy={full}
-            note={r.missing.length ? `Not set: ${r.missing.map((m) => `{${m}}`).join(', ')}` : undefined}
+            note={
+              r.missing.length ? (
+                <>
+                  Not set: {r.missing.map((m) => `{${m}}`).join(', ')} ·{' '}
+                  <button type="button" onClick={onEdit} className="underline underline-offset-2 hover:text-foreground">
+                    Fill in
+                  </button>
+                </>
+              ) : undefined
+            }
             open={
               canOpen ? (
                 <button
@@ -160,10 +170,13 @@ function SetupLog({ workspace }: { workspace: Workspace }) {
   )
 }
 
-function DetailsSection({ title, children }: { title: string; children: ReactNode }) {
+function DetailsSection({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
   return (
     <section className="space-y-2 border-b border-border px-4 py-3">
-      <h3 className="text-xs font-semibold text-muted-foreground/80">{title}</h3>
+      <div className="flex items-center justify-between">
+        <h3 className="text-xs font-semibold text-muted-foreground/80">{title}</h3>
+        {action}
+      </div>
       {children}
     </section>
   )
@@ -183,14 +196,29 @@ function CopyLine({ value }: { value: string }) {
 }
 
 /** Right panel (Orca's right sidebar): task values, branch + folder, setup log, archive. */
-function DetailsPanel({ workspace }: { workspace: Workspace }) {
+function DetailsPanel({ workspace, onEdit }: { workspace: Workspace; onEdit: () => void }) {
   return (
     <aside className="flex w-80 shrink-0 flex-col overflow-y-auto border-l border-border bg-sidebar">
-      <DetailsSection title={workspace.workflowId ? 'Task' : 'Type'}>
+      <DetailsSection
+        title={workspace.workflowId ? 'Task' : 'Type'}
+        action={
+          !workspace.archivedAt && (
+            <button
+              type="button"
+              aria-label="Edit workspace"
+              title="Edit type and values"
+              onClick={onEdit}
+              className="flex items-center gap-1 rounded px-1.5 py-0.5 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground"
+            >
+              <Pencil className="size-3" /> Edit
+            </button>
+          )
+        }
+      >
         <TaskDetails workspace={workspace} />
       </DetailsSection>
       <DetailsSection title="Docs">
-        <DocLocations workspace={workspace} />
+        <DocLocations workspace={workspace} onEdit={onEdit} />
       </DetailsSection>
       <DetailsSection title="Branch">
         <CopyLine value={workspace.branch} />
@@ -215,6 +243,7 @@ export function WorkspacePage({ id, chats }: { id: string; chats?: (ws: Workspac
   const [workspace, setWorkspace] = useState<Workspace | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [details, setDetails] = useState(() => readPref('details-open', true))
+  const [editing, setEditing] = useState(false)
   const load = useCallback(() => {
     api.getWorkspace(id).then(setWorkspace, (e: unknown) => setError(errorText(e)))
   }, [id])
@@ -232,6 +261,7 @@ export function WorkspacePage({ id, chats }: { id: string; chats?: (ws: Workspac
   if (!workspace) return null
   return (
     <div className="flex h-full flex-col">
+      {editing && <EditWorkspaceModal workspace={workspace} onClose={() => setEditing(false)} onSaved={setWorkspace} />}
       <header className="flex h-11 shrink-0 items-center gap-2 border-b border-border px-4">
         <StatusDot status={workspace.status} />
         <h1 className="truncate text-sm font-semibold text-foreground">{workspace.name}</h1>
@@ -250,7 +280,7 @@ export function WorkspacePage({ id, chats }: { id: string; chats?: (ws: Workspac
       </header>
       <div className="flex min-h-0 flex-1">
         <div className="flex min-w-0 flex-1 flex-col">{chats?.(workspace)}</div>
-        {details && <DetailsPanel workspace={workspace} />}
+        {details && <DetailsPanel workspace={workspace} onEdit={() => setEditing(true)} />}
       </div>
     </div>
   )

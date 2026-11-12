@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { existsSync, mkdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'
-import { type AgentId, type Workspace, WorkspaceInput, type WorkspaceStatus } from '../../shared/schemas'
+import { type AgentId, type Workspace, WorkspaceInput, type WorkspaceStatus, WorkspaceUpdate } from '../../shared/schemas'
 import { getWorkflow, resolveValues } from '../workflows/service'
 import { UserError } from '../errors'
 import { expandHome, nowIso } from '../paths'
@@ -146,4 +146,20 @@ export async function createWorkspace(db: Db, input: unknown, run: Git = default
     nowIso(),
   )
   return getWorkspace(db, id)
+}
+
+/**
+ * Change an existing workspace's type and field values (e.g. fill Iteration / Module later, or turn
+ * a free chat into a Planning workspace). The branch, base and folder never change; chats pick the
+ * new values up from their next message.
+ */
+export function updateWorkspace(db: Db, id: string, input: unknown, status: StatusLookup = idle): Workspace {
+  const ws = getWorkspace(db, id)
+  if (ws.archivedAt) throw new UserError('workspace_archived', 'This workspace is archived', 409)
+  const parsed = WorkspaceUpdate.safeParse(input)
+  if (!parsed.success) throw new UserError('invalid_workspace', parsed.error.issues[0]?.message ?? 'Invalid workspace')
+  const workflow = parsed.data.workflowId ? getWorkflow(db, parsed.data.workflowId) : null
+  const values = workflow ? resolveValues(workflow, parsed.data.values, { requireAll: false }) : {}
+  db.prepare('UPDATE workspaces SET workflow_id = ?, values_json = ? WHERE id = ?').run(workflow?.id ?? null, JSON.stringify(values), id)
+  return getWorkspace(db, id, status)
 }

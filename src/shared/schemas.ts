@@ -140,6 +140,13 @@ export const WorkspaceInput = z.object({
 })
 export type WorkspaceInput = z.input<typeof WorkspaceInput>
 
+/** Editing a workspace after it exists: its type (Free chat or a workflow) and the field values. */
+export const WorkspaceUpdate = z.object({
+  workflowId: z.string().nullable(),
+  values: z.record(z.string(), z.string()).default({}),
+})
+export type WorkspaceUpdate = z.input<typeof WorkspaceUpdate>
+
 export const Workspace = z.object({
   id: z.string(),
   repoId: z.string(),

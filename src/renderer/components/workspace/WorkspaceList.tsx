@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, ClipboardList, Loader2, MessageSquare, Plus, Settings2 } from 'lucide-react'
+import { ClipboardList, Folder, FolderOpen, Loader2, MessageSquare, Plus, Settings2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { Repo, Workspace } from '../../../shared/schemas'
 import { accountName } from '../../lib/accounts'
@@ -63,9 +63,10 @@ function ProjectGroup({ repo, workspaces }: { repo: Repo; workspaces: Workspace[
           type="button"
           aria-label={collapsed ? `Expand ${repo.name}` : `Collapse ${repo.name}`}
           onClick={() => setCollapsed(!collapsed)}
-          className="flex size-5 items-center justify-center text-foreground/30 hover:text-foreground/70"
+          title={collapsed ? 'Show workspaces' : 'Hide workspaces'}
+          className="flex size-5 items-center justify-center text-foreground/40 hover:text-foreground/80"
         >
-          {collapsed ? <ChevronRight className="size-3.5" /> : <ChevronDown className="size-3.5" />}
+          {collapsed ? <Folder className="size-3.5" /> : <FolderOpen className="size-3.5" />}
         </button>
         <button
           type="button"

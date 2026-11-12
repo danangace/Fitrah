@@ -14,7 +14,7 @@ const select = 'w-full rounded-md border border-input bg-card px-2.5 py-1.5 text
 const FREE = '__free'
 const NO_AGENT = '__none'
 
-function WorkflowFieldInput({
+export function WorkflowFieldInput({
   field,
   value,
   onChange,

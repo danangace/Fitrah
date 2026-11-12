@@ -1,4 +1,4 @@
-import { BookOpen, FolderPlus, Plus, Settings } from 'lucide-react'
+import { BookOpen, FolderPlus, Settings } from 'lucide-react'
 import { type PointerEvent, type ReactNode, useState } from 'react'
 import { APP_INFO } from '../../../shared/app-info'
 import { cn } from '../../lib/cn'
@@ -94,7 +94,6 @@ export function Sidebar({ workspaces }: { workspaces?: ReactNode }) {
       ) : (
         <>
         <nav className="flex flex-col gap-0.5 px-2 pb-1">
-          <NavRow strong icon={<Plus />} label="New workspace" onClick={() => open({ kind: 'create-workspace' })} />
           <NavRow icon={<FolderPlus />} label="Add project" onClick={() => open({ kind: 'add-project' })} />
           <NavRow active={is('docs')} icon={<BookOpen />} label="Docs" onClick={() => navigate({ name: 'docs', path: '' })} />
         </nav>

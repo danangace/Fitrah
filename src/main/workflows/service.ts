@@ -91,12 +91,16 @@ export function removeWorkflow(db: Db, id: string): void {
 }
 
 /** Defaults applied, values trimmed, unknown keys dropped; required fields must be filled. */
-export function resolveValues(workflow: Workflow, values: Record<string, string>): Record<string, string> {
+/**
+ * Field values for a workflow: defaults filled, choices checked. `requireAll: false` (editing an
+ * existing workspace) lets required fields stay empty, so you can fill what you know now.
+ */
+export function resolveValues(workflow: Workflow, values: Record<string, string>, { requireAll = true } = {}): Record<string, string> {
   const out: Record<string, string> = {}
   const missing: string[] = []
   for (const f of workflow.fields) {
     const value = (values[f.key] ?? f.default ?? '').trim()
-    if (f.required && !value) missing.push(f.label)
+    if (requireAll && f.required && !value) missing.push(f.label)
     if (f.type === 'choice' && value && f.options && !f.options.includes(value)) {
       throw new UserError('invalid_choice', `"${value}" is not a choice of ${f.label}`)
     }

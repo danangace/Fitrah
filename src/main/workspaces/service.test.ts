@@ -5,7 +5,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_SETTINGS, addRepo, saveSettings } from '../settings/store'
 import { openDb } from '../sqlite/db'
-import { autoName, createWorkspace, listWorkspaces } from './service'
+import { autoName, createWorkspace, listWorkspaces, updateWorkspace } from './service'
 import { gitOut, makeRepoWithOrigin } from './testing'
 
 async function setup(setupScript = '') {
@@ -18,6 +18,25 @@ async function setup(setupScript = '') {
 }
 
 const planningValues = { prd: 'https://p', figma: 'https://f', iteration: 'i-16', module: 'kelola' }
+
+describe('updateWorkspace', () => {
+  it('turns a free chat into a workflow and fills values later, keeping branch and folder', async () => {
+    const { db, repoId } = await setup()
+    const ws = await createWorkspace(db, { repoId, name: 'later' })
+    // Required fields may stay empty when editing: fill what you know now.
+    const planned = updateWorkspace(db, ws.id, { workflowId: 'planning', values: { iteration: 'i-16', module: 'kelola' } })
+    expect(planned).toMatchObject({ workflowId: 'planning', branch: ws.branch, base: ws.base, worktreePath: ws.worktreePath })
+    expect(planned.values).toMatchObject({ iteration: 'i-16', module: 'kelola', prd: '' })
+    // Back to a free chat clears the values.
+    expect(updateWorkspace(db, ws.id, { workflowId: null, values: { iteration: 'x' } })).toMatchObject({ workflowId: null, values: {} })
+  })
+
+  it('rejects an unknown workflow', async () => {
+    const { db, repoId } = await setup()
+    const ws = await createWorkspace(db, { repoId, name: 'w' })
+    expect(() => updateWorkspace(db, ws.id, { workflowId: 'nope', values: {} })).toThrow()
+  })
+})
 
 describe('createWorkspace', () => {
   it('creates a free-chat worktree: prefix + name, from the fetched project base', async () => {
