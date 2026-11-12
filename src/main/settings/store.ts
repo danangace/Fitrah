@@ -7,11 +7,11 @@ import type { Db } from '../sqlite/db'
 
 export const DEFAULT_SETTINGS: Settings = {
   docsRoot: null,
-  paths: {
-    moduleDocs: 'frontend/modules/{iteration}/{module}',
-    plans: 'plans/{yyyy-mm}/{iteration}/{feature}/{feature}.md',
-    oqFile: 'Open Questions.md',
-  },
+  docPaths: [
+    { label: 'Module docs', template: 'frontend/modules/{iteration}/{module}' },
+    { label: 'Open Questions', template: 'frontend/modules/{iteration}/{module}/Open Questions.md' },
+    { label: 'Plan', template: 'plans/{yyyy-mm}/{iteration}/{feature}/{feature}.md' },
+  ],
   workspacesDir: '~/fitrah/workspaces',
   models: { claude: { list: ['sonnet', 'opus', 'haiku'], default: 'sonnet' } },
   openIn: { kind: 'default' },
@@ -19,10 +19,26 @@ export const DEFAULT_SETTINGS: Settings = {
 
 const SETTINGS_KEY = 'app'
 
+type LegacyPaths = { moduleDocs?: string; plans?: string; oqFile?: string }
+
+/** Settings saved before doc paths became a list had three fixed `paths`; keep what the user typed there. */
+export function migrateSettings(stored: Record<string, unknown>): Record<string, unknown> {
+  if (stored.docPaths !== undefined || !stored.paths || typeof stored.paths !== 'object') return stored
+  const { paths, ...rest } = stored
+  const old = paths as LegacyPaths
+  const docPaths = [
+    old.moduleDocs && { label: 'Module docs', template: old.moduleDocs },
+    // The old OQ setting was a file name inside the module folder.
+    old.oqFile && { label: 'Open Questions', template: old.moduleDocs ? `${old.moduleDocs.replace(/\/+$/, '')}/${old.oqFile}` : old.oqFile },
+    old.plans && { label: 'Plan', template: old.plans },
+  ].filter(Boolean)
+  return { ...rest, docPaths }
+}
+
 export function getSettings(db: Db): Settings {
   const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(SETTINGS_KEY) as { value: string } | undefined
   if (!row) return DEFAULT_SETTINGS
-  const parsed = Settings.safeParse({ ...DEFAULT_SETTINGS, ...JSON.parse(row.value) })
+  const parsed = Settings.safeParse({ ...DEFAULT_SETTINGS, ...migrateSettings(JSON.parse(row.value) as Record<string, unknown>) })
   return parsed.success ? parsed.data : DEFAULT_SETTINGS
 }
 
@@ -34,6 +50,9 @@ export function saveSettings(db: Db, input: unknown): Settings {
   if (settings.docsRoot !== null && !isDirectory(expandHome(settings.docsRoot))) {
     throw new UserError('docs_root_missing', `Docs root does not exist: ${settings.docsRoot}`)
   }
+  const labels = settings.docPaths.map((p) => p.label.toLowerCase())
+  const dup = labels.find((l, i) => labels.indexOf(l) !== i)
+  if (dup) throw new UserError('duplicate_doc_path', `Two doc paths are both named "${dup}"`)
   for (const [agent, models] of Object.entries(settings.models)) {
     if (!models.list.includes(models.default)) {
       throw new UserError('invalid_default_model', `Default model for ${agent} must be in its list`)

@@ -51,4 +51,18 @@ describe('workspaceContext', () => {
     expect(text).toContain('free chat')
     expect(text).not.toContain('Workflow')
   })
+
+  it('tells Claude your doc paths filled for the workspace, flagging what is not set', () => {
+    const planning = getWorkflow(openDb(':memory:'), 'planning')
+    const text = workspaceContext(ws, repo, { ...DEFAULT_SETTINGS, docsRoot: '/vault' }, planning)
+    expect(text).toContain('## Doc locations')
+    expect(text).toContain('- Module docs: /vault/frontend/modules/i-15/detail')
+    expect(text).toContain('- Open Questions: /vault/frontend/modules/i-15/detail/Open Questions.md')
+    expect(text).toMatch(/- Plan: \/vault\/plans\/\d{4}-\d{2}\/i-15\/\{feature\}\/\{feature\}\.md {3}\(not set: \{feature\}/)
+  })
+
+  it('skips doc locations without a docs root', () => {
+    const text = workspaceContext(ws, repo, DEFAULT_SETTINGS, null)
+    expect(text).not.toContain('Doc locations')
+  })
 })

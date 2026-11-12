@@ -20,7 +20,7 @@ describe('contracts', () => {
   })
 
   it('requires a claude model list in settings', () => {
-    const base = { docsRoot: null, paths: { moduleDocs: '', plans: '', oqFile: '' }, workspacesDir: '/w' }
+    const base = { docsRoot: null, docPaths: [], workspacesDir: '/w' }
     expect(Settings.safeParse({ ...base, models: { claude: { list: ['sonnet'], default: 'sonnet' } } }).success).toBe(true)
     expect(Settings.safeParse({ ...base, models: {} }).success).toBe(false)
   })

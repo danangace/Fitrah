@@ -20,14 +20,19 @@ export const OpenIn = z.discriminatedUnion('kind', [
 ])
 export type OpenIn = z.infer<typeof OpenIn>
 
+/** A named place in the docs root, e.g. "Plan" → `plans/{yyyy-mm}/{iteration}/{feature}/{feature}.md`. */
+export const DocPath = z.object({
+  label: z.string().trim().min(1, 'Each doc path needs a name'),
+  /** Relative to the docs root; `{placeholders}` are filled per workspace (see shared/doc-paths). */
+  template: z.string().trim().min(1, 'Each doc path needs a path'),
+})
+export type DocPath = z.infer<typeof DocPath>
+
 export const Settings = z.object({
   /** Markdown folder browsed read-only (e.g. the Obsidian vault). */
   docsRoot: nullableText,
-  paths: z.object({
-    moduleDocs: z.string(),
-    plans: z.string(),
-    oqFile: z.string(),
-  }),
+  /** Your own list of doc locations; every chat is told where they are for its workspace. */
+  docPaths: z.array(DocPath).max(30, 'At most 30 doc paths'),
   workspacesDir: z.string().min(1),
   models: z.object({ claude: AgentModels }).catchall(AgentModels),
   openIn: OpenIn.default({ kind: 'default' }),
