@@ -37,6 +37,28 @@ describe('settings', () => {
     const models = { claude: { list: ['opus'], default: 'haiku' } }
     expect(() => saveSettings(db, { ...DEFAULT_SETTINGS, models })).toThrow(/must be in its list/)
   })
+
+  it('saves your own doc paths and rejects two with the same name', () => {
+    const db = openDb(':memory:')
+    const docPaths = [{ label: 'BE Proposal', template: 'frontend/modules/{iteration}/{module}/BE Proposal.md' }]
+    saveSettings(db, { ...DEFAULT_SETTINGS, docPaths })
+    expect(getSettings(db).docPaths).toEqual(docPaths)
+    expect(() => saveSettings(db, { ...DEFAULT_SETTINGS, docPaths: [...docPaths, { label: 'be proposal', template: 'x' }] })).toThrow(
+      /both named/,
+    )
+    expect(() => saveSettings(db, { ...DEFAULT_SETTINGS, docPaths: [{ label: '', template: 'x' }] })).toThrow(/needs a name/)
+  })
+
+  it('turns the old three fixed paths into the doc paths list', () => {
+    const db = openDb(':memory:')
+    const old = { ...DEFAULT_SETTINGS, docPaths: undefined, paths: { moduleDocs: 'mods/{module}/', plans: 'p/{feature}.md', oqFile: 'OQ.md' } }
+    db.prepare("INSERT INTO settings (key, value) VALUES ('app', ?)").run(JSON.stringify(old))
+    expect(getSettings(db).docPaths).toEqual([
+      { label: 'Module docs', template: 'mods/{module}/' },
+      { label: 'Open Questions', template: 'mods/{module}/OQ.md' },
+      { label: 'Plan', template: 'p/{feature}.md' },
+    ])
+  })
 })
 
 describe('repos', () => {

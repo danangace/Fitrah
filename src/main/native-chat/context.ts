@@ -1,4 +1,5 @@
 import { join } from 'node:path'
+import { resolveDocPath } from '../../shared/doc-paths'
 import type { Repo, Settings, Workflow, Workspace } from '../../shared/schemas'
 import { expandHome } from '../paths'
 import { fillInstructions } from '../workflows/service'
@@ -17,6 +18,16 @@ export function workspaceContext(ws: Workspace, repo: Repo, settings: Settings, 
     `- Branch: ${ws.branch} (created from ${ws.base})`,
   ]
   if (docsRoot) lines.push(`- Docs root (vault; write docs here, not in the repo): ${docsRoot}`)
+
+  // The user's own doc locations (Settings → General → Doc paths), filled for this workspace.
+  if (docsRoot && settings.docPaths.length > 0) {
+    const resolved = settings.docPaths.map((p) => resolveDocPath(p, ws, workflow))
+    lines.push('', '## Doc locations (from Settings; use these, do not invent other places)')
+    for (const p of resolved) {
+      const note = p.missing.length ? `   (not set: ${p.missing.map((m) => `{${m}}`).join(', ')}; ask the user if you need it)` : ''
+      lines.push(`- ${p.label}: ${join(docsRoot, p.path)}${note}`)
+    }
+  }
 
   if (!workflow) {
     lines.push('', 'This is a free chat: no task template. The user will say what to do.')

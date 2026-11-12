@@ -1,10 +1,61 @@
+import { Plus, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import type { Settings } from '../../../shared/schemas'
+import { BUILTIN_PLACEHOLDERS } from '../../../shared/doc-paths'
+import type { DocPath, Settings } from '../../../shared/schemas'
 import { api } from '../../api/fitrah'
 import { errorText } from '../../lib/errors'
 import { Button } from '../ui/Button'
 import { toast } from '../../store/toast'
 import { Card, Field, Input, Notice } from '../ui/Field'
+
+/** Your own named doc locations; each chat gets them filled in for its workspace. */
+function DocPathsEditor({ value, onChange }: { value: DocPath[]; onChange: (v: DocPath[]) => void }) {
+  const update = (i: number, patch: Partial<DocPath>) => onChange(value.map((p, j) => (j === i ? { ...p, ...patch } : p)))
+  return (
+    <div className="space-y-2">
+      <div className="text-[13px] font-medium text-muted-foreground">Doc paths</div>
+      {/* One block per topic: name on its own line, the full path on the next, so long paths stay readable. */}
+      {value.map((p, i) => (
+        <div key={i} className="space-y-1.5 rounded-md border border-border/60 bg-background/40 p-2.5">
+          <div className="flex items-center gap-2">
+            <Input
+              aria-label={`Doc path ${i + 1} name`}
+              className="min-w-0 flex-1"
+              placeholder="Name, e.g. BE Proposal"
+              value={p.label}
+              onChange={(e) => update(i, { label: e.target.value })}
+            />
+            <button
+              type="button"
+              aria-label={`Remove doc path ${p.label || i + 1}`}
+              title="Remove"
+              onClick={() => onChange(value.filter((_, j) => j !== i))}
+              className="flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-destructive"
+            >
+              <Trash2 className="size-4" />
+            </button>
+          </div>
+          <Input
+            aria-label={`Doc path ${i + 1} path`}
+            className="font-mono text-xs"
+            placeholder="frontend/modules/{iteration}/{module}/…"
+            value={p.template}
+            onChange={(e) => update(i, { template: e.target.value })}
+          />
+        </div>
+      ))}
+      <Button variant="ghost" onClick={() => onChange([...value, { label: '', template: '' }])}>
+        <Plus className="size-4" /> Add doc path
+      </Button>
+      <p className="text-xs text-muted-foreground/70">
+        Relative to the docs root. Every chat is told these locations for its workspace. Placeholders:{' '}
+        <span className="font-mono">{BUILTIN_PLACEHOLDERS.join(' ')}</span>, plus any workflow field by its name, e.g.{' '}
+        <span className="font-mono">{'{iteration}'}</span> or <span className="font-mono">{'{module}'}</span>. An empty one is left as is and
+        Claude asks for it.
+      </p>
+    </div>
+  )
+}
 
 export function GeneralSettings() {
   const [settings, setSettings] = useState<Settings | null>(null)
@@ -19,7 +70,6 @@ export function GeneralSettings() {
   if (!settings) return message ? <Notice tone="error">{message.text}</Notice> : null
 
   const set = (patch: Partial<Settings>) => setSettings({ ...settings, ...patch })
-  const setPath = (key: keyof Settings['paths'], value: string) => set({ paths: { ...settings.paths, [key]: value } })
 
   const save = async () => {
     setMessage(null)
@@ -72,17 +122,7 @@ export function GeneralSettings() {
       <Field label="Workspaces folder" hint="Where new git worktrees are created.">
         <Input value={settings.workspacesDir} onChange={(e) => set({ workspacesDir: e.target.value })} />
       </Field>
-      <div className="grid gap-4 md:grid-cols-3">
-        <Field label="Module docs path">
-          <Input value={settings.paths.moduleDocs} onChange={(e) => setPath('moduleDocs', e.target.value)} />
-        </Field>
-        <Field label="Plans path">
-          <Input value={settings.paths.plans} onChange={(e) => setPath('plans', e.target.value)} />
-        </Field>
-        <Field label="Open Questions file">
-          <Input value={settings.paths.oqFile} onChange={(e) => setPath('oqFile', e.target.value)} />
-        </Field>
-      </div>
+      <DocPathsEditor value={settings.docPaths} onChange={(docPaths) => set({ docPaths })} />
     </Card>
   )
 }

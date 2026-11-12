@@ -1,6 +1,8 @@
-import { PanelRight } from 'lucide-react'
+import { Check, Copy, FileText, PanelRight } from 'lucide-react'
 import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
-import type { Workflow, Workspace } from '../../shared/schemas'
+import { resolveDocPath } from '../../shared/doc-paths'
+import type { Settings, Workflow, Workspace } from '../../shared/schemas'
+import { useRouter } from '../store/router'
 import { api } from '../api/fitrah'
 import { ArchiveButton } from '../components/workspace/ArchiveButton'
 import { STATUS_LABEL, StatusDot } from '../components/workspace/StatusDot'
@@ -10,16 +12,55 @@ import { errorText } from '../lib/errors'
 import { readPref, writePref } from '../lib/local-pref'
 import { useAppEvents } from '../store/events'
 
-function TaskLink({ label, value }: { label: string; value: string }) {
-  if (!value) return <span className="text-muted-foreground/50">—</span>
-  return /^https?:\/\//.test(value) ? (
-    <a href={value} target="_blank" rel="noreferrer" title={value} className="text-foreground underline decoration-foreground/30 underline-offset-2 hover:decoration-foreground">
-      {label} ↗
-    </a>
-  ) : (
-    <span className="text-foreground/90" title={value}>
-      {value}
-    </span>
+function CopyButton({ value, label }: { value: string; label: string }) {
+  const [copied, setCopied] = useState(false)
+  useEffect(() => {
+    if (!copied) return
+    const t = setTimeout(() => setCopied(false), 1200)
+    return () => clearTimeout(t)
+  }, [copied])
+  return (
+    <button
+      type="button"
+      aria-label={`Copy ${label}`}
+      title={copied ? 'Copied' : 'Copy'}
+      onClick={() => void navigator.clipboard.writeText(value).then(() => setCopied(true))}
+      className="flex size-6 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-secondary hover:text-foreground"
+    >
+      {copied ? <Check className="size-3.5 text-success" /> : <Copy className="size-3.5" />}
+    </button>
+  )
+}
+
+/**
+ * One topic per row: the name on top, the full value below (wrapped, never cut off) and a copy button,
+ * so a long PRD / Figma link or doc path can be read and copied whole.
+ */
+function DetailRow({ label, value, copy, open, note }: { label: string; value: string; copy?: string; open?: ReactNode; note?: string }) {
+  const isUrl = /^https?:\/\//.test(value)
+  return (
+    <div className="rounded-md border border-border/60 bg-background/40 px-2.5 py-1.5">
+      <div className="flex items-center gap-1">
+        <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">{label}</span>
+        {open}
+        {value && <CopyButton value={copy ?? value} label={label} />}
+      </div>
+      {!value ? (
+        <div className="text-[13px] text-muted-foreground/50">—</div>
+      ) : isUrl ? (
+        <a
+          href={value}
+          target="_blank"
+          rel="noreferrer"
+          className="block font-mono text-xs break-all text-foreground underline decoration-foreground/30 underline-offset-2 hover:decoration-foreground"
+        >
+          {value}
+        </a>
+      ) : (
+        <div className="font-mono text-xs break-all text-foreground/90">{value}</div>
+      )}
+      {note && <div className="mt-0.5 text-xs text-warning">{note}</div>}
+    </div>
   )
 }
 
@@ -42,17 +83,57 @@ function TaskDetails({ workspace }: { workspace: Workspace }) {
   const workflow = useWorkflow(workspace.workflowId)
   if (!workspace.workflowId) return <div className="text-sm text-foreground/80">Free chat</div>
   return (
-    <dl className="space-y-1.5 text-[13px]" title="Claude gets these in every chat of this workspace">
+    <div className="space-y-1.5" title="Claude gets these in every chat of this workspace">
       <div className="mb-1 text-sm font-medium text-info">{workflow?.name ?? 'Workflow'}</div>
       {(workflow?.fields ?? []).map((f) => (
-        <div key={f.key} className="grid grid-cols-[88px_1fr] gap-2">
-          <dt className="truncate text-muted-foreground">{f.label}</dt>
-          <dd className="min-w-0 truncate">
-            <TaskLink label={f.label} value={workspace.values[f.key] ?? ''} />
-          </dd>
-        </div>
+        <DetailRow key={f.key} label={f.label} value={workspace.values[f.key] ?? ''} />
       ))}
-    </dl>
+    </div>
+  )
+}
+
+/** Your doc paths (Settings → General) filled for this workspace: the same list Claude is told. */
+function DocLocations({ workspace }: { workspace: Workspace }) {
+  const workflow = useWorkflow(workspace.workflowId)
+  const navigate = useRouter((s) => s.navigate)
+  const [settings, setSettings] = useState<Settings | null>(null)
+  useEffect(() => {
+    api.getSettings().then(setSettings, () => setSettings(null))
+  }, [])
+  if (!settings) return null
+  if (!settings.docsRoot) return <div className="text-xs text-muted-foreground">Set a docs root in Settings → General to see doc paths.</div>
+  if (settings.docPaths.length === 0) return <div className="text-xs text-muted-foreground">No doc paths yet. Add them in Settings → General.</div>
+  const root = settings.docsRoot.replace(/\/+$/, '')
+  return (
+    <div className="space-y-1.5">
+      {settings.docPaths.map((p) => {
+        const r = resolveDocPath(p, workspace, workflow)
+        const full = `${root}/${r.path}`
+        const canOpen = r.missing.length === 0 && r.path.endsWith('.md')
+        return (
+          <DetailRow
+            key={p.label}
+            label={p.label}
+            value={r.path}
+            copy={full}
+            note={r.missing.length ? `Not set: ${r.missing.map((m) => `{${m}}`).join(', ')}` : undefined}
+            open={
+              canOpen ? (
+                <button
+                  type="button"
+                  aria-label={`Open ${p.label} in Docs`}
+                  title="Open in Docs"
+                  onClick={() => navigate({ name: 'docs', path: r.path })}
+                  className="flex size-6 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-secondary hover:text-foreground"
+                >
+                  <FileText className="size-3.5" />
+                </button>
+              ) : undefined
+            }
+          />
+        )
+      })}
+    </div>
   )
 }
 
@@ -94,7 +175,7 @@ function CopyLine({ value }: { value: string }) {
       type="button"
       title="Copy"
       onClick={() => void navigator.clipboard.writeText(value)}
-      className="block w-full truncate rounded bg-secondary/60 px-2 py-1 text-left font-mono text-xs text-foreground/80 hover:bg-secondary"
+      className="block w-full rounded bg-secondary/60 px-2 py-1 text-left font-mono text-xs break-all text-foreground/80 hover:bg-secondary"
     >
       {value}
     </button>
@@ -107,6 +188,9 @@ function DetailsPanel({ workspace }: { workspace: Workspace }) {
     <aside className="flex w-80 shrink-0 flex-col overflow-y-auto border-l border-border bg-sidebar">
       <DetailsSection title={workspace.workflowId ? 'Task' : 'Type'}>
         <TaskDetails workspace={workspace} />
+      </DetailsSection>
+      <DetailsSection title="Docs">
+        <DocLocations workspace={workspace} />
       </DetailsSection>
       <DetailsSection title="Branch">
         <CopyLine value={workspace.branch} />

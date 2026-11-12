@@ -38,7 +38,7 @@ Already running and you closed the tab, or want **another browser**? Run `fitrah
 
 ## 3. First-time setup
 
-1. **Settings → General:** set the **Docs root** to your markdown folder (e.g. your Obsidian vault). Docs are shown **read-only**; you keep editing them in Obsidian. Also choose the **Workspaces folder** (default `~/fitrah/workspaces`) and where Fitrah opens (**Open Fitrah in**: your default browser or a Chrome profile).
+1. **Settings → General:** set the **Docs root** to your markdown folder (e.g. your Obsidian vault). Docs are shown **read-only**; you keep editing them in Obsidian. Under **Doc paths**, list your own doc locations by name (e.g. *Plan* → `plans/{yyyy-mm}/{iteration}/{feature}/{feature}.md`, *BE Proposal*, *Open Questions*); every chat is told where they are for its workspace, with `{placeholders}` filled from the workflow fields and the date. Also choose the **Workspaces folder** (default `~/fitrah/workspaces`) and where Fitrah opens (**Open Fitrah in**: your default browser or a Chrome profile).
 2. **Add a project** (sidebar → **Add project**):
    - **Browse folder:** pick an existing git repo. Fitrah has its own folder browser: click into folders, or type / paste a path and press Enter.
    - **Clone from URL:** a git URL + the folder to clone into.
