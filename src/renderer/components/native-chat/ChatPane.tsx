@@ -1,4 +1,4 @@
-import { ArrowUp, CheckCircle2, ChevronRight, CircleX, Loader2, Sparkles, Square, Wrench } from 'lucide-react'
+import { ArrowDown, ArrowUp, CheckCircle2, ChevronRight, CircleX, Loader2, Sparkles, Square, Wrench } from 'lucide-react'
 import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react'
 import type { ChatEvent } from '../../../shared/events'
 import type { Chat } from '../../../shared/schemas'
@@ -62,7 +62,8 @@ export function ChatPane({ chat: initial }: { chat: Chat }) {
   const setDraft = useChatUi((s) => s.setDraft)
   const setText = (value: string) => setDraft(chat.id, value)
   const [error, setError] = useState<string | null>(null)
-  const bottom = useRef<HTMLDivElement>(null)
+  const scroller = useRef<HTMLDivElement>(null)
+  const column = useRef<HTMLDivElement>(null)
   const input = useRef<HTMLTextAreaElement>(null)
 
   // Load once per chat; live events append. (Status changes must not reload the history.)
@@ -77,9 +78,44 @@ export function ChatPane({ chat: initial }: { chat: Chat }) {
   }, [chat.id])
 
   const items = useMemo(() => toItems(events), [events])
+
+  // Stick to the bottom: while you are at (or near) the bottom, follow everything that makes the
+  // transcript taller — new items, "Claude is working…", tool results, long replies, diagrams that
+  // render late. Scroll up to read and it stops following until you scroll back down.
+  const stick = useRef(true)
+  const [away, setAway] = useState(false)
+  const scrollToBottom = () => {
+    const el = scroller.current
+    if (el) el.scrollTop = el.scrollHeight
+  }
+  const onScroll = () => {
+    const el = scroller.current
+    if (!el) return
+    stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80
+    setAway(!stick.current)
+  }
   useEffect(() => {
-    bottom.current?.scrollIntoView({ block: 'end' })
-  }, [items.length])
+    const content = column.current
+    const viewport = scroller.current
+    if (!content || !viewport) return
+    const observer = new ResizeObserver(() => {
+      if (stick.current) scrollToBottom()
+    })
+    observer.observe(content) // the transcript grows
+    observer.observe(viewport) // the composer grows and the visible area shrinks
+    return () => observer.disconnect()
+  }, [])
+  const jumpToLatest = () => {
+    stick.current = true
+    setAway(false)
+    scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: 'smooth' })
+  }
+  // A new chat (tab switch) opens at the bottom.
+  useEffect(() => {
+    stick.current = true
+    setAway(false)
+    scrollToBottom()
+  }, [chat.id])
   // Auto-grow the composer up to ~10 lines.
   useEffect(() => {
     const el = input.current
@@ -93,6 +129,10 @@ export function ChatPane({ chat: initial }: { chat: Chat }) {
     if (!text.trim() || running) return
     setError(null)
     const chatId = chat.id
+    // Sending a message always jumps back to the bottom to follow the answer.
+    stick.current = true
+    setAway(false)
+    scrollToBottom()
     api.sendMessage(chatId, text).then(() => setDraft(chatId, ''), (e: unknown) => setError(errorText(e)))
   }
   const onKey = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -114,8 +154,8 @@ export function ChatPane({ chat: initial }: { chat: Chat }) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-3xl space-y-5 px-6 py-6">
+      <div ref={scroller} onScroll={onScroll} className="min-h-0 flex-1 overflow-y-auto">
+        <div ref={column} className="mx-auto max-w-3xl space-y-5 px-6 py-6">
           {blocks.length === 0 && (
             <div className="pt-[18vh] text-center">
               <div className="mx-auto mb-3 flex size-9 items-center justify-center rounded-lg bg-secondary text-foreground/70">
@@ -160,11 +200,19 @@ export function ChatPane({ chat: initial }: { chat: Chat }) {
               <Loader2 className="size-3 animate-spin" /> Claude is working…
             </div>
           )}
-          <div ref={bottom} />
         </div>
       </div>
 
-      <div className="shrink-0 px-6 pb-4">
+      <div className="relative shrink-0 px-6 pb-4">
+        {away && (
+          <button
+            type="button"
+            onClick={jumpToLatest}
+            className="absolute -top-11 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-border bg-popover px-3 py-1.5 text-xs text-foreground shadow-lg shadow-black/30 hover:bg-secondary"
+          >
+            <ArrowDown className="size-3.5" /> {running ? 'Claude is working · jump to latest' : 'Jump to latest'}
+          </button>
+        )}
         <div className="mx-auto max-w-3xl">
           {error && <div className="mb-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-red-200">{error}</div>}
           <div className="rounded-xl border border-input bg-card shadow-lg shadow-black/20 focus-within:border-ring">

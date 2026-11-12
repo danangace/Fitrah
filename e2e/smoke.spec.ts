@@ -199,6 +199,38 @@ test('composer pickers: permission and model + effort (in the chat)', async ({ p
   await expect(page.getByRole('button', { name: 'Model' })).toContainText('Claude Opus')
 })
 
+test('the chat follows new output to the bottom, and offers "Jump to latest" after scrolling up', async ({ page }) => {
+  await page.goto(`/?token=${TOKEN}`)
+  await page.locator('aside').getByRole('button', { name: 'New workspace', exact: true }).click()
+  const dialog = page.getByRole('dialog', { name: 'Create workspace' })
+  await dialog.getByLabel('Project').selectOption({ label: 'repo' })
+  await dialog.getByLabel('Workspace name').fill('scrolling')
+  await dialog.getByRole('button', { name: /Create workspace/ }).click()
+  await expect(page.getByRole('heading', { name: 'scrolling' })).toBeVisible({ timeout: 20_000 })
+  // Full access: the fake agent's tool call runs without an approval card.
+  await page.getByRole('button', { name: 'Permission' }).click()
+  await page.getByRole('menuitemradio', { name: /Full access/ }).click()
+
+  const done = page.getByText('The command was allowed.')
+  const tall = Array.from({ length: 14 }, (_, i) => `line ${i + 1}`).join('\n')
+  for (let turn = 1; turn <= 4; turn++) {
+    await page.getByPlaceholder(/Message Claude/).fill(`turn ${turn}\n${tall}`)
+    await page.getByRole('button', { name: 'Send' }).click()
+    await expect(done).toHaveCount(turn)
+    // Without touching the scrollbar, the newest output is on screen.
+    await expect(done.last()).toBeInViewport()
+  }
+
+  // Scroll up to read: it stops following and offers a way back.
+  await done.last().hover()
+  await page.mouse.wheel(0, -5000)
+  await expect(page.getByRole('button', { name: /Jump to latest/ })).toBeVisible()
+  await expect(done.last()).not.toBeInViewport()
+  await page.getByRole('button', { name: /Jump to latest/ }).click()
+  await expect(done.last()).toBeInViewport()
+  await expect(page.getByRole('button', { name: /Jump to latest/ })).toBeHidden()
+})
+
 test('the sidebar can be resized and remembers its width', async ({ page }) => {
   await page.goto(`/?token=${TOKEN}`)
   const aside = page.locator('aside').first()
