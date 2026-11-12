@@ -1,11 +1,12 @@
-import { RefreshCw, Star, Trash2 } from 'lucide-react'
+import { Check, Pencil, RefreshCw, Star, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import type { Account, DetectedLogin } from '../../../shared/schemas'
 import { api } from '../../api/fitrah'
+import { configDirName } from '../../lib/accounts'
 import { cn } from '../../lib/cn'
 import { errorText } from '../../lib/errors'
 import { Button } from '../ui/Button'
-import { Card, Notice } from '../ui/Field'
+import { Card, Input, Notice } from '../ui/Field'
 import { toast } from '../../store/toast'
 import { useConfirm } from '../ui/confirm'
 import { ClaudeSignIn } from './ClaudeSignIn'
@@ -34,11 +35,61 @@ function AccountRow({ account, onChange, onError }: { account: Account; onChange
     })
     if (ok) act(() => api.removeAccount(account.id))()
   }
+  const [editing, setEditing] = useState(false)
+  const [name, setName] = useState(account.label)
+  const folder = configDirName(account.configDir)
+  const saveName = () => {
+    if (name.trim() === account.label) return setEditing(false)
+    api.renameAccount(account.id, name).then(() => {
+      setEditing(false)
+      onChange()
+    }, onError)
+  }
   return (
     <li className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2">
       <div className="min-w-0">
         <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-          {account.label}
+          {editing ? (
+            <form
+              className="flex items-center gap-1"
+              onSubmit={(e) => {
+                e.preventDefault()
+                saveName()
+              }}
+            >
+              <Input
+                autoFocus
+                aria-label="Account name"
+                className="h-7 w-48"
+                value={name}
+                placeholder="e.g. Sekolahmu, Personal"
+                onChange={(e) => setName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    setName(account.label)
+                    setEditing(false)
+                  }
+                }}
+              />
+              <Button variant="ghost" type="submit" aria-label="Save name" title="Save (Enter)">
+                <Check size={14} />
+              </Button>
+            </form>
+          ) : (
+            <>
+              {account.label}
+              {account.label !== folder && <span className="font-mono text-xs font-normal text-muted-foreground">{folder}</span>}
+              <button
+                type="button"
+                aria-label={`Rename ${account.label}`}
+                title="Rename"
+                onClick={() => setEditing(true)}
+                className="rounded p-0.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
+              >
+                <Pencil size={12} />
+              </button>
+            </>
+          )}
           <StatusBadge status={account.loginStatus} />
           <span className="text-xs text-muted-foreground">{account.kind}</span>
         </div>

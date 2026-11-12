@@ -1,7 +1,7 @@
 import { ChevronDown, ChevronRight, ClipboardList, Loader2, MessageSquare, Plus, Settings2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { Repo, Workspace } from '../../../shared/schemas'
-import { configDirName } from '../../lib/accounts'
+import { accountName } from '../../lib/accounts'
 import { cn } from '../../lib/cn'
 import { modelInfo } from '../../lib/models'
 import { useAppEvents } from '../../store/events'
@@ -34,7 +34,7 @@ function WorkspaceRow({ ws, active, onClick }: { ws: Workspace; active: boolean;
               <span className="size-1.5 shrink-0 rounded-full bg-[#d97757]" />
               <span className="truncate" title={ws.agent.configDir ?? undefined}>
                 {modelInfo(ws.agent.model).name}
-                {ws.agent.configDir && <span className="font-mono"> · {configDirName(ws.agent.configDir)}</span>}
+                {ws.agent.configDir && <span> · {accountName(ws.agent.accountLabel, ws.agent.configDir)}</span>}
               </span>
             </>
           ) : (

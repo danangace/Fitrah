@@ -6,7 +6,7 @@ import { UserError } from '../errors'
 import type { Db } from '../sqlite/db'
 import { ClaudeLoginManager } from './claude/login'
 import { attachAccount, detectLogins, removeAccount } from './manage'
-import { listAccounts, refreshAccount, setDefaultAccount } from './service'
+import { listAccounts, refreshAccount, renameAccount, setDefaultAccount } from './service'
 
 const AttachBody = z.object({ agent: AgentId, configDir: z.string().min(1), label: z.string().optional() })
 
@@ -39,4 +39,9 @@ export function registerAccountRoutes(app: Hono, db: Db): void {
   })
   app.post(`${API.accounts}/:id/check`, async (c) => c.json(await refreshAccount(db, c.req.param('id'))))
   app.post(`${API.accounts}/:id/default`, (c) => c.json(setDefaultAccount(db, c.req.param('id'))))
+  app.patch(`${API.accounts}/:id`, async (c) => {
+    const body = z.object({ label: z.string() }).safeParse(await c.req.json())
+    if (!body.success) throw new UserError('invalid_label', 'Give the account a name')
+    return c.json(renameAccount(db, c.req.param('id'), body.data.label))
+  })
 }

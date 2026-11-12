@@ -27,17 +27,17 @@ type WorkspaceRow = {
 /** Live status per workspace comes from its chats (T25); stored rows default to idle. */
 export type StatusLookup = (workspaceId: string) => WorkspaceStatus
 
-type AgentRow = { agent: AgentId; model: string; config_dir: string | null }
+type AgentRow = { agent: AgentId; model: string; config_dir: string | null; label: string | null }
 
 /** The chat used last in a workspace, for the sidebar's "Claude Sonnet · .claude-sid" label. */
 function lastAgent(db: Db, workspaceId: string): Workspace['agent'] {
   const row = db
     .prepare(
-      `SELECT c.agent, c.model, a.config_dir FROM chats c LEFT JOIN accounts a ON a.id = c.account_id
+      `SELECT c.agent, c.model, a.config_dir, a.label FROM chats c LEFT JOIN accounts a ON a.id = c.account_id
        WHERE c.workspace_id = ? ORDER BY COALESCE(c.last_active_at, c.created_at) DESC LIMIT 1`,
     )
     .get(workspaceId) as AgentRow | undefined
-  return row ? { agent: row.agent, model: row.model, configDir: row.config_dir } : null
+  return row ? { agent: row.agent, model: row.model, configDir: row.config_dir, accountLabel: row.label } : null
 }
 
 const toWorkspace = (r: WorkspaceRow, status: StatusLookup, agent: Workspace['agent'] = null): Workspace => ({

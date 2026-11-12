@@ -159,6 +159,8 @@ export const Workspace = z.object({
       model: z.string(),
       /** Login folder of that chat's account, e.g. `/Users/x/.claude-sid`; null when it has none. */
       configDir: z.string().nullable().default(null),
+      /** That account's name (Settings → Accounts), e.g. "Sekolahmu". */
+      accountLabel: z.string().nullable().default(null),
     })
     .nullable(),
   createdAt: isoDate,

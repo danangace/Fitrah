@@ -76,7 +76,9 @@ export function AccountBadge({ chat }: { chat: Chat }) {
     }
   }, [chat.accountId])
 
-  const name = account ? configDirName(account.configDir) : chat.accountId ? 'unknown account' : 'no account'
+  const folder = account ? configDirName(account.configDir) : null
+  // "Sekolahmu · .claude-sid" once renamed; just the folder while the name is still the folder.
+  const name = account && folder ? (account.label === folder ? folder : `${account.label} · ${folder}`) : chat.accountId ? 'unknown account' : 'no account'
   const title = account
     ? [`Claude account: ${account.label}`, account.email, account.configDir, 'To use another account, start a new chat.'].filter(Boolean).join('\n')
     : 'This chat has no attached account.'

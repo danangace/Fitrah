@@ -80,6 +80,16 @@ export function insertAccount(
   return getAccount(db, id)
 }
 
+/** Your own name for a login (e.g. "Sekolahmu" for `.claude-sid`), shown next to its folder everywhere. */
+export function renameAccount(db: Db, id: string, label: string): Account {
+  getAccount(db, id)
+  const name = label.trim()
+  if (!name) throw new UserError('invalid_label', 'Give the account a name')
+  if (name.length > 40) throw new UserError('invalid_label', 'Keep the name under 40 characters')
+  db.prepare('UPDATE accounts SET label = ? WHERE id = ?').run(name, id)
+  return getAccount(db, id)
+}
+
 export function setDefaultAccount(db: Db, id: string): Account {
   const account = getAccount(db, id)
   db.exec('BEGIN')

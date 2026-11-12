@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { openDb } from '../sqlite/db'
-import { deleteAccountRow, insertAccount, listAccounts, refreshAccount, setDefaultAccount } from './service'
+import { deleteAccountRow, insertAccount, listAccounts, refreshAccount, renameAccount, setDefaultAccount } from './service'
 
 const add = (db: ReturnType<typeof openDb>, dir: string) =>
   insertAccount(db, { agent: 'claude', label: dir, kind: 'attached', configDir: dir })
@@ -14,6 +14,14 @@ describe('accounts', () => {
     expect(b.isDefault).toBe(false)
     setDefaultAccount(db, b.id)
     expect(listAccounts(db).filter((x) => x.isDefault).map((x) => x.id)).toEqual([b.id])
+  })
+
+  it('renames an account and rejects an empty name', () => {
+    const db = openDb(':memory:')
+    const a = add(db, '/Users/x/.claude-sid')
+    expect(renameAccount(db, a.id, '  Sekolahmu ').label).toBe('Sekolahmu')
+    expect(() => renameAccount(db, a.id, '   ')).toThrow(/name/)
+    expect(listAccounts(db)[0]?.label).toBe('Sekolahmu')
   })
 
   it('moves the default when the default account is removed', () => {
