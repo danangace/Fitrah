@@ -307,6 +307,16 @@ test('Settings → Models: the list comes from the account; switched-on models s
   await expect(items.filter({ hasText: 'For your toughest challenges' })).toBeVisible()
   await expect(items.filter({ hasText: 'Haiku 5.5' })).toHaveCount(0)
   await page.screenshot({ path: 'test-results/screens/chat-model-picker.png' })
+  await page.keyboard.press('Escape')
+
+  // Create workspace: the Model list is the same switched-on models, named by the account; ★ preselected.
+  await page.getByRole('button', { name: 'New workspace in repo', exact: true }).click()
+  const dialog = page.getByRole('dialog', { name: 'Create workspace' })
+  await expect(dialog.getByLabel('Model')).toContainText('Fable 5.2')
+  await dialog.getByLabel('Model').click()
+  await expect(page.getByRole('option', { name: 'Sonnet 5.5', exact: true })).toBeVisible()
+  await expect(page.getByRole('option', { name: 'Haiku 5.5', exact: true })).toHaveCount(0)
+  await page.screenshot({ path: 'test-results/screens/create-workspace-models.png', animations: 'disabled' })
 })
 
 test('the sidebar can be resized and remembers its width', async ({ page }) => {

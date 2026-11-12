@@ -5,6 +5,7 @@ import type { Account, Chat, Settings, Workspace } from '../../../shared/schemas
 import { onChatEvent } from '../../api/chat-socket'
 import { api } from '../../api/fitrah'
 import { cn } from '../../lib/cn'
+import { describeModel, useAccountModels } from '../../lib/account-models'
 import { errorText } from '../../lib/errors'
 import { useChatUi } from '../../store/chat-ui'
 import { useRouter } from '../../store/router'
@@ -24,6 +25,7 @@ function NewChatForm({ workspace, onCreated }: { workspace: Workspace; onCreated
   const [accountId, setAccountId] = useState('')
   const [model, setModel] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const offered = useAccountModels(accountId || null)
 
   useEffect(() => {
     Promise.all([api.listAccounts(), api.getSettings()]).then(([a, s]) => {
@@ -56,7 +58,12 @@ function NewChatForm({ workspace, onCreated }: { workspace: Workspace; onCreated
             onValueChange={setAccountId}
             options={accounts.map((a) => ({ value: a.id, label: `Claude · ${a.label}${a.isDefault ? ' ★' : ''}` }))}
           />
-          <Select aria-label="Model" value={model} onValueChange={setModel} options={settings.models.claude.list.map((m) => ({ value: m, label: m }))} />
+          <Select
+            aria-label="Model"
+            value={model}
+            onValueChange={setModel}
+            options={settings.models.claude.list.map((m) => ({ value: m, label: describeModel(offered, m).name }))}
+          />
           <Button
             variant="primary"
             className="w-full"

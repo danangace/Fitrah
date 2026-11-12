@@ -1,10 +1,11 @@
 import { Check, ChevronDown, FilePen, Hand, Search, ShieldAlert, UserRound } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import type { Account, Chat, Effort, ModelOption, PermissionMode } from '../../../shared/schemas'
+import type { Account, Chat, Effort, PermissionMode } from '../../../shared/schemas'
 import { api } from '../../api/fitrah'
 import { configDirName } from '../../lib/accounts'
+import { describeModel, useAccountModels } from '../../lib/account-models'
 import { cn } from '../../lib/cn'
-import { EFFORTS, PERMISSIONS, modelInfo } from '../../lib/models'
+import { EFFORTS, PERMISSIONS } from '../../lib/models'
 import { Popover } from '../ui/Popover'
 
 const PERMISSION_ICON: Record<PermissionMode, typeof Hand> = { ask: Hand, 'accept-edits': FilePen, full: ShieldAlert }
@@ -96,26 +97,6 @@ export function AccountBadge({ chat }: { chat: Chat }) {
   )
 }
 
-// One request per account per page load; the runtime keeps the list in its DB.
-const catalogRequests = new Map<string, Promise<ModelOption[]>>()
-function useAccountModels(accountId: string | null): ModelOption[] {
-  const [models, setModels] = useState<ModelOption[]>([])
-  useEffect(() => {
-    if (!accountId) return setModels([])
-    let alive = true
-    let request = catalogRequests.get(accountId)
-    if (!request) {
-      request = api.accountModels(accountId).then((c) => c.models, () => [])
-      catalogRequests.set(accountId, request)
-    }
-    void request.then((m) => alive && setModels(m))
-    return () => {
-      alive = false
-    }
-  }, [accountId])
-  return models
-}
-
 /** "Opus 5.5 · Med ▾": model + effort for the next messages (Orca's model menu). */
 export function ModelPicker({ chat, onChange }: { chat: Chat; onChange: (c: Chat) => void }) {
   const [open, setOpen] = useState(false)
@@ -123,10 +104,7 @@ export function ModelPicker({ chat, onChange }: { chat: Chat; onChange: (c: Chat
   const [query, setQuery] = useState('')
   // Names, descriptions and effort levels come from the chat's account (Settings → Models).
   const offered = useAccountModels(chat.accountId)
-  const describe = (id: string) => {
-    const known = offered.find((o) => o.value === id)
-    return known ? { name: known.displayName, description: known.description } : modelInfo(id)
-  }
+  const describe = (id: string) => describeModel(offered, id)
   useEffect(() => {
     if (open) api.getSettings().then((s) => setModels(s.models.claude.list), () => setModels([chat.model]))
   }, [open, chat.model])

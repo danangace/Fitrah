@@ -2,6 +2,7 @@ import { Loader2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import type { Account, Settings, Workflow, WorkflowField } from '../../../shared/schemas'
 import { api } from '../../api/fitrah'
+import { describeModel, useAccountModels } from '../../lib/account-models'
 import { docFolders } from '../../lib/docs-folders'
 import { errorText } from '../../lib/errors'
 import { useRouter } from '../../store/router'
@@ -85,6 +86,8 @@ export function CreateWorkspaceModal({ projectId, onClose }: { projectId?: strin
   }, [repoId, repos])
 
   const repo = repos.find((r) => r.id === repoId)
+  // Model names ("Sonnet 5.5") from the chosen account; the list itself = models switched on in Settings → Models.
+  const offered = useAccountModels(agent === NO_AGENT ? null : agent)
   const workflow = workflows.find((w) => w.id === type) ?? null
   // Start each workflow's fields from their defaults.
   useEffect(() => {
@@ -188,7 +191,7 @@ export function CreateWorkspaceModal({ projectId, onClose }: { projectId?: strin
                   value={model}
                   disabled={agent === NO_AGENT}
                   onValueChange={setModel}
-                  options={(settings?.models.claude.list ?? []).map((m) => ({ value: m, label: m }))}
+                  options={(settings?.models.claude.list ?? []).map((m) => ({ value: m, label: describeModel(offered, m).name }))}
                 />
               </Field>
             </div>
