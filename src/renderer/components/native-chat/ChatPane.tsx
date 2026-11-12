@@ -7,6 +7,7 @@ import { api } from '../../api/fitrah'
 import { cn } from '../../lib/cn'
 import { errorText } from '../../lib/errors'
 import { type ToolItem, toItems } from '../../lib/transcript'
+import { useChatUi } from '../../store/chat-ui'
 import { useRouter } from '../../store/router'
 import { Markdown } from '../docs-browser/Markdown'
 import { ApprovalCard } from './ApprovalCard'
@@ -56,7 +57,10 @@ export function ChatPane({ chat: initial }: { chat: Chat }) {
   const navigate = useRouter((s) => s.navigate)
   const [events, setEvents] = useState<ChatEvent[]>([])
   const [status, setStatus] = useState(chat.status)
-  const [text, setText] = useState('')
+  // The unsent text lives in a store so it survives leaving the page (e.g. opening Settings).
+  const text = useChatUi((s) => s.drafts[chat.id] ?? '')
+  const setDraft = useChatUi((s) => s.setDraft)
+  const setText = (value: string) => setDraft(chat.id, value)
   const [error, setError] = useState<string | null>(null)
   const bottom = useRef<HTMLDivElement>(null)
   const input = useRef<HTMLTextAreaElement>(null)
@@ -88,7 +92,8 @@ export function ChatPane({ chat: initial }: { chat: Chat }) {
   const send = () => {
     if (!text.trim() || running) return
     setError(null)
-    api.sendMessage(chat.id, text).then(() => setText(''), (e: unknown) => setError(errorText(e)))
+    const chatId = chat.id
+    api.sendMessage(chatId, text).then(() => setDraft(chatId, ''), (e: unknown) => setError(errorText(e)))
   }
   const onKey = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {

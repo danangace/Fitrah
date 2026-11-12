@@ -5,6 +5,7 @@ import { onChatEvent } from '../../api/chat-socket'
 import { api } from '../../api/fitrah'
 import { cn } from '../../lib/cn'
 import { errorText } from '../../lib/errors'
+import { useChatUi } from '../../store/chat-ui'
 import { useRouter } from '../../store/router'
 import { Button } from '../ui/Button'
 import { Notice } from '../ui/Field'
@@ -87,7 +88,9 @@ function NewChatPopover({ workspace, onCreated, onClose }: { workspace: Workspac
 /** Chats of a workspace as tabs (like Orca's tab bar) + the active chat filling the space. */
 export function ChatsPanel({ workspace }: { workspace: Workspace }) {
   const [chats, setChats] = useState<Chat[]>([])
-  const [active, setActive] = useState<string | null>(null)
+  // The selected tab is kept per workspace in a store, so coming back from Settings reopens the same chat.
+  const active = useChatUi((s) => s.activeChat[workspace.id] ?? null)
+  const setActiveChat = useChatUi((s) => s.setActiveChat)
   const [picker, setPicker] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const confirm = useConfirm()
@@ -95,12 +98,14 @@ export function ChatsPanel({ workspace }: { workspace: Workspace }) {
     (select?: string) =>
       api.listChats(workspace.id).then((list) => {
         setChats(list)
-        setActive((cur) => select ?? cur ?? list.at(-1)?.id ?? null)
+        const cur = useChatUi.getState().activeChat[workspace.id]
+        const keep = cur && list.some((c) => c.id === cur) ? cur : undefined
+        setActiveChat(workspace.id, select ?? keep ?? list.at(-1)?.id ?? null)
       }),
-    [workspace.id],
+    [workspace.id, setActiveChat],
   )
+  const setActive = (id: string | null) => setActiveChat(workspace.id, id)
   useEffect(() => {
-    setActive(null)
     void load()
   }, [load])
   // Keep the tab dots live.
@@ -129,8 +134,10 @@ export function ChatsPanel({ workspace }: { workspace: Workspace }) {
     }
     const rest = chats.filter((c) => c.id !== chat.id)
     setChats(rest)
-    setActive((cur) => (cur === chat.id ? (rest.at(-1)?.id ?? null) : cur))
+    if (active === chat.id) setActive(rest.at(-1)?.id ?? null)
+    setDraft(chat.id, '')
   }
+  const setDraft = useChatUi((s) => s.setDraft)
   const closePicker = useCallback(() => setPicker(false), [])
   const current = chats.find((c) => c.id === active)
 
