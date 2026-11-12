@@ -155,8 +155,10 @@ test('Planning workflow: required fields, values shown, chat waits (AC-F2, AC-F4
 
   await expect(page.getByRole('heading', { name: 'plan-kelola' })).toBeVisible({ timeout: 20_000 })
   await expect(page.locator('main header').getByText('Planning', { exact: true })).toBeVisible()
-  await expect(page.getByRole('link', { name: 'PRD ↗' })).toHaveAttribute('href', 'https://prd.example/kelola')
-  await expect(page.getByText('i-16')).toBeVisible()
+  // Each task value has its own row with the full link and a copy button.
+  await expect(page.getByRole('link', { name: 'https://prd.example/kelola' })).toHaveAttribute('href', 'https://prd.example/kelola')
+  await expect(page.getByRole('button', { name: 'Copy PRD' })).toBeVisible()
+  await expect(page.getByText('i-16', { exact: true })).toBeVisible()
   // The chat is ready and waits for my first message (nothing sent).
   await expect(page.getByText('Say what Claude should do in this workspace.')).toBeVisible()
   await page.screenshot({ path: 'test-results/screens/workspace-planning.png' })
