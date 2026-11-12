@@ -67,7 +67,16 @@ const agent = fakeAdapter(async (o, emit) => {
   emit({ type: 'turn.done', ok: true, numTurns: 2 })
 })
 const chats = new ChatService(db, { claude: agent })
-const { app } = createRuntimeApp({ security: { token: E2E_TOKEN, allowedHosts: localHosts(E2E_PORT) }, db, chats, webRoot: WEB_ROOT })
+// The account's models as Claude Code would report them (no real Claude call in e2e).
+const modelListers = {
+  claude: async () => [
+    { value: 'opus', displayName: 'Opus 5.5', description: 'For complex work and everyday tasks', resolvedModel: 'claude-opus-5-5', efforts: ['low', 'medium', 'high', 'xhigh', 'max'] as const },
+    { value: 'fable', displayName: 'Fable 5.2', description: 'For your toughest challenges', resolvedModel: 'claude-fable-5-2', efforts: ['low', 'medium', 'high', 'xhigh', 'max'] as const },
+    { value: 'sonnet', displayName: 'Sonnet 5.5', description: 'Most efficient for simpler tasks', resolvedModel: 'claude-sonnet-5-5', efforts: ['low', 'medium', 'high'] as const },
+    { value: 'haiku', displayName: 'Haiku 5.5', description: 'Fastest for quick answers', resolvedModel: 'claude-haiku-5-5', efforts: [] },
+  ].map((m) => ({ ...m, efforts: [...m.efforts] })),
+}
+const { app } = createRuntimeApp({ security: { token: E2E_TOKEN, allowedHosts: localHosts(E2E_PORT) }, db, chats, webRoot: WEB_ROOT, modelListers })
 serve({ fetch: app.fetch, hostname: '127.0.0.1', port: E2E_PORT, websocket: { server: new WebSocketServer({ noServer: true }) } }, () =>
   console.info(`e2e server on ${E2E_PORT}`),
 )

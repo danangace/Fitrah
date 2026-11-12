@@ -209,16 +209,16 @@ test('composer pickers: permission and model + effort (in the chat)', async ({ p
   await expect(page.getByRole('menuitemradio')).toHaveCount(1)
   await page.getByPlaceholder('Search models…').fill('')
   await page.screenshot({ path: 'test-results/screens/model-menu.png' })
-  await page.getByRole('menuitemradio', { name: /Claude Opus/ }).click()
+  await page.getByRole('menuitemradio', { name: /Opus 5.5/ }).click()
   await page.getByRole('button', { name: 'High', exact: true }).click()
   await page.keyboard.press('Escape')
-  await expect(page.getByRole('button', { name: 'Model' })).toContainText('Claude Opus')
+  await expect(page.getByRole('button', { name: 'Model' })).toContainText('Opus 5.5')
   await expect(page.getByRole('button', { name: 'Model' })).toContainText('High')
 
   // Saved on the chat: still there after a reload.
   await page.reload()
   await expect(page.getByRole('button', { name: 'Permission' })).toContainText('Full access')
-  await expect(page.getByRole('button', { name: 'Model' })).toContainText('Claude Opus')
+  await expect(page.getByRole('button', { name: 'Model' })).toContainText('Opus 5.5')
 })
 
 test('the chat follows new output to the bottom, and offers "Jump to latest" after scrolling up', async ({ page }) => {
@@ -278,6 +278,35 @@ test('edit a workspace: turn a free chat into Planning and fill Iteration / Modu
   await expect(page.getByText('i-17', { exact: true })).toBeVisible()
   await expect(page.getByText('frontend/modules/i-17/invoice', { exact: true })).toBeVisible()
   await page.screenshot({ path: 'test-results/screens/workspace-edited.png' })
+})
+
+test('Settings → Models: the list comes from the account; switched-on models show in the chat picker', async ({ page }) => {
+  await page.goto(`/?token=${TOKEN}`)
+  await page.getByRole('button', { name: 'Settings', exact: true }).click()
+  await page.getByRole('button', { name: 'Models', exact: true }).click()
+
+  // The account's models, each with a switch; the default list (sonnet, opus, haiku) is on.
+  await expect(page.getByText('Fable 5.2')).toBeVisible()
+  await expect(page.getByRole('switch', { name: 'Show Opus 5.5' })).toBeChecked()
+  await expect(page.getByRole('switch', { name: 'Show Fable 5.2' })).not.toBeChecked()
+  // No more typing model ids.
+  await expect(page.getByPlaceholder(/Model id/)).toHaveCount(0)
+
+  await page.getByRole('switch', { name: 'Show Fable 5.2' }).click()
+  await page.getByRole('switch', { name: 'Show Haiku 5.5' }).click()
+  await page.getByRole('button', { name: 'Make Fable 5.2 the default' }).click()
+  await page.screenshot({ path: 'test-results/screens/settings-models.png' })
+  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await expect(page.getByText('Models saved')).toBeVisible()
+
+  // The chat picker offers exactly the switched-on models, with the account's names.
+  await page.getByTestId('workspace-row-pickers').click()
+  await page.getByRole('button', { name: 'Model' }).click()
+  const items = page.getByRole('menuitemradio')
+  await expect(items.filter({ hasText: 'Fable 5.2' })).toBeVisible()
+  await expect(items.filter({ hasText: 'For your toughest challenges' })).toBeVisible()
+  await expect(items.filter({ hasText: 'Haiku 5.5' })).toHaveCount(0)
+  await page.screenshot({ path: 'test-results/screens/chat-model-picker.png' })
 })
 
 test('the sidebar can be resized and remembers its width', async ({ page }) => {

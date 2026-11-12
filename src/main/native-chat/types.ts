@@ -1,5 +1,5 @@
 import type { ChatEvent } from '../../shared/events'
-import type { AgentId, Effort } from '../../shared/schemas'
+import type { ModelOption, AgentId, Effort } from '../../shared/schemas'
 
 /** What an agent wants to do that may need the user's OK. */
 export type ToolRequest = { tool: string; input: Record<string, unknown> }
@@ -45,4 +45,6 @@ export type AgentAdapter = {
   startTurn: (options: TurnOptions) => Turn
   /** Rebuild a chat's events from the agent's own transcript (after a restart). */
   readHistory?: (configDir: string, sessionId: string) => AdapterEvent[]
+  /** The models this login may use (no message is sent, nothing is billed). */
+  listModels?: (configDir: string) => Promise<ModelOption[]>
 }

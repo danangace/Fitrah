@@ -5,12 +5,13 @@ import { AgentId } from '../../shared/schemas'
 import { UserError } from '../errors'
 import type { Db } from '../sqlite/db'
 import { ClaudeLoginManager } from './claude/login'
+import type { ModelCatalogs } from './models'
 import { attachAccount, detectLogins, removeAccount } from './manage'
 import { listAccounts, refreshAccount, renameAccount, setDefaultAccount } from './service'
 
 const AttachBody = z.object({ agent: AgentId, configDir: z.string().min(1), label: z.string().optional() })
 
-export function registerAccountRoutes(app: Hono, db: Db): void {
+export function registerAccountRoutes(app: Hono, db: Db, catalogs: ModelCatalogs): void {
   const logins = new ClaudeLoginManager(db)
   // Sign in a new Claude account (managed folder under ~/.fitrah/accounts).
   app.post(`${API.accounts}/login`, async (c) => {
@@ -33,8 +34,11 @@ export function registerAccountRoutes(app: Hono, db: Db): void {
     if (!parsed.success) throw new UserError('invalid_account', parsed.error.issues[0]?.message ?? 'Invalid account')
     return c.json(await attachAccount(db, parsed.data), 201)
   })
+  // The models this account may use (cached; ?refresh=1 asks Claude Code again).
+  app.get(`${API.accounts}/:id/models`, async (c) => c.json(await catalogs.get(c.req.param('id'), c.req.query('refresh') === '1')))
   app.delete(`${API.accounts}/:id`, async (c) => {
     await removeAccount(db, c.req.param('id'))
+    catalogs.forget(c.req.param('id'))
     return c.json({ ok: true })
   })
   app.post(`${API.accounts}/:id/check`, async (c) => c.json(await refreshAccount(db, c.req.param('id'))))

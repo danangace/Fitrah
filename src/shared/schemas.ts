@@ -185,6 +185,25 @@ export type PermissionMode = z.infer<typeof PermissionMode>
 export const Effort = z.enum(['low', 'medium', 'high', 'xhigh', 'max'])
 export type Effort = z.infer<typeof Effort>
 
+/** One model an account may use, as Claude Code reports it (Settings → Models toggles these). */
+export const ModelOption = z.object({
+  /** What Fitrah passes as `model`, e.g. `opus` or `claude-fable-5-1`. */
+  value: z.string(),
+  displayName: z.string(),
+  description: z.string().default(''),
+  /** The full model id an alias points to, e.g. `opus` → `claude-opus-5-5`. */
+  resolvedModel: z.string().nullable().default(null),
+  efforts: z.array(Effort).default([]),
+})
+export type ModelOption = z.infer<typeof ModelOption>
+
+export const ModelCatalog = z.object({
+  accountId: z.string(),
+  models: z.array(ModelOption),
+  fetchedAt: z.string(),
+})
+export type ModelCatalog = z.infer<typeof ModelCatalog>
+
 export const ChatSettingsInput = z.object({
   model: z.string().min(1).optional(),
   effort: Effort.nullable().optional(),

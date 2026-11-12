@@ -1,6 +1,6 @@
 import { Check, ChevronDown, FilePen, Hand, Search, ShieldAlert, UserRound } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import type { Account, Chat, Effort, PermissionMode } from '../../../shared/schemas'
+import type { Account, Chat, Effort, ModelOption, PermissionMode } from '../../../shared/schemas'
 import { api } from '../../api/fitrah'
 import { configDirName } from '../../lib/accounts'
 import { cn } from '../../lib/cn'
@@ -96,19 +96,47 @@ export function AccountBadge({ chat }: { chat: Chat }) {
   )
 }
 
-/** "Claude Sonnet · Med ▾": model + effort for the next messages (Orca's model menu). */
+// One request per account per page load; the runtime keeps the list in its DB.
+const catalogRequests = new Map<string, Promise<ModelOption[]>>()
+function useAccountModels(accountId: string | null): ModelOption[] {
+  const [models, setModels] = useState<ModelOption[]>([])
+  useEffect(() => {
+    if (!accountId) return setModels([])
+    let alive = true
+    let request = catalogRequests.get(accountId)
+    if (!request) {
+      request = api.accountModels(accountId).then((c) => c.models, () => [])
+      catalogRequests.set(accountId, request)
+    }
+    void request.then((m) => alive && setModels(m))
+    return () => {
+      alive = false
+    }
+  }, [accountId])
+  return models
+}
+
+/** "Opus 5.5 · Med ▾": model + effort for the next messages (Orca's model menu). */
 export function ModelPicker({ chat, onChange }: { chat: Chat; onChange: (c: Chat) => void }) {
   const [open, setOpen] = useState(false)
   const [models, setModels] = useState<string[]>([])
   const [query, setQuery] = useState('')
+  // Names, descriptions and effort levels come from the chat's account (Settings → Models).
+  const offered = useAccountModels(chat.accountId)
+  const describe = (id: string) => {
+    const known = offered.find((o) => o.value === id)
+    return known ? { name: known.displayName, description: known.description } : modelInfo(id)
+  }
   useEffect(() => {
     if (open) api.getSettings().then((s) => setModels(s.models.claude.list), () => setModels([chat.model]))
   }, [open, chat.model])
   const list = useMemo(() => {
     const all = models.includes(chat.model) ? models : [chat.model, ...models]
     const q = query.trim().toLowerCase()
-    return q ? all.filter((m) => `${m} ${modelInfo(m).name}`.toLowerCase().includes(q)) : all
-  }, [models, chat.model, query])
+    return q ? all.filter((m) => `${m} ${describe(m).name}`.toLowerCase().includes(q)) : all
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [models, chat.model, query, offered])
+  const supported = offered.find((o) => o.value === chat.model)?.efforts ?? []
   const update = (patch: { model?: string; effort?: Effort | null }) => void api.updateChat(chat.id, patch).then(onChange)
   const effortInfo = EFFORTS.find((e) => e.id === chat.effort)
 
@@ -120,7 +148,7 @@ export function ModelPicker({ chat, onChange }: { chat: Chat; onChange: (c: Chat
         onClick={() => setOpen(!open)}
         className="flex items-center gap-2 rounded-md px-2 py-1 text-[13px] hover:bg-secondary"
       >
-        <span className="font-medium text-foreground/80">{modelInfo(chat.model).name}</span>
+        <span className="font-medium text-foreground/80">{describe(chat.model).name}</span>
         {effortInfo && (
           <span className="rounded px-1.5 py-px text-xs font-semibold" style={{ color: effortInfo.color, backgroundColor: `${effortInfo.color}26` }}>
             {effortInfo.label}
@@ -141,7 +169,7 @@ export function ModelPicker({ chat, onChange }: { chat: Chat; onChange: (c: Chat
         </div>
         <div className="flex max-h-64 flex-col gap-1.5 overflow-y-auto p-2">
           {list.map((m) => {
-            const info = modelInfo(m)
+            const info = describe(m)
             return (
               <button
                 key={m}
@@ -162,11 +190,11 @@ export function ModelPicker({ chat, onChange }: { chat: Chat; onChange: (c: Chat
               </button>
             )
           })}
-          {list.length === 0 && <div className="px-3 py-2 text-[13px] text-muted-foreground">No model matches. Add models in Settings → Models.</div>}
+          {list.length === 0 && <div className="px-3 py-2 text-[13px] text-muted-foreground">No model matches. Switch models on in Settings → Models.</div>}
         </div>
         <div className="flex items-center gap-1.5 border-t border-border px-3 py-2.5">
           <span className="mr-2 text-[13px] text-muted-foreground">Effort</span>
-          {EFFORTS.map((e) => {
+          {EFFORTS.filter((e) => supported.length === 0 || supported.includes(e.id)).map((e) => {
             const selected = chat.effort === e.id
             return (
               <button

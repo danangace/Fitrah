@@ -5,6 +5,7 @@ import { Hono } from 'hono'
 import { setCookie } from 'hono/cookie'
 import { APP_INFO } from '../../shared/app-info'
 import { UserError } from '../errors'
+import { type ModelLister, ModelCatalogs } from '../accounts/models'
 import { registerAccountRoutes } from '../accounts/routes'
 import { registerDocsRoutes } from '../docs/routes'
 import { DocsService } from '../docs/service'
@@ -30,6 +31,8 @@ export type AppOptions = {
   docs?: DocsService
   bus?: EventBus
   chats?: ChatService
+  /** How each agent lists an account's models (tests pass a fake; default: the Claude adapter). */
+  modelListers?: ModelLister
   /** Folder with the built UI; when missing, only the API is served. */
   webRoot?: string
 }
@@ -74,7 +77,7 @@ export function createRuntimeApp(options: AppOptions): { app: Hono; chats: ChatS
     }
   })
   registerSettingsRoutes(app, db)
-  registerAccountRoutes(app, db)
+  registerAccountRoutes(app, db, new ModelCatalogs(db, options.modelListers ?? { claude: claudeAdapter.listModels }))
   registerWorkflowRoutes(app, db)
   registerProjectRoutes(app, db)
   registerDocsRoutes(app, docs)

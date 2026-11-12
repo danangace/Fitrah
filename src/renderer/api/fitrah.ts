@@ -2,6 +2,7 @@ import { z } from 'zod/v4'
 import { API } from '../../shared/api'
 import {
   Account,
+  ModelCatalog,
   type AgentId,
   Chat,
   type ChatInput,
@@ -77,6 +78,7 @@ export const api = {
     request('POST', API.accounts, Account, { agent, configDir, label }),
   checkAccount: (id: string) => request('POST', `${API.accounts}/${id}/check`, Account),
   setDefaultAccount: (id: string) => request('POST', `${API.accounts}/${id}/default`, Account),
+  accountModels: (id: string, refresh = false) => request('GET', `${API.accounts}/${id}/models${refresh ? '?refresh=1' : ''}`, ModelCatalog),
   renameAccount: (id: string, label: string) => request('PATCH', `${API.accounts}/${id}`, Account, { label }),
   removeAccount: (id: string) => request('DELETE', `${API.accounts}/${id}`, Ok),
   docsTree: () => request('GET', API.docsTree, z.array(DocNode)),
