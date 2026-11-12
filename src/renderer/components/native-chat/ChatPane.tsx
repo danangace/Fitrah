@@ -11,7 +11,7 @@ import { useChatUi } from '../../store/chat-ui'
 import { useRouter } from '../../store/router'
 import { Markdown } from '../docs-browser/Markdown'
 import { ApprovalCard } from './ApprovalCard'
-import { ModelPicker, PermissionPicker } from './ComposerPickers'
+import { AccountBadge, ModelPicker, PermissionPicker } from './ComposerPickers'
 
 function ToolRow({ item }: { item: ToolItem }) {
   const [open, setOpen] = useState(false)
@@ -180,6 +180,7 @@ export function ChatPane({ chat: initial }: { chat: Chat }) {
             <div className="flex items-center gap-2 px-2.5 pb-2.5">
               <PermissionPicker chat={chat} onChange={setChat} />
               <span className="ml-auto" />
+              <AccountBadge chat={chat} />
               <ModelPicker chat={chat} onChange={setChat} />
               {running ? (
                 <button

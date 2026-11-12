@@ -72,12 +72,12 @@ describe('ChatService', () => {
     expect(() => service.update(chat.id, { permissionMode: 'yolo' })).toThrow()
   })
 
-  it('the workspace shows the agent + model of its last used chat', async () => {
-    const { db, service, chat, ws } = await chatFixture()
+  it('the workspace shows the agent, model and account folder of its last used chat', async () => {
+    const { db, service, chat, ws, account } = await chatFixture()
     const { getWorkspace } = await import('../workspaces/service')
-    expect(getWorkspace(db, ws.id).agent).toEqual({ agent: 'claude', model: 'haiku' })
+    expect(getWorkspace(db, ws.id).agent).toEqual({ agent: 'claude', model: 'haiku', configDir: account.configDir })
     service.update(chat.id, { model: 'opus' })
-    expect(getWorkspace(db, ws.id).agent).toEqual({ agent: 'claude', model: 'opus' })
+    expect(getWorkspace(db, ws.id).agent).toEqual({ agent: 'claude', model: 'opus', configDir: account.configDir })
   })
 
   it('keeps several chats per workspace (multiple chats)', async () => {

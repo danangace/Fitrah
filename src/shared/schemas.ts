@@ -148,7 +148,14 @@ export const Workspace = z.object({
   setupStatus: z.enum(['pending', 'running', 'done', 'failed', 'skipped']),
   status: WorkspaceStatus,
   /** The most recently used chat's agent + model (sidebar shows "Claude Sonnet"). */
-  agent: z.object({ agent: AgentId, model: z.string() }).nullable(),
+  agent: z
+    .object({
+      agent: AgentId,
+      model: z.string(),
+      /** Login folder of that chat's account, e.g. `/Users/x/.claude-sid`; null when it has none. */
+      configDir: z.string().nullable().default(null),
+    })
+    .nullable(),
   createdAt: isoDate,
   archivedAt: nullableText,
 })

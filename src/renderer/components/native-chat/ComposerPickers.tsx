@@ -1,7 +1,8 @@
-import { Check, ChevronDown, FilePen, Hand, Search, ShieldAlert } from 'lucide-react'
+import { Check, ChevronDown, FilePen, Hand, Search, ShieldAlert, UserRound } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import type { Chat, Effort, PermissionMode } from '../../../shared/schemas'
+import type { Account, Chat, Effort, PermissionMode } from '../../../shared/schemas'
 import { api } from '../../api/fitrah'
+import { configDirName } from '../../lib/accounts'
 import { cn } from '../../lib/cn'
 import { EFFORTS, PERMISSIONS, modelInfo } from '../../lib/models'
 import { Popover } from '../ui/Popover'
@@ -54,6 +55,42 @@ export function PermissionPicker({ chat, onChange }: { chat: Chat; onChange: (c:
         })}
       </Popover>
     </div>
+  )
+}
+
+/**
+ * Which Claude login this chat runs on (e.g. `.claude` or `.claude-sid`). Read-only: the conversation
+ * lives in that login's transcript, so switching account means starting a new chat.
+ */
+export function AccountBadge({ chat }: { chat: Chat }) {
+  const [account, setAccount] = useState<Account | null>(null)
+  useEffect(() => {
+    if (!chat.accountId) return setAccount(null)
+    let alive = true
+    api.listAccounts().then(
+      (list) => alive && setAccount(list.find((a) => a.id === chat.accountId) ?? null),
+      () => alive && setAccount(null),
+    )
+    return () => {
+      alive = false
+    }
+  }, [chat.accountId])
+
+  const name = account ? configDirName(account.configDir) : chat.accountId ? 'unknown account' : 'no account'
+  const title = account
+    ? [`Claude account: ${account.label}`, account.email, account.configDir, 'To use another account, start a new chat.'].filter(Boolean).join('\n')
+    : 'This chat has no attached account.'
+  return (
+    <span
+      aria-label={`Account ${name}`}
+      title={title}
+      className={cn(
+        'flex items-center gap-1.5 rounded-md px-2 py-1 font-mono text-xs',
+        account ? 'text-muted-foreground' : 'text-warning',
+      )}
+    >
+      <UserRound className="size-3.5" /> {name}
+    </span>
   )
 }
 
