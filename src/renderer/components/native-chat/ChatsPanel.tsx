@@ -1,5 +1,6 @@
 import { Plus, X } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { Popover } from '@base-ui/react/popover'
+import { useCallback, useEffect, useState } from 'react'
 import type { Account, Chat, Settings, Workspace } from '../../../shared/schemas'
 import { onChatEvent } from '../../api/chat-socket'
 import { api } from '../../api/fitrah'
@@ -9,21 +10,20 @@ import { useChatUi } from '../../store/chat-ui'
 import { useRouter } from '../../store/router'
 import { Button } from '../ui/Button'
 import { Notice } from '../ui/Field'
+import { Select } from '../ui/Select'
 import { useConfirm } from '../ui/confirm'
 import { StatusDot } from '../workspace/StatusDot'
 import { ChatPane } from './ChatPane'
 
-const selectClass = 'h-8 w-full rounded-md border border-input bg-transparent px-2 text-sm text-foreground'
 
 /** "+" in the tab bar: pick account + model, start a chat (Orca's agent picker, simplified). */
-function NewChatPopover({ workspace, onCreated, onClose }: { workspace: Workspace; onCreated: (chat: Chat) => void; onClose: () => void }) {
+function NewChatForm({ workspace, onCreated }: { workspace: Workspace; onCreated: (chat: Chat) => void }) {
   const navigate = useRouter((s) => s.navigate)
   const [accounts, setAccounts] = useState<Account[]>([])
   const [settings, setSettings] = useState<Settings | null>(null)
   const [accountId, setAccountId] = useState('')
   const [model, setModel] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     Promise.all([api.listAccounts(), api.getSettings()]).then(([a, s]) => {
@@ -33,15 +33,10 @@ function NewChatPopover({ workspace, onCreated, onClose }: { workspace: Workspac
       setAccountId((claude.find((x) => x.isDefault) ?? claude[0])?.id ?? '')
       setModel(s.models.claude.default)
     }, (e: unknown) => setError(errorText(e)))
-    const onDown = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) onClose()
-    }
-    window.addEventListener('mousedown', onDown)
-    return () => window.removeEventListener('mousedown', onDown)
-  }, [onClose])
+  }, [])
 
   return (
-    <div ref={ref} className="absolute top-9 left-0 z-30 w-64 space-y-2 rounded-lg border border-border bg-popover p-3 shadow-xl shadow-black/40">
+    <div className="space-y-2">
       <div className="text-xs font-semibold text-muted-foreground">New chat</div>
       {error && <Notice tone="error">{error}</Notice>}
       {settings && accounts.length === 0 && (
@@ -55,21 +50,13 @@ function NewChatPopover({ workspace, onCreated, onClose }: { workspace: Workspac
       )}
       {accounts.length > 0 && settings && (
         <>
-          <select aria-label="Account" className={selectClass} value={accountId} onChange={(e) => setAccountId(e.target.value)}>
-            {accounts.map((a) => (
-              <option key={a.id} value={a.id}>
-                Claude · {a.label}
-                {a.isDefault ? ' ★' : ''}
-              </option>
-            ))}
-          </select>
-          <select aria-label="Model" className={selectClass} value={model} onChange={(e) => setModel(e.target.value)}>
-            {settings.models.claude.list.map((m) => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-          </select>
+          <Select
+            aria-label="Account"
+            value={accountId}
+            onValueChange={setAccountId}
+            options={accounts.map((a) => ({ value: a.id, label: `Claude · ${a.label}${a.isDefault ? ' ★' : ''}` }))}
+          />
+          <Select aria-label="Model" value={model} onValueChange={setModel} options={settings.models.claude.list.map((m) => ({ value: m, label: m }))} />
           <Button
             variant="primary"
             className="w-full"
@@ -138,7 +125,6 @@ export function ChatsPanel({ workspace }: { workspace: Workspace }) {
     setDraft(chat.id, '')
   }
   const setDraft = useChatUi((s) => s.setDraft)
-  const closePicker = useCallback(() => setPicker(false), [])
   const current = chats.find((c) => c.id === active)
 
   return (
@@ -167,27 +153,28 @@ export function ChatsPanel({ workspace }: { workspace: Workspace }) {
             </button>
           </div>
         ))}
-        <div className="relative mb-1">
-          <button
-            type="button"
+        <Popover.Root open={picker} onOpenChange={setPicker}>
+          <Popover.Trigger
             aria-label="New chat"
             title="New chat"
-            onClick={() => setPicker(!picker)}
-            className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground"
+            className="mb-1 flex size-7 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-secondary hover:text-foreground data-popup-open:bg-secondary data-popup-open:text-foreground"
           >
             <Plus className="size-4" />
-          </button>
-          {picker && (
-            <NewChatPopover
-              workspace={workspace}
-              onClose={closePicker}
-              onCreated={(c) => {
-                setPicker(false)
-                void load(c.id)
-              }}
-            />
-          )}
-        </div>
+          </Popover.Trigger>
+          <Popover.Portal>
+            <Popover.Positioner side="bottom" align="start" sideOffset={6} className="z-40">
+              <Popover.Popup className="w-64 origin-[var(--transform-origin)] rounded-lg border border-border bg-popover p-3 shadow-xl shadow-black/40 outline-none transition-[scale,opacity] duration-100 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0">
+                <NewChatForm
+                  workspace={workspace}
+                  onCreated={(c) => {
+                    setPicker(false)
+                    void load(c.id)
+                  }}
+                />
+              </Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        </Popover.Root>
       </div>
       {error && (
         <div className="px-3 pt-2">

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { type DirListing, api } from '../../api/fitrah'
 import { cn } from '../../lib/cn'
 import { errorText } from '../../lib/errors'
+import { Checkbox } from '../ui/Checkbox'
 import { Notice } from '../ui/Field'
 
 /**
@@ -59,9 +60,9 @@ export function FolderBrowser({
           title="Type or paste a path, then Enter"
           className="min-w-0 flex-1 rounded bg-background px-2 py-1 font-mono text-xs text-foreground/80 focus:outline focus:outline-ring"
         />
-        <label className="flex items-center gap-1 text-xs text-muted-foreground">
-          <input type="checkbox" checked={hidden} onChange={(e) => setHidden(e.target.checked)} /> hidden
-        </label>
+        <Checkbox className="gap-1.5 text-xs text-muted-foreground" checked={hidden} onCheckedChange={setHidden}>
+          hidden
+        </Checkbox>
       </div>
       {error && <Notice tone="error">{error}</Notice>}
       <ul className="max-h-64 overflow-y-auto rounded-md border border-border">

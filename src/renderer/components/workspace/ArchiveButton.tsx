@@ -7,6 +7,7 @@ import { errorText } from '../../lib/errors'
 import { useRouter } from '../../store/router'
 import { useWorkspaces } from '../../store/workspaces'
 import { Button } from '../ui/Button'
+import { Checkbox } from '../ui/Checkbox'
 import { Notice } from '../ui/Field'
 
 /** Archive a workspace. The branch is deleted only when the box is ticked (AC-W5). */
@@ -40,10 +41,9 @@ export function ArchiveButton({ workspace }: { workspace: Workspace }) {
   return (
     <div className="space-y-2 rounded-md border border-input bg-card p-3 text-sm">
       <p className="text-foreground">Archive this workspace? Its worktree folder is removed.</p>
-      <label className="flex items-center gap-2 text-foreground/80">
-        <input type="checkbox" checked={deleteBranch} onChange={(e) => setDeleteBranch(e.target.checked)} />
+      <Checkbox className="text-foreground/80" checked={deleteBranch} onCheckedChange={setDeleteBranch}>
         Also delete branch <code className="text-xs">{workspace.branch}</code>
-      </label>
+      </Checkbox>
       {error && <Notice tone="error">{error}</Notice>}
       {dirty && <Notice tone="error">The worktree has uncommitted changes. Archive anyway? They will be lost.</Notice>}
       <div className="flex gap-2">

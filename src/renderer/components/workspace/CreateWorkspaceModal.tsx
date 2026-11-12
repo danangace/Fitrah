@@ -7,10 +7,11 @@ import { errorText } from '../../lib/errors'
 import { useRouter } from '../../store/router'
 import { useWorkspaces } from '../../store/workspaces'
 import { Button } from '../ui/Button'
+import { Collapsible } from '../ui/Collapsible'
 import { Field, Input, Notice } from '../ui/Field'
 import { Modal } from '../ui/Modal'
+import { Select } from '../ui/Select'
 
-const select = 'w-full rounded-md border border-input bg-card px-2.5 py-1.5 text-sm text-foreground'
 const FREE = '__free'
 const NO_AGENT = '__none'
 
@@ -29,14 +30,7 @@ export function WorkflowFieldInput({
   if (field.type === 'choice') {
     return (
       <Field label={label} hint={field.help}>
-        <select aria-label={field.label} className={select} value={value} onChange={(e) => onChange(e.target.value)}>
-          <option value="">Choose…</option>
-          {(field.options ?? []).map((o) => (
-            <option key={o} value={o}>
-              {o}
-            </option>
-          ))}
-        </select>
+        <Select aria-label={field.label} value={value} onValueChange={onChange} options={(field.options ?? []).map((o) => ({ value: o, label: o }))} />
       </Field>
     )
   }
@@ -143,27 +137,19 @@ export function CreateWorkspaceModal({ projectId, onClose }: { projectId?: strin
           <>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Project">
-                <select aria-label="Project" className={select} value={repoId} onChange={(e) => setRepoId(e.target.value)}>
-                  {repos.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.name}
-                    </option>
-                  ))}
-                </select>
+                <Select aria-label="Project" value={repoId} onValueChange={setRepoId} options={repos.map((r) => ({ value: r.id, label: r.name }))} />
               </Field>
               <Field label="Workspace name (optional)">
                 <Input aria-label="Workspace name" value={name} placeholder="auto" onChange={(e) => setName(e.target.value.toLowerCase().replace(/\s+/g, '-'))} />
               </Field>
             </div>
             <Field label="Type">
-              <select aria-label="Type" className={select} value={type} onChange={(e) => setType(e.target.value)}>
-                <option value={FREE}>Free chat</option>
-                {workflows.map((w) => (
-                  <option key={w.id} value={w.id}>
-                    {w.name}
-                  </option>
-                ))}
-              </select>
+              <Select
+                aria-label="Type"
+                value={type}
+                onValueChange={setType}
+                options={[{ value: FREE, label: 'Free chat' }, ...workflows.map((w) => ({ value: w.id, label: w.name }))]}
+              />
             </Field>
             {workflow && (
               <div className="space-y-3 rounded-md border border-border p-3">
@@ -186,34 +172,31 @@ export function CreateWorkspaceModal({ projectId, onClose }: { projectId?: strin
             )}
             <div className="grid grid-cols-2 gap-3">
               <Field label="Agent">
-                <select aria-label="Agent" className={select} value={agent} onChange={(e) => setAgent(e.target.value)}>
-                  {accounts.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      Claude · {a.label}
-                      {a.isDefault ? ' ★' : ''}
-                    </option>
-                  ))}
-                  <option value={NO_AGENT}>No agent</option>
-                </select>
+                <Select
+                  aria-label="Agent"
+                  value={agent}
+                  onValueChange={setAgent}
+                  options={[
+                    ...accounts.map((a) => ({ value: a.id, label: `Claude · ${a.label}${a.isDefault ? ' ★' : ''}` })),
+                    { value: NO_AGENT, label: 'No agent' },
+                  ]}
+                />
               </Field>
               <Field label="Model">
-                <select aria-label="Model" className={select} value={model} disabled={agent === NO_AGENT} onChange={(e) => setModel(e.target.value)}>
-                  {(settings?.models.claude.list ?? []).map((m) => (
-                    <option key={m} value={m}>
-                      {m}
-                    </option>
-                  ))}
-                </select>
+                <Select
+                  aria-label="Model"
+                  value={model}
+                  disabled={agent === NO_AGENT}
+                  onValueChange={setModel}
+                  options={(settings?.models.claude.list ?? []).map((m) => ({ value: m, label: m }))}
+                />
               </Field>
             </div>
-            <details className="rounded-md border border-border px-3 py-2 text-sm">
-              <summary className="cursor-pointer text-muted-foreground">Advanced</summary>
-              <div className="mt-2 space-y-2">
-                <Field label="Base branch">
-                  <Input aria-label="Base branch override" value={base} placeholder={effectiveBase} onChange={(e) => setBase(e.target.value)} />
-                </Field>
-              </div>
-            </details>
+            <Collapsible title="Advanced" panelClassName="space-y-2 px-3 py-3">
+              <Field label="Base branch">
+                <Input aria-label="Base branch override" value={base} placeholder={effectiveBase} onChange={(e) => setBase(e.target.value)} />
+              </Field>
+            </Collapsible>
             <p className="text-xs text-muted-foreground">
               Branch <code className="text-foreground/80">{branchPreview}</code> from <code className="text-foreground/80">{effectiveBase}</code>
             </p>

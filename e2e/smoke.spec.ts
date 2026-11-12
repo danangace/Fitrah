@@ -1,9 +1,16 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { expect, test } from '@playwright/test'
+import { type Locator, type Page, expect, test } from '@playwright/test'
 
 const TOKEN = 'e'.repeat(64)
 const shot = (name: string) => `test-results/screens/${name}.png`
+
+/** Pick an option in a shadcn / Base UI select: open the trigger, click the option in its popup. */
+async function pick(page: Page, trigger: Locator, option: string) {
+  await trigger.click()
+  await page.getByRole('option', { name: option, exact: true }).click()
+  await expect(trigger).toContainText(option)
+}
 
 test('start, accounts, docs, workspace and chat (AC-B1 smoke)', async ({ page }) => {
   // Start: the link from `fitrah start` carries the token; it becomes a cookie and leaves the URL.
@@ -119,10 +126,10 @@ test('Settings → Workflows: create a workflow with fields (AC-F1)', async ({ p
   await page.getByPlaceholder('e.g. Planning').fill('Defect fix')
   await page.getByRole('button', { name: 'Add field' }).click()
   await page.getByLabel('Field label').last().fill('Ticket')
-  await page.getByLabel('Field type').last().selectOption('link')
+  await pick(page, page.getByLabel('Field type').last(), 'Link')
   await page.getByRole('button', { name: 'Add field' }).click()
   await page.getByLabel('Field label').last().fill('Found on')
-  await page.getByLabel('Field type').last().selectOption('choice')
+  await pick(page, page.getByLabel('Field type').last(), 'Choice')
   await page.getByLabel('Choices').fill('dev, staging, prod')
   await page.getByRole('button', { name: '{Ticket}' }).click()
   await page.getByRole('button', { name: 'Create workflow' }).click()
@@ -141,9 +148,24 @@ test('Planning workflow: required fields, values shown, chat waits (AC-F2, AC-F4
   await page.goto(`/?token=${TOKEN}`)
   await page.getByRole('button', { name: 'New workspace in repo', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: 'Create workspace' })
-  await dialog.getByLabel('Project').selectOption({ label: 'repo' })
+  await pick(page, dialog.getByLabel('Project'), 'repo')
   await dialog.getByLabel('Workspace name').fill('plan-kelola')
-  await dialog.getByLabel('Type').selectOption({ label: 'Planning' })
+  // The Type dropdown is a styled popup list; Esc closes only the list, not the dialog.
+  await dialog.getByLabel('Type').click()
+  const option = page.getByRole('option', { name: 'Planning', exact: true })
+  await expect(option).toBeVisible()
+  // The list is on top of the dialog (not hidden behind it): the option is what is under the pointer.
+  await expect
+    .poll(() => option.evaluate((el) => {
+      const r = el.getBoundingClientRect()
+      return el.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2))
+    }))
+    .toBe(true)
+  await page.screenshot({ path: 'test-results/screens/select-open.png', animations: 'disabled' })
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('listbox')).toBeHidden()
+  await expect(dialog).toBeVisible()
+  await pick(page, dialog.getByLabel('Type'), 'Planning')
   await expect(dialog.getByText('Fill in: PRD, Figma, Iteration, Module')).toBeVisible()
   await expect(dialog.getByRole('button', { name: /Create workspace/ })).toBeDisabled()
   await dialog.getByLabel('PRD').fill('https://prd.example/kelola')
@@ -168,7 +190,7 @@ test('composer pickers: permission and model + effort (in the chat)', async ({ p
   await page.goto(`/?token=${TOKEN}`)
   await page.getByRole('button', { name: 'New workspace in repo', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: 'Create workspace' })
-  await dialog.getByLabel('Project').selectOption({ label: 'repo' })
+  await pick(page, dialog.getByLabel('Project'), 'repo')
   await dialog.getByLabel('Workspace name').fill('pickers')
   await dialog.getByRole('button', { name: /Create workspace/ }).click()
   await expect(page.getByRole('heading', { name: 'pickers' })).toBeVisible({ timeout: 20_000 })
@@ -203,7 +225,7 @@ test('the chat follows new output to the bottom, and offers "Jump to latest" aft
   await page.goto(`/?token=${TOKEN}`)
   await page.getByRole('button', { name: 'New workspace in repo', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: 'Create workspace' })
-  await dialog.getByLabel('Project').selectOption({ label: 'repo' })
+  await pick(page, dialog.getByLabel('Project'), 'repo')
   await dialog.getByLabel('Workspace name').fill('scrolling')
   await dialog.getByRole('button', { name: /Create workspace/ }).click()
   await expect(page.getByRole('heading', { name: 'scrolling' })).toBeVisible({ timeout: 20_000 })
@@ -243,7 +265,7 @@ test('edit a workspace: turn a free chat into Planning and fill Iteration / Modu
 
   await page.getByRole('button', { name: 'Edit workspace' }).click()
   const dialog = page.getByRole('dialog', { name: 'Edit workspace' })
-  await dialog.getByLabel('Type').selectOption({ label: 'Planning' })
+  await pick(page, dialog.getByLabel('Type'), 'Planning')
   await dialog.getByLabel('Iteration').fill('i-17')
   await dialog.getByLabel('Module').fill('invoice')
   // PRD / Figma are still empty: saving is allowed, with a reminder.

@@ -9,9 +9,9 @@ import { useWorkspaces } from '../../store/workspaces'
 import { Button } from '../ui/Button'
 import { Field, Notice } from '../ui/Field'
 import { Modal } from '../ui/Modal'
+import { Select } from '../ui/Select'
 import { WorkflowFieldInput } from './CreateWorkspaceModal'
 
-const select = 'w-full rounded-md border border-input bg-card px-2.5 py-1.5 text-sm text-foreground'
 const FREE = '__free'
 
 /**
@@ -74,14 +74,12 @@ export function EditWorkspaceModal({ workspace, onClose, onSaved }: { workspace:
           folder do not change)
         </p>
         <Field label="Type">
-          <select aria-label="Type" className={select} value={type} onChange={(e) => changeType(e.target.value)}>
-            <option value={FREE}>Free chat</option>
-            {workflows.map((w) => (
-              <option key={w.id} value={w.id}>
-                {w.name}
-              </option>
-            ))}
-          </select>
+          <Select
+            aria-label="Type"
+            value={type}
+            onValueChange={changeType}
+            options={[{ value: FREE, label: 'Free chat' }, ...workflows.map((w) => ({ value: w.id, label: w.name }))]}
+          />
         </Field>
         {workflow && (
           <div className="space-y-3 rounded-md border border-border p-3">

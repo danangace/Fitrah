@@ -6,7 +6,9 @@ import { cn } from '../../lib/cn'
 import { errorText } from '../../lib/errors'
 import { FIELD_TYPE_LABEL, keyFromLabel, parseOptions } from '../../lib/workflow-form'
 import { Button } from '../ui/Button'
+import { Checkbox } from '../ui/Checkbox'
 import { Card, Field, Input, Notice, ScriptArea } from '../ui/Field'
+import { Select } from '../ui/Select'
 import { toast } from '../../store/toast'
 import { useConfirm } from '../ui/confirm'
 
@@ -29,16 +31,18 @@ function FieldRow({
     <div data-testid="workflow-field" className="space-y-2 rounded-md border border-border p-2.5">
       <div className="grid grid-cols-12 items-center gap-2">
         <input aria-label="Field label" className={cn(cellInput, 'col-span-4')} value={field.label} onChange={(e) => onChange({ ...field, label: e.target.value })} />
-        <select aria-label="Field type" className={cn(cellInput, 'col-span-3')} value={field.type} onChange={(e) => onChange({ ...field, type: e.target.value as WorkflowField['type'] })}>
-          {Object.entries(FIELD_TYPE_LABEL).map(([v, l]) => (
-            <option key={v} value={v}>
-              {l}
-            </option>
-          ))}
-        </select>
-        <label className="col-span-2 flex items-center gap-1.5 text-xs text-foreground/80">
-          <input type="checkbox" checked={field.required} onChange={(e) => onChange({ ...field, required: e.target.checked })} /> required
-        </label>
+        <div className="col-span-3">
+          <Select
+            aria-label="Field type"
+            className="h-7 text-xs"
+            value={field.type}
+            onValueChange={(v) => onChange({ ...field, type: v as WorkflowField['type'] })}
+            options={Object.entries(FIELD_TYPE_LABEL).map(([v, l]) => ({ value: v, label: l }))}
+          />
+        </div>
+        <Checkbox className="col-span-2 text-xs text-foreground/80" checked={field.required} onCheckedChange={(v) => onChange({ ...field, required: v })}>
+          required
+        </Checkbox>
         <div className="col-span-3 flex justify-end gap-1 text-muted-foreground">
           <button type="button" aria-label="Move up" onClick={() => onMove(-1)} className="hover:text-foreground">
             <ArrowUp size={13} />

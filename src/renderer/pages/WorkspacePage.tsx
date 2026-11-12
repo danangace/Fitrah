@@ -7,6 +7,7 @@ import { api } from '../api/fitrah'
 import { ArchiveButton } from '../components/workspace/ArchiveButton'
 import { EditWorkspaceModal } from '../components/workspace/EditWorkspaceModal'
 import { STATUS_LABEL, StatusDot } from '../components/workspace/StatusDot'
+import { Collapsible } from '../components/ui/Collapsible'
 import { Notice } from '../components/ui/Field'
 import { cn } from '../lib/cn'
 import { errorText } from '../lib/errors'
@@ -161,12 +162,11 @@ function SetupLog({ workspace }: { workspace: Workspace }) {
   }, [log])
   if (workspace.setupStatus === 'skipped') return null
   return (
-    <details open={workspace.setupStatus !== 'done'} className="rounded-md border border-border bg-background/40">
-      <summary className="cursor-pointer px-2.5 py-1.5 text-[13px] text-foreground/80">{workspace.setupStatus}</summary>
-      <pre ref={ref} className="max-h-56 overflow-y-auto border-t border-border p-2.5 text-xs whitespace-pre-wrap text-muted-foreground">
+    <Collapsible defaultOpen={workspace.setupStatus !== 'done'} title={workspace.setupStatus} className="bg-background/40">
+      <pre ref={ref} className="max-h-56 overflow-y-auto p-2.5 text-xs whitespace-pre-wrap text-muted-foreground">
         {log || 'Waiting for output…'}
       </pre>
-    </details>
+    </Collapsible>
   )
 }
 

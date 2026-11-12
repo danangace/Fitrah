@@ -7,6 +7,7 @@ import { errorText } from '../../lib/errors'
 import { Button } from '../ui/Button'
 import { toast } from '../../store/toast'
 import { Card, Field, Input, Notice } from '../ui/Field'
+import { Select } from '../ui/Select'
 
 /** Your own named doc locations; each chat gets them filled in for its workspace. */
 function DocPathsEditor({ value, onChange }: { value: DocPath[]; onChange: (v: DocPath[]) => void }) {
@@ -102,22 +103,12 @@ export function GeneralSettings() {
         label="Open Fitrah in"
         hint="Used by `fitrah start` and `fitrah open`. Pick the Chrome profile you work in, so its login stays there."
       >
-        <select
+        <Select
+          aria-label="Open Fitrah in"
           value={settings.openIn.kind === 'chrome' ? `chrome:${settings.openIn.profile}` : 'default'}
-          onChange={(e) =>
-            set({
-              openIn: e.target.value === 'default' ? { kind: 'default' } : { kind: 'chrome', profile: e.target.value.slice('chrome:'.length) },
-            })
-          }
-          className="w-full rounded-md border border-input bg-card px-2.5 py-1.5 text-sm"
-        >
-          <option value="default">Default browser</option>
-          {profiles.map((p) => (
-            <option key={p.dir} value={`chrome:${p.dir}`}>
-              Chrome · {p.name}
-            </option>
-          ))}
-        </select>
+          onValueChange={(v) => set({ openIn: v === 'default' ? { kind: 'default' } : { kind: 'chrome', profile: v.slice('chrome:'.length) } })}
+          options={[{ value: 'default', label: 'Default browser' }, ...profiles.map((p) => ({ value: `chrome:${p.dir}`, label: `Chrome · ${p.name}` }))]}
+        />
       </Field>
       <Field label="Workspaces folder" hint="Where new git worktrees are created.">
         <Input value={settings.workspacesDir} onChange={(e) => set({ workspacesDir: e.target.value })} />
