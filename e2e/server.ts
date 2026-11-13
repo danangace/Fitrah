@@ -32,7 +32,13 @@ writeFileSync(
 writeFileSync(join(vault, 'notes', 'Second note.md'), '# Second note\n\nHello from the second note.\n')
 
 const db = openDb(':memory:')
-saveSettings(db, { ...DEFAULT_SETTINGS, docsRoot: vault, workspacesDir: join(home, 'workspaces') })
+// The smoke tests exercise the approval prompt, so new chats start at "Accept edits" here (the app default is "Full access").
+saveSettings(db, {
+  ...DEFAULT_SETTINGS,
+  docsRoot: vault,
+  workspacesDir: join(home, 'workspaces'),
+  chatDefaults: { effort: 'medium', permissionMode: 'accept-edits' },
+})
 const { repo } = makeRepoWithOrigin()
 const extra = makeRepoWithOrigin()
 // A distinct folder name, so it is easy to pick in the repo dropdown.
