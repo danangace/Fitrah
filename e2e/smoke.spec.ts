@@ -29,7 +29,7 @@ test('start, accounts, docs, workspace and chat (AC-B1 smoke)', async ({ page })
   await page.getByRole('button', { name: 'Back to Nakoda' }).click()
 
   // Docs: rendered markdown, table, mermaid, wiki-link
-  await page.getByRole('button', { name: 'Docs' }).click()
+  await page.getByRole('link', { name: 'Docs', exact: true }).click()
   await page.getByRole('button', { name: 'README' }).click()
   await expect(page.getByRole('heading', { name: 'Smoke vault' })).toBeVisible()
   await expect(page.locator('.markdown table')).toBeVisible()
@@ -310,7 +310,7 @@ test('Settings lives in the sidebar: sections, Connectors, and Back to Nakoda', 
   // Back returns to the main sidebar.
   await page.getByRole('button', { name: 'Back to Nakoda' }).click()
   await expect(page.locator('aside').getByRole('button', { name: 'Settings', exact: true })).toBeVisible()
-  await expect(page.locator('aside').getByRole('button', { name: 'Docs', exact: true })).toBeVisible()
+  await expect(page.locator('aside').getByRole('link', { name: 'Docs', exact: true })).toBeVisible()
 })
 
 test('Settings → Models: the list comes from the account; switched-on models show in the chat picker', async ({ page }) => {
@@ -377,7 +377,7 @@ test('Connect Helix in Settings, then read the External tab (read-only)', async 
   await page.goto(`/?token=${TOKEN}`)
 
   // Tasks → External with nothing connected points to Connectors.
-  await page.locator('aside').getByRole('button', { name: 'Tasks', exact: true }).click()
+  await page.locator('aside').getByRole('link', { name: 'Tasks', exact: true }).click()
   await page.getByRole('tab', { name: 'External' }).click()
   await expect(page.getByText('No task source is connected yet.')).toBeVisible()
   await page.getByRole('button', { name: 'Connect Helix' }).click()
@@ -400,7 +400,7 @@ test('Connect Helix in Settings, then read the External tab (read-only)', async 
 
   // External tab: my tickets, defect vs task, link to the source.
   await page.locator('aside').getByRole('button', { name: 'Back to Nakoda' }).click()
-  await page.locator('aside').getByRole('button', { name: 'Tasks', exact: true }).click()
+  await page.locator('aside').getByRole('link', { name: 'Tasks', exact: true }).click()
   await page.getByRole('tab', { name: 'External' }).click()
   const list = page.getByTestId('external-list')
   await expect(list.getByText('T2-3672')).toBeVisible()
@@ -425,7 +425,7 @@ test('Connect Helix in Settings, then read the External tab (read-only)', async 
 
 test('Task board: create a ticket, see what is missing, assign it, and one active ticket per workspace', async ({ page }) => {
   await page.goto(`/?token=${TOKEN}`)
-  await page.locator('aside').getByRole('button', { name: 'Tasks', exact: true }).click()
+  await page.locator('aside').getByRole('link', { name: 'Tasks', exact: true }).click()
   await expect(page.getByRole('tab', { name: 'Our board', selected: true })).toBeVisible()
   for (const name of ['Backlog', 'In progress', 'Review', 'Done']) await expect(page.getByRole('region', { name })).toBeVisible()
 
@@ -460,7 +460,7 @@ test('Task board: create a ticket, see what is missing, assign it, and one activ
   await expect(page).toHaveURL(/\/workspaces\//)
 
   // Back on the board the ticket is In progress, with its workspace.
-  await page.locator('aside').getByRole('button', { name: 'Tasks', exact: true }).click()
+  await page.locator('aside').getByRole('link', { name: 'Tasks', exact: true }).click()
   await expect(page.getByRole('region', { name: 'In progress' }).getByText('Fix invoice total')).toBeVisible()
   await expect(card('Fix invoice total').getByRole('button', { name: /fix-invoice-total/ })).toBeVisible()
 
@@ -511,7 +511,7 @@ test('Transfer a Helix defect and a story to the board; the defect gets the Defe
 
   // External: transfer both tickets.
   await page.locator('aside').getByRole('button', { name: 'Back to Nakoda' }).click()
-  await page.locator('aside').getByRole('button', { name: 'Tasks', exact: true }).click()
+  await page.locator('aside').getByRole('link', { name: 'Tasks', exact: true }).click()
   await page.getByRole('tab', { name: 'External' }).click()
   const row = (key: string) => page.getByTestId('external-list').locator('li', { hasText: key })
   await row('T2-3672').getByRole('button', { name: 'Transfer' }).click()
@@ -560,4 +560,27 @@ test('Transfer a Helix defect and a story to the board; the defect gets the Defe
   await page.getByRole('button', { name: 'Remove' }).click()
   await page.getByRole('alertdialog').getByRole('button', { name: 'Remove' }).click()
   await expect(page.getByText('No connectors yet')).toBeVisible()
+})
+
+test('Tasks and Docs open in a new tab, already signed in', async ({ page, context }) => {
+  await page.goto(`/?token=${TOKEN}`)
+  const aside = page.locator('aside')
+  for (const [label, path, check] of [
+    ['Tasks', '/tasks/board', 'Tasks'],
+    ['Docs', '/docs', 'README'],
+  ] as const) {
+    await expect(aside.getByRole('link', { name: label, exact: true })).toHaveAttribute('href', path)
+    await aside.getByRole('link', { name: label, exact: true }).hover()
+    const [tab] = await Promise.all([context.waitForEvent('page'), aside.getByRole('link', { name: `Open ${label} in a new tab` }).click()])
+    await tab.waitForLoadState()
+    await expect(tab).toHaveURL(new RegExp(`${path}$`))
+    // The session cookie carries over: the new tab is not asked to connect again.
+    await expect(tab.getByText(check).first()).toBeVisible()
+    await expect(tab.getByText("This browser isn't connected to Nakoda")).toHaveCount(0)
+    await tab.close()
+  }
+  // A plain click still stays in this tab.
+  await aside.getByRole('link', { name: 'Tasks', exact: true }).click()
+  await expect(page).toHaveURL(/\/tasks\/board$/)
+  expect(context.pages()).toHaveLength(1)
 })

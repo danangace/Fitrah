@@ -1,9 +1,9 @@
-import { BookOpen, FolderPlus, ListChecks, Settings } from 'lucide-react'
+import { BookOpen, ExternalLink, FolderPlus, ListChecks, Settings } from 'lucide-react'
 import { type PointerEvent, type ReactNode, useState } from 'react'
 import { APP_INFO } from '../../../shared/app-info'
 import { cn } from '../../lib/cn'
 import { readNumber, writeNumber } from '../../lib/local-pref'
-import type { Route } from '../../lib/route'
+import { type Route, routePath } from '../../lib/route'
 import { useRouter } from '../../store/router'
 import { useModal } from '../../store/ui'
 import { DocsSidebar } from '../docs-browser/DocsSidebar'
@@ -18,6 +18,7 @@ export function NavRow({
   onClick,
   strong,
   hint,
+  href,
 }: {
   active?: boolean
   icon: ReactNode
@@ -25,20 +26,52 @@ export function NavRow({
   onClick: () => void
   strong?: boolean
   hint?: string
+  /** A page of the app: the row becomes a real link, so Cmd/Ctrl-click, middle-click and the right-click menu open it in a new tab. */
+  href?: string
 }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        'group flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm font-medium tracking-tight transition-colors',
-        active ? 'bg-secondary text-foreground' : strong ? 'bg-foreground/5 text-foreground/80 hover:bg-foreground/10' : 'text-foreground/60 hover:bg-foreground/5 hover:text-foreground',
-      )}
-    >
+  const className = cn(
+    'group flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm font-medium tracking-tight transition-colors',
+    active ? 'bg-secondary text-foreground' : strong ? 'bg-foreground/5 text-foreground/80 hover:bg-foreground/10' : 'text-foreground/60 hover:bg-foreground/5 hover:text-foreground',
+  )
+  const content = (
+    <>
       <span className={cn('shrink-0 [&>svg]:size-4', active ? 'text-foreground/70' : 'text-foreground/30 group-hover:text-foreground/60')}>{icon}</span>
       <span className="flex-1 truncate">{label}</span>
       {hint && <span className="hidden text-[11px] text-muted-foreground/60 group-hover:inline">{hint}</span>}
-    </button>
+    </>
+  )
+  if (!href) {
+    return (
+      <button type="button" onClick={onClick} className={className}>
+        {content}
+      </button>
+    )
+  }
+  return (
+    <div className="group/row relative">
+      <a
+        href={href}
+        onClick={(e) => {
+          // A modified or middle click is the browser's "open in new tab"; a plain click stays in this tab.
+          if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return
+          e.preventDefault()
+          onClick()
+        }}
+        className={cn(className, 'pr-8')}
+      >
+        {content}
+      </a>
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener"
+        aria-label={`Open ${label} in a new tab`}
+        title="Open in a new tab"
+        className="absolute top-1/2 right-1.5 hidden -translate-y-1/2 rounded p-1 text-muted-foreground hover:bg-secondary hover:text-foreground group-hover/row:block focus-visible:block"
+      >
+        <ExternalLink className="size-3.5" />
+      </a>
+    </div>
   )
 }
 
@@ -98,8 +131,8 @@ export function Sidebar({ workspaces }: { workspaces?: ReactNode }) {
         <>
         <nav className="flex flex-col gap-0.5 px-2 pb-1">
           <NavRow icon={<FolderPlus />} label="Add project" onClick={() => open({ kind: 'add-project' })} />
-          <NavRow active={is('tasks')} icon={<ListChecks />} label="Tasks" onClick={() => navigate({ name: 'tasks', tab: 'board' })} />
-          <NavRow active={is('docs')} icon={<BookOpen />} label="Docs" onClick={() => navigate({ name: 'docs', path: '' })} />
+          <NavRow active={is('tasks')} icon={<ListChecks />} label="Tasks" href={routePath({ name: 'tasks', tab: 'board' })} onClick={() => navigate({ name: 'tasks', tab: 'board' })} />
+          <NavRow active={is('docs')} icon={<BookOpen />} label="Docs" href={routePath({ name: 'docs', path: '' })} onClick={() => navigate({ name: 'docs', path: '' })} />
         </nav>
         <div className="mt-2 flex h-8 items-center justify-between px-2">
           <span className="pl-2 text-xs font-semibold text-muted-foreground/80 select-none">Projects</span>
