@@ -7,6 +7,7 @@ import type { Route } from '../../lib/route'
 import { useRouter } from '../../store/router'
 import { useModal } from '../../store/ui'
 import { DocsSidebar } from '../docs-browser/DocsSidebar'
+import { SettingsSidebar } from '../settings/SettingsSidebar'
 import { AccountWarnings, EnableNotifications, WorkingCount } from './Attention'
 
 /** Orca-style nav row: 13px, icon at 30% until hover. */
@@ -91,6 +92,8 @@ export function Sidebar({ workspaces }: { workspaces?: ReactNode }) {
       </div>
       {route.name === 'docs' ? (
         <DocsSidebar path={route.path} />
+      ) : route.name === 'settings' ? (
+        <SettingsSidebar section={route.section} />
       ) : (
         <>
         <nav className="flex flex-col gap-0.5 px-2 pb-1">
