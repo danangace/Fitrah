@@ -407,9 +407,9 @@ test('Connect Helix in Settings, then read the External tab (read-only)', async 
   await expect(list.getByText('T2-3252')).toBeVisible()
   await expect(list.getByText('Old and archived')).toHaveCount(0)
   // The status filter offers Helix's real status names.
-  await pick(page, page.getByLabel('Status'), 'To do')
+  await pick(page, page.getByLabel('Status', { exact: true }), 'To do')
   await expect(list.getByText('T2-3672')).toBeVisible()
-  await pick(page, page.getByLabel('Status'), 'All statuses')
+  await pick(page, page.getByLabel('Status', { exact: true }), 'All statuses')
   await expect(list.locator('li', { hasText: 'T2-3672' }).getByText('Defect')).toBeVisible()
   await expect(list.locator('li', { hasText: 'T2-3252' }).getByText('Task', { exact: true })).toBeVisible()
   await expect(list.locator('li', { hasText: 'T2-3672' }).getByRole('link', { name: /Open in source/ })).toHaveAttribute('href', 'https://helix.example.test/tickets/T2-3672')
@@ -422,12 +422,16 @@ test('Connect Helix in Settings, then read the External tab (read-only)', async 
   await expect(subtasks.getByText('Old, archived')).toHaveCount(0)
   await expect(subtasks.getByRole('button', { name: 'Transfer' })).toHaveCount(2)
   await page.screenshot({ path: shot('external-tab'), animations: 'disabled' })
-  // The status filter applies to subtasks too (an open story stays open).
-  await pick(page, page.getByLabel('Status'), 'In progress')
+  // Subtasks have their own status filter: a Done story can still have open subtasks.
+  await pick(page, page.getByLabel('Subtask status'), 'Subtasks: In progress')
   const filtered = page.getByTestId('external-item').filter({ hasText: 'Invoice Management - Phase 1' }).getByTestId('subtasks')
   await expect(filtered.getByText('T2-3391')).toBeVisible()
   await expect(filtered.getByText('T2-3274')).toHaveCount(0)
-  await pick(page, page.getByLabel('Status'), 'All statuses')
+  // The story itself (Done) stays in the list.
+  await expect(page.getByTestId('external-item').filter({ hasText: 'Invoice Management - Phase 1' })).toBeVisible()
+  await pick(page, page.getByLabel('Subtask status'), 'Subtasks: To do')
+  await expect(filtered.getByText(/No subtasks with status To do \(2 in total\)/)).toBeVisible()
+  await pick(page, page.getByLabel('Subtask status'), 'All subtask statuses')
 
   // Clean up so the empty-state test above stays true on a re-run.
   await page.locator('aside').getByRole('button', { name: 'Settings', exact: true }).click()

@@ -55,7 +55,8 @@ function Row({ t, child, actions, toggle }: { t: ExternalTicket; child?: boolean
 
 /**
  * One ticket, and for a story / task its subtasks on demand. Helix search never returns subtasks,
- * so they are read from the parent when you open it. The status filter applies to them too.
+ * so they are read from the parent when you open it. They have their own status filter
+ * (a Done story can still have To do subtasks).
  */
 function TicketItem({ ticket, connectorId, status, ...actions }: { ticket: ExternalTicket; connectorId: string; status: string | null } & RowActions) {
   const [open, setOpen] = useState(false)
@@ -108,6 +109,8 @@ export function ExternalTasks() {
   const [boardId, setBoardId] = useState(ALL)
   const [iterationId, setIterationId] = useState(ALL)
   const [status, setStatus] = useState(ALL)
+  // Subtasks often differ from their story, so they filter on their own (in the browser; Helix cannot).
+  const [subStatus, setSubStatus] = useState(ALL)
   const [scope, setScope] = useState<'mine' | 'everyone'>('mine')
   const [page, setPage] = useState(1)
   const [data, setData] = useState<ExternalPage | null>(null)
@@ -213,6 +216,7 @@ export function ExternalTasks() {
           <Select aria-label="Iteration" className="w-44" value={iterationId} onValueChange={filter(setIterationId)} options={[{ value: ALL, label: 'All iterations' }, ...iterations.map((i) => ({ value: String(i.id), label: i.name }))]} />
         )}
         <Select aria-label="Status" className="w-44" value={status} onValueChange={filter(setStatus)} options={[{ value: ALL, label: 'All statuses' }, ...HELIX_STATUSES.map((s) => ({ value: s, label: statusLabel(s) }))]} />
+        <Select aria-label="Subtask status" className="w-48" value={subStatus} onValueChange={setSubStatus} options={[{ value: ALL, label: 'All subtask statuses' }, ...HELIX_STATUSES.map((s) => ({ value: s, label: `Subtasks: ${statusLabel(s)}` }))]} />
         <Button variant="ghost" aria-label="Refresh" title="Refresh" disabled={loading} onClick={() => setNonce((n) => n + 1)}>
           <RefreshCw className={cn('size-4', loading && 'animate-spin')} />
         </Button>
@@ -227,7 +231,7 @@ export function ExternalTasks() {
               key={t.key}
               ticket={t}
               connectorId={connectorId}
-              status={status === ALL ? null : status}
+              status={subStatus === ALL ? null : subStatus}
               onBoard={onBoard}
               copying={copying}
               onTransfer={(key) => void transfer(key)}
