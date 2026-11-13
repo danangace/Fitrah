@@ -46,7 +46,7 @@ function AssistantRow({ children }: { children: React.ReactNode }) {
       <div className="flex size-6 shrink-0 items-center justify-center rounded-md bg-secondary text-foreground/70">
         <Sparkles className="size-3.5" />
       </div>
-      <div className="min-w-0 flex-1 space-y-1.5 pt-0.5">{children}</div>
+      <div className="min-w-0 flex-1 space-y-1.5 pt-px">{children}</div>
     </div>
   )
 }
