@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import type { Account } from '../../../shared/schemas'
 import { api } from '../../api/nakoda'
 import { notificationFor } from '../../lib/notify'
+import { isWarningStale } from '../../lib/usage'
 import { useAppEvents } from '../../store/events'
 import { useRouter } from '../../store/router'
 import { useWorkspaces } from '../../store/workspaces'
@@ -59,7 +60,12 @@ export function AccountWarnings() {
   useAppEvents((e) => {
     if (e.type === 'account.warning') void load()
   })
-  const warned = accounts.filter((a) => a.warning)
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 30_000)
+    return () => clearInterval(t)
+  }, [])
+  const warned = accounts.filter((a) => a.warning && !isWarningStale(a, now))
   if (warned.length === 0) return null
   return (
     <div className="space-y-1 px-2 pb-2">

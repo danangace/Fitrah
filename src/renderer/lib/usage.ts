@@ -1,4 +1,5 @@
-import type { UsageWindow } from '../../shared/schemas'
+import { RATE_LIMIT_PREFIX } from '../../shared/events'
+import type { Account, UsageWindow } from '../../shared/schemas'
 
 const LABELS: Record<string, { long: string; short: string; order: number }> = {
   five_hour: { long: 'Session', short: '5h', order: 0 },
@@ -54,4 +55,16 @@ export function timeAgo(iso: string, nowMs = Date.now()): string {
 export function usageTone(w: UsageWindow): 'ok' | 'warn' | 'high' {
   if (w.status === 'rejected' || w.utilization >= 0.85) return 'high'
   return w.utilization >= 0.6 ? 'warn' : 'ok'
+}
+
+/**
+ * A rate-limit warning is only cleared by a successful turn, so it can outlive the limit. It is
+ * stale when the last snapshot recorded a rejected window and that window has since reset.
+ * Without such a window we cannot tell, so the warning stays.
+ */
+export function isWarningStale(account: Pick<Account, 'warning' | 'usage'>, nowMs = Date.now()): boolean {
+  if (!account.warning?.startsWith(RATE_LIMIT_PREFIX) || !account.usage) return false
+  const rejected = account.usage.windows.filter((w) => w.status === 'rejected')
+  if (rejected.length === 0) return false
+  return rejected.every((w) => w.resetsAt !== null && w.resetsAt * 1000 <= nowMs)
 }

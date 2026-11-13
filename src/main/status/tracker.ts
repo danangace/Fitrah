@@ -1,11 +1,9 @@
-import type { ChatEvent } from '../../shared/events'
+import { type ChatEvent, RATE_LIMIT_PREFIX } from '../../shared/events'
 import type { ChatStatus, WorkspaceStatus } from '../../shared/schemas'
 import { saveAccountUsage, setAccountWarning } from '../accounts/service'
 import type { EventBus } from '../events/bus'
 import type { ChatService } from '../native-chat/service'
 import type { Db } from '../sqlite/db'
-
-export const RATE_LIMIT_PREFIX = 'Rate limit: '
 
 /** Most urgent first: a workspace shows the most urgent state of its chats (AC-N1). */
 const PRIORITY: WorkspaceStatus[] = ['needs_approval', 'working', 'error', 'waiting', 'done', 'idle']

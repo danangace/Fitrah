@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatReset, liveWindows, percent, sortWindows, timeAgo, usageTone, windowLabel } from './usage'
+import { formatReset, isWarningStale, liveWindows, percent, sortWindows, timeAgo, usageTone, windowLabel } from './usage'
 
 const secs = (iso: string) => Date.parse(iso) / 1000
 const w = (key: string, utilization: number) => ({ key, utilization, resetsAt: null, status: 'allowed' })
@@ -35,5 +35,15 @@ describe('usage helpers', () => {
     const now = Date.parse('2026-11-11T12:00:00Z')
     expect(timeAgo('2026-11-11T11:56:00Z', now)).toBe('4m ago')
     expect(timeAgo('2026-11-11T11:59:50Z', now)).toBe('just now')
+  })
+
+  it('drops a rate-limit warning once the rejected window has reset', () => {
+    const now = Date.parse('2026-11-11T19:00:00Z')
+    const usage = (resetsAt: string) => ({ updatedAt: '2026-11-11T17:00:00Z', windows: [{ key: 'five_hour', utilization: 1, resetsAt: secs(resetsAt), status: 'rejected' }] })
+    const warning = 'Rate limit: Usage limit reached (five_hour).'
+    expect(isWarningStale({ warning, usage: usage('2026-11-11T18:40:00Z') }, now)).toBe(true)
+    expect(isWarningStale({ warning, usage: usage('2026-11-11T20:00:00Z') }, now)).toBe(false)
+    expect(isWarningStale({ warning: 'Login expired', usage: usage('2026-11-11T18:40:00Z') }, now)).toBe(false)
+    expect(isWarningStale({ warning, usage: null }, now)).toBe(false)
   })
 })

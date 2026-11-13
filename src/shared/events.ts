@@ -72,3 +72,6 @@ export const AppEvent = z.discriminatedUnion('type', [
   z.object({ type: z.literal('account.usage'), accountId: z.string(), usage: AccountUsage }),
 ])
 export type AppEvent = z.infer<typeof AppEvent>
+
+/** Account warnings from a usage limit start with this; the UI hides them once the window has reset. */
+export const RATE_LIMIT_PREFIX = 'Rate limit: '
