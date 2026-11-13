@@ -59,7 +59,8 @@ export function ProjectSettingsCard({ repo, onChange }: { repo: Repo; onChange: 
   const remove = async () => {
     const ok = await confirm({
       title: `Remove ${repo.name}?`,
-      description: 'It is removed from Nakoda only. The folder itself is not touched.',
+      description:
+        'It is removed from Nakoda only; the folder itself is not touched. All of its archived workspaces and their chat history are deleted too, and this cannot be undone.',
       confirmLabel: 'Remove',
       destructive: true,
     })

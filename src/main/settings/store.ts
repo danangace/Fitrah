@@ -140,5 +140,17 @@ export function removeRepo(db: Db, id: string): void {
   getRepo(db, id)
   const used = db.prepare('SELECT 1 FROM workspaces WHERE repo_id = ? AND archived_at IS NULL').get(id)
   if (used) throw new UserError('repo_in_use', 'Archive its workspaces first', 409)
-  db.prepare('DELETE FROM repos WHERE id = ?').run(id)
+  // Archived workspaces still reference the repo (and their chats reference them), so drop that history too.
+  const ws = 'SELECT id FROM workspaces WHERE repo_id = ?'
+  db.exec('BEGIN')
+  try {
+    db.prepare(`DELETE FROM approvals WHERE chat_id IN (SELECT id FROM chats WHERE workspace_id IN (${ws}))`).run(id)
+    db.prepare(`DELETE FROM chats WHERE workspace_id IN (${ws})`).run(id)
+    db.prepare('DELETE FROM workspaces WHERE repo_id = ?').run(id)
+    db.prepare('DELETE FROM repos WHERE id = ?').run(id)
+    db.exec('COMMIT')
+  } catch (e) {
+    db.exec('ROLLBACK')
+    throw e
+  }
 }

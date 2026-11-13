@@ -167,7 +167,7 @@ export function ChatPane({ chat: initial }: { chat: Chat }) {
           {blocks.map((block, i) =>
             block.kind === 'user' ? (
               <div key={i} className="flex justify-end">
-                <div className="max-w-[80%] rounded-xl border border-white/10 bg-chat-user px-3.5 py-2.5 text-sm leading-relaxed whitespace-pre-wrap text-foreground">
+                <div className="min-w-0 max-w-[80%] rounded-xl [overflow-wrap:anywhere] border border-white/10 bg-chat-user px-3.5 py-2.5 text-sm leading-relaxed whitespace-pre-wrap text-foreground">
                   {block.items[0]?.kind === 'user' ? block.items[0].text : ''}
                 </div>
               </div>

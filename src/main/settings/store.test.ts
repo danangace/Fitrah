@@ -91,4 +91,19 @@ describe('repos', () => {
     removeRepo(db, repo.id)
     expect(listRepos(db)).toEqual([])
   })
+
+  it('removes a repo that only has archived workspaces, with their chats', async () => {
+    const db = openDb(':memory:')
+    const repo = await addRepo(db, { path: gitRepo(), featureBase: 'main' })
+    db.prepare(
+      "INSERT INTO workspaces (id, repo_id, kind, name, branch, base, worktree_path, setup_status, values_json, created_at, archived_at) VALUES ('w1', ?, 'feature', 'a', 'b', 'main', '/x', 'done', '{}', 'now', 'now')",
+    ).run(repo.id)
+    db.prepare(
+      "INSERT INTO chats (id, workspace_id, agent, model, title, created_at) VALUES ('c1', 'w1', 'claude', 'm', 't', 'now')",
+    ).run()
+    db.prepare("INSERT INTO approvals (id, chat_id, tool, input_json, requested_at) VALUES ('a1', 'c1', 'Bash', '{}', 'now')").run()
+    removeRepo(db, repo.id)
+    expect(listRepos(db)).toEqual([])
+    expect(db.prepare('SELECT COUNT(*) AS n FROM chats').get()).toEqual({ n: 0 })
+  })
 })
