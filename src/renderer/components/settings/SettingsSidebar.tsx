@@ -22,11 +22,12 @@ export function SettingsSidebar({ section }: { section: string }) {
       <div className="mt-2 flex h-8 items-center px-2">
         <span className="pl-2 text-xs font-semibold text-muted-foreground/80 select-none">Settings</span>
       </div>
-      <nav className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2 pb-2">
+      <nav aria-label="Settings sections" className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2 pb-2">
         {SETTINGS_SECTIONS.map((s) => (
           <button
             key={s.id}
             type="button"
+            aria-current={s.id === active ? 'page' : undefined}
             onClick={() => navigate({ name: 'settings', section: s.id })}
             className={cn(
               'rounded-md px-2 py-1.5 text-left text-sm font-medium tracking-tight transition-colors',

@@ -25,6 +25,9 @@ test('start, accounts, docs, workspace and chat (AC-B1 smoke)', async ({ page })
   await expect(page.getByText('smoke@example.com')).toBeVisible()
   await page.screenshot({ path: shot('2-accounts') })
 
+  // Settings replaces the main sidebar (like Docs): go back before opening Docs.
+  await page.getByRole('button', { name: 'Back to Nakoda' }).click()
+
   // Docs: rendered markdown, table, mermaid, wiki-link
   await page.getByRole('button', { name: 'Docs' }).click()
   await page.getByRole('button', { name: 'README' }).click()
@@ -85,6 +88,8 @@ test('Add a project by browsing to a folder, then edit its settings (AC-P1)', as
   await page.goto(`/?token=${TOKEN}`)
   await page.locator('aside').getByRole('button', { name: 'Add project' }).click()
   await page.getByRole('button', { name: /Browse folder/ }).click()
+  // Let the first (home) listing land before typing, so it can't race the typed path.
+  await expect(page.getByRole('button', { name: /Use this folder:/ })).toBeVisible()
   await page.getByLabel('Folder path').fill(extraRepo)
   await page.getByLabel('Folder path').press('Enter')
   await expect(page.getByRole('button', { name: /Use this folder: extra-repo/ })).toBeVisible()
@@ -280,6 +285,34 @@ test('edit a workspace: turn a free chat into Planning and fill Iteration / Modu
   await page.screenshot({ path: 'test-results/screens/workspace-edited.png' })
 })
 
+test('Settings lives in the sidebar: sections, Connectors, and Back to Nakoda', async ({ page }) => {
+  await page.goto(`/?token=${TOKEN}`)
+  await page.locator('aside').getByRole('button', { name: 'Settings', exact: true }).click()
+
+  // The sections are in the sidebar (not tabs in the page); General is open first.
+  const sections = page.getByRole('navigation', { name: 'Settings sections' })
+  for (const name of ['General', 'Workflows', 'Accounts', 'Models', 'Connectors']) {
+    await expect(sections.getByRole('button', { name, exact: true })).toBeVisible()
+  }
+  await expect(sections.getByRole('button', { name: 'General', exact: true })).toHaveAttribute('aria-current', 'page')
+  await expect(page.getByRole('heading', { level: 1, name: 'General', exact: true })).toBeVisible()
+
+  // Connectors: empty for now.
+  await sections.getByRole('button', { name: 'Connectors', exact: true }).click()
+  await expect(page).toHaveURL(/\/settings\/connectors$/)
+  await expect(page.getByRole('heading', { level: 1, name: 'Connectors', exact: true })).toBeVisible()
+  await expect(page.getByText('No connectors yet')).toBeVisible()
+  // The sidebar follows the page: Connectors is the current section, General is not.
+  await expect(sections.getByRole('button', { name: 'Connectors', exact: true })).toHaveAttribute('aria-current', 'page')
+  await expect(sections.getByRole('button', { name: 'General', exact: true })).not.toHaveAttribute('aria-current', 'page')
+  await page.screenshot({ path: 'test-results/screens/settings-connectors.png', animations: 'disabled' })
+
+  // Back returns to the main sidebar.
+  await page.getByRole('button', { name: 'Back to Nakoda' }).click()
+  await expect(page.locator('aside').getByRole('button', { name: 'Settings', exact: true })).toBeVisible()
+  await expect(page.locator('aside').getByRole('button', { name: 'Docs', exact: true })).toBeVisible()
+})
+
 test('Settings → Models: the list comes from the account; switched-on models show in the chat picker', async ({ page }) => {
   await page.goto(`/?token=${TOKEN}`)
   await page.getByRole('button', { name: 'Settings', exact: true }).click()
@@ -298,6 +331,9 @@ test('Settings → Models: the list comes from the account; switched-on models s
   await page.screenshot({ path: 'test-results/screens/settings-models.png' })
   await page.getByRole('button', { name: 'Save', exact: true }).click()
   await expect(page.getByText('Models saved')).toBeVisible()
+
+  // Settings replaces the main sidebar: go back to reach the workspace list.
+  await page.getByRole('button', { name: 'Back to Nakoda' }).click()
 
   // The chat picker offers exactly the switched-on models, with the account's names.
   await page.getByTestId('workspace-row-pickers').click()
