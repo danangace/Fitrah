@@ -1,5 +1,5 @@
 import { ArrowUp, Folder, GitBranch, Home } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { type DirListing, api } from '../../api/nakoda'
 import { cn } from '../../lib/cn'
 import { errorText } from '../../lib/errors'
@@ -23,18 +23,26 @@ export function FolderBrowser({
   const [hidden, setHidden] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [typed, setTyped] = useState<string | null>(null)
-  const go = (path?: string) =>
-    api.listDirs(path, hidden).then(
+  // Only the latest request may update the view, so a slow first listing can't overwrite a later navigation.
+  const latest = useRef(0)
+  const go = (path?: string, background = false) => {
+    const id = ++latest.current
+    return api.listDirs(path, hidden).then(
       (l) => {
+        if (id !== latest.current) return
         setListing(l)
-        setTyped(null)
+        // An automatic reload must not wipe a path the user is typing.
+        if (!background) setTyped(null)
         setError(null)
       },
-      (e: unknown) => setError(errorText(e)),
+      (e: unknown) => {
+        if (id === latest.current) setError(errorText(e))
+      },
     )
+  }
   // biome-ignore lint/correctness/useExhaustiveDependencies: reload when the hidden toggle changes
   useEffect(() => {
-    void go(listing?.path ?? initialPath)
+    void go(listing?.path ?? initialPath, true)
   }, [hidden])
 
   return (
@@ -56,7 +64,7 @@ export function FolderBrowser({
           aria-label="Folder path"
           value={typed ?? listing?.path ?? ''}
           onChange={(e) => setTyped(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && void go(typed ?? undefined)}
+          onKeyDown={(e) => e.key === 'Enter' && void go(e.currentTarget.value || undefined)}
           title="Type or paste a path, then Enter"
           className="min-w-0 flex-1 rounded bg-background px-2 py-1 font-mono text-xs text-foreground/80 focus:outline focus:outline-ring"
         />
