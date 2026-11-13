@@ -418,3 +418,71 @@ test('Connect Helix in Settings, then read the External tab (read-only)', async 
   await page.getByRole('alertdialog').getByRole('button', { name: 'Remove' }).click()
   await expect(page.getByText('No connectors yet')).toBeVisible()
 })
+
+test('Task board: create a ticket, see what is missing, assign it, and one active ticket per workspace', async ({ page }) => {
+  await page.goto(`/?token=${TOKEN}`)
+  await page.locator('aside').getByRole('button', { name: 'Tasks', exact: true }).click()
+  await expect(page.getByRole('tab', { name: 'Our board', selected: true })).toBeVisible()
+  for (const name of ['Backlog', 'In progress', 'Review', 'Done']) await expect(page.getByRole('region', { name })).toBeVisible()
+
+  const card = (title: string) => page.getByTestId('task-card').filter({ hasText: title })
+  const dialog = page.getByRole('dialog')
+
+  // A new ticket starts with the Planning workflow, so its required fields are missing.
+  await page.getByRole('button', { name: 'New ticket' }).click()
+  await dialog.getByLabel('Title').fill('Fix invoice total')
+  await dialog.getByLabel('Description').fill('The total ignores the discount.')
+  await pick(page, dialog.getByLabel('Project'), 'repo')
+  await expect(dialog.getByText(/Missing: PRD, Figma, Iteration, Module/)).toBeVisible()
+  await dialog.getByRole('button', { name: 'Create ticket' }).click()
+  await expect(page.getByRole('region', { name: 'Backlog' }).getByText('Missing: PRD, Figma, Iteration, Module')).toBeVisible()
+
+  // Free chat needs no extra fields: the card turns Ready.
+  await card('Fix invoice total').click()
+  await pick(page, dialog.getByLabel('Workflow'), 'Free chat')
+  await expect(dialog.getByText('Ready to assign.')).toBeVisible()
+  await dialog.getByRole('button', { name: 'Save ticket' }).click()
+  await expect(card('Fix invoice total').getByText('Ready', { exact: true })).toBeVisible()
+  await page.screenshot({ path: shot('task-board-ready'), animations: 'disabled' })
+
+  // Assign by creating a new workspace from the ticket: pre-filled, project locked.
+  await card('Fix invoice total').click()
+  await dialog.getByRole('button', { name: 'Assign to a workspace…' }).click()
+  await dialog.getByRole('button', { name: 'Create a new workspace' }).click()
+  const create = page.getByRole('dialog', { name: 'Create workspace' })
+  await expect(create.getByLabel('Workspace name')).toHaveValue('fix-invoice-total')
+  await expect(create.getByLabel('Project')).toBeDisabled()
+  await create.getByRole('button', { name: /Create workspace/ }).click()
+  await expect(page).toHaveURL(/\/workspaces\//)
+
+  // Back on the board the ticket is In progress, with its workspace.
+  await page.locator('aside').getByRole('button', { name: 'Tasks', exact: true }).click()
+  await expect(page.getByRole('region', { name: 'In progress' }).getByText('Fix invoice total')).toBeVisible()
+  await expect(card('Fix invoice total').getByRole('button', { name: /fix-invoice-total/ })).toBeVisible()
+
+  // A second ticket cannot take that workspace while the first is still in progress.
+  await page.getByRole('button', { name: 'New ticket' }).click()
+  await dialog.getByLabel('Title').fill('Fix invoice date')
+  await dialog.getByLabel('Description').fill('Wrong date format.')
+  await pick(page, dialog.getByLabel('Project'), 'repo')
+  await pick(page, dialog.getByLabel('Workflow'), 'Free chat')
+  await dialog.getByRole('button', { name: 'Create ticket' }).click()
+  await card('Fix invoice date').click()
+  await dialog.getByRole('button', { name: 'Assign to a workspace…' }).click()
+  const row = dialog.getByTestId('assign-candidate').filter({ hasText: 'fix-invoice-total' })
+  await expect(row.getByText(/Busy with "Fix invoice total"/)).toBeVisible()
+  await expect(row.getByRole('button', { name: 'Assign' })).toBeDisabled()
+  await page.screenshot({ path: shot('task-assign-busy'), animations: 'disabled' })
+  await page.keyboard.press('Escape')
+
+  // Drag the first ticket to Review: the workspace is free again.
+  await card('Fix invoice total').dragTo(page.getByRole('region', { name: 'Review' }))
+  await expect(page.getByRole('region', { name: 'Review' }).getByText('Fix invoice total')).toBeVisible()
+  await card('Fix invoice date').click()
+  await dialog.getByRole('button', { name: 'Assign to a workspace…' }).click()
+  const free = dialog.getByTestId('assign-candidate').filter({ hasText: 'fix-invoice-total' })
+  await expect(free.getByRole('button', { name: 'Assign' })).toBeEnabled()
+  await free.getByRole('button', { name: 'Assign' }).click()
+  await expect(page.getByRole('region', { name: 'In progress' }).getByText('Fix invoice date')).toBeVisible()
+  await page.screenshot({ path: shot('task-board'), animations: 'disabled' })
+})

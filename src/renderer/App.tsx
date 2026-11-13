@@ -39,7 +39,7 @@ function Page() {
 function Modals() {
   const { modal, close } = useModal()
   if (modal?.kind === 'add-project') return <AddProjectModal onClose={close} />
-  if (modal?.kind === 'create-workspace') return <CreateWorkspaceModal projectId={modal.projectId} onClose={close} />
+  if (modal?.kind === 'create-workspace') return <CreateWorkspaceModal projectId={modal.projectId} taskId={modal.taskId} onClose={close} />
   return null
 }
 

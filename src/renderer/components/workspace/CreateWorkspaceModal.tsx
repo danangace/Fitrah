@@ -1,6 +1,7 @@
 import { Loader2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import type { Account, Settings, Workflow, WorkflowField } from '../../../shared/schemas'
+import type { Task } from '../../../shared/tasks'
 import { api } from '../../api/nakoda'
 import { describeModel, useAccountModels } from '../../lib/account-models'
 import { docFolders } from '../../lib/docs-folders'
@@ -51,7 +52,13 @@ export function WorkflowFieldInput({
 }
 
 /** Small "Create workspace" modal like Orca (D-15): project · name · Free chat or a workflow · agent. */
-export function CreateWorkspaceModal({ projectId, onClose }: { projectId?: string; onClose: () => void }) {
+/** Folder-safe branch name from a ticket title: "Fix the login!" → "fix-the-login". */
+export function slugify(text: string, max = 40): string {
+  return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, max).replace(/-+$/, '')
+}
+
+/** With `taskId`, the form starts from that ticket (project, workflow, values, name) and the new workspace is assigned to it. */
+export function CreateWorkspaceModal({ projectId, taskId, onClose }: { projectId?: string; taskId?: string; onClose: () => void }) {
   const { repos, load } = useWorkspaces()
   const navigate = useRouter((s) => s.navigate)
   const [workflows, setWorkflows] = useState<Workflow[]>([])
@@ -67,6 +74,17 @@ export function CreateWorkspaceModal({ projectId, onClose }: { projectId?: strin
   const [base, setBase] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [task, setTask] = useState<Task | null>(null)
+
+  useEffect(() => {
+    if (!taskId) return
+    api.getTask(taskId).then((t) => {
+      setTask(t)
+      if (t.repoId) setRepoId(t.repoId)
+      setType(t.workflowId ?? FREE)
+      setName(slugify(t.title))
+    }, (e: unknown) => setError(errorText(e)))
+  }, [taskId])
 
   useEffect(() => {
     void load()
@@ -91,8 +109,10 @@ export function CreateWorkspaceModal({ projectId, onClose }: { projectId?: strin
   const workflow = workflows.find((w) => w.id === type) ?? null
   // Start each workflow's fields from their defaults.
   useEffect(() => {
-    setValues(Object.fromEntries((workflow?.fields ?? []).map((f) => [f.key, f.default ?? ''])))
-  }, [workflow])
+    const defaults = Object.fromEntries((workflow?.fields ?? []).map((f) => [f.key, f.default ?? '']))
+    // A ticket's own values win over the defaults, but only for the workflow it was written for.
+    setValues(task && task.workflowId === workflow?.id ? { ...defaults, ...task.values } : defaults)
+  }, [workflow, task])
 
   const missing = useMemo(() => (workflow?.fields ?? []).filter((f) => f.required && !values[f.key]?.trim()).map((f) => f.label), [workflow, values])
   const branchField = workflow?.fields.find((f) => f.type === 'branch')
@@ -110,6 +130,8 @@ export function CreateWorkspaceModal({ projectId, onClose }: { projectId?: strin
         values: workflow ? values : {},
         base: base.trim() || undefined,
       })
+      // From a ticket: the new workspace takes it (the ticket moves to In progress).
+      if (taskId) await api.assignTask(taskId, ws.id)
       // The first chat is ready but waits for your message (D-17).
       if (agent !== NO_AGENT) {
         await api.createChat({ workspaceId: ws.id, agent: 'claude', accountId: agent, model, title: workflow ? workflow.name : 'Chat' })
@@ -140,7 +162,7 @@ export function CreateWorkspaceModal({ projectId, onClose }: { projectId?: strin
           <>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Project">
-                <Select aria-label="Project" value={repoId} onValueChange={setRepoId} options={repos.map((r) => ({ value: r.id, label: r.name }))} />
+                <Select aria-label="Project" value={repoId} disabled={Boolean(task?.repoId)} onValueChange={setRepoId} options={repos.map((r) => ({ value: r.id, label: r.name }))} />
               </Field>
               <Field label="Workspace name (optional)">
                 <Input aria-label="Workspace name" value={name} placeholder="auto" onChange={(e) => setName(e.target.value.toLowerCase().replace(/\s+/g, '-'))} />

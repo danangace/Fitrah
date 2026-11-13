@@ -22,6 +22,7 @@ import { ChatService } from '../native-chat/service'
 import { registerSettingsRoutes } from '../settings/routes'
 import { registerProjectRoutes } from '../projects/routes'
 import { StatusTracker } from '../status/tracker'
+import { registerTaskRoutes } from '../tasks/routes'
 import { registerWorkflowRoutes } from '../workflows/routes'
 import { registerWorkspaceRoutes } from '../workspaces/routes'
 import { SetupRunner } from '../workspaces/setup-runner'
@@ -85,6 +86,7 @@ export function createRuntimeApp(options: AppOptions): { app: Hono; chats: ChatS
   registerAccountRoutes(app, db, new ModelCatalogs(db, options.modelListers ?? { claude: claudeAdapter.listModels }))
   registerConnectorRoutes(app, new ConnectorService(db, new SecretStore(options.connectors?.secretsDir), options.connectors))
   registerWorkflowRoutes(app, db)
+  registerTaskRoutes(app, db)
   registerProjectRoutes(app, db)
   registerDocsRoutes(app, docs)
   registerEventRoutes(app, bus)

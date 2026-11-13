@@ -19,6 +19,7 @@ import {
   type WorkspaceUpdate,
 } from '../../shared/schemas'
 import { ChatEvent } from '../../shared/events'
+import { type BoardColumn, Task, type TaskInput, type TaskUpdate } from '../../shared/tasks'
 import {
   Connector,
   type ConnectorInput,
@@ -111,6 +112,14 @@ export const api = {
   stopChat: (id: string) => request('POST', `${API.chats}/${id}/stop`, Ok),
   answerApproval: (approvalId: string, decision: 'allow' | 'deny') =>
     request('POST', `/api/approvals/${approvalId}`, Ok, { decision }),
+  listTasks: () => request('GET', '/api/tasks', z.array(Task)),
+  getTask: (id: string) => request('GET', `/api/tasks/${id}`, Task),
+  createTask: (input: TaskInput) => request('POST', '/api/tasks', Task, input),
+  updateTask: (id: string, input: TaskUpdate) => request('PATCH', `/api/tasks/${id}`, Task, input),
+  moveTask: (id: string, column: BoardColumn) => request('POST', `/api/tasks/${id}/move`, Task, { column }),
+  deleteTask: (id: string) => request('DELETE', `/api/tasks/${id}`, Ok),
+  assignTask: (id: string, workspaceId: string) => request('POST', `/api/tasks/${id}/assign`, Task, { workspaceId }),
+  unassignTask: (id: string) => request('POST', `/api/tasks/${id}/unassign`, Task),
   listConnectors: () => request('GET', '/api/connectors', z.array(Connector)),
   connectorEnvVars: () => request('GET', '/api/connectors/env-vars', z.array(z.string())),
   createConnector: (input: ConnectorInput) => request('POST', '/api/connectors', Connector, input),

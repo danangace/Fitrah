@@ -13,6 +13,20 @@ export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElem
   )
 }
 
+/** Multi-line plain text (descriptions). */
+export function TextArea({ className, ...props }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  return (
+    <textarea
+      rows={5}
+      className={cn(
+        'w-full resize-y rounded-md border border-input bg-card px-2.5 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none',
+        className,
+      )}
+      {...props}
+    />
+  )
+}
+
 /** Multi-line, monospace: for shell scripts. */
 export function ScriptArea({ className, ...props }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return (
