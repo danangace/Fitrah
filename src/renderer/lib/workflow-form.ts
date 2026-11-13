@@ -18,6 +18,8 @@ export const FIELD_TYPE_LABEL: Record<WorkflowField['type'], string> = {
   docsFolder: 'Docs folder',
   branch: 'Branch',
   choice: 'Choice',
+  longtext: 'Long text',
+  links: 'Links (one per line)',
 }
 
 /** "dev, staging ,prod" → ["dev", "staging", "prod"] */

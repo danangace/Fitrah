@@ -2,6 +2,16 @@ import { describe, expect, it } from 'vitest'
 import { openDb } from '../sqlite/db'
 import { createWorkflow, fillInstructions, getWorkflow, listWorkflows, removeWorkflow, resolveValues, updateWorkflow } from './service'
 
+describe('workflow values', () => {
+  it('accepts a list of web links, one per line, and rejects anything else', () => {
+    const wf = getWorkflow(openDb(':memory:'), 'defect')
+    const base = { defect: 'x', environment: 'dev', app: 'core', url_page: 'https://a.test', steps: '1', expected: 'e', actual: 'a', severity: 'minor', handling: 'hotfix', iteration: 'i-1' }
+    expect(resolveValues(wf, { ...base, references: 'https://a.test/1\n\nhttps://b.test/2' }).references).toBe('https://a.test/1\n\nhttps://b.test/2')
+    expect(() => resolveValues(wf, { ...base, references: 'see the PRD' })).toThrow(/one web link per line/)
+    expect(resolveValues(wf, base).references).toBe('')
+  })
+})
+
 describe('workflows', () => {
   it('ships the editable Planning starter', () => {
     const db = openDb(':memory:')
@@ -32,7 +42,7 @@ describe('workflows', () => {
       ],
       instructions: 'Fix {Ticket} found on {Found on}.',
     })
-    expect(listWorkflows(db).map((w) => w.name)).toEqual(['Defect fix', 'Planning'])
+    expect(listWorkflows(db).map((w) => w.name)).toEqual(['Defect', 'Defect fix', 'Planning'])
     expect(wf.fields).toHaveLength(5)
   })
 
@@ -64,6 +74,6 @@ describe('workflows', () => {
     const db = openDb(':memory:')
     const wf = createWorkflow(db, { name: 'Tmp', fields: [] })
     removeWorkflow(db, wf.id)
-    expect(listWorkflows(db).map((w) => w.name)).toEqual(['Planning'])
+    expect(listWorkflows(db).map((w) => w.name)).toEqual(['Defect', 'Planning'])
   })
 })

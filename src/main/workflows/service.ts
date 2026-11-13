@@ -104,6 +104,9 @@ export function resolveValues(workflow: Workflow, values: Record<string, string>
     if (f.type === 'choice' && value && f.options && !f.options.includes(value)) {
       throw new UserError('invalid_choice', `"${value}" is not a choice of ${f.label}`)
     }
+    if (f.type === 'links' && value && !value.split('\n').every((line) => !line.trim() || /^https?:\/\/\S+$/i.test(line.trim()))) {
+      throw new UserError('invalid_links', `${f.label}: one web link per line, starting with http:// or https://`)
+    }
     out[f.key] = value
   }
   if (missing.length) throw new UserError('missing_fields', `Fill in: ${missing.join(', ')}`)

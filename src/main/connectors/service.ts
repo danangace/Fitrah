@@ -5,7 +5,10 @@ import { UserError } from '../errors'
 import { nowIso } from '../paths'
 import type { Db } from '../sqlite/db'
 import { HelixClient, type HelixTicket, normalizeBaseUrl } from './helix'
+import type { Task } from '../../shared/tasks'
+import { createTask } from '../tasks/service'
 import { type SecretStore, tokenHint } from './secrets'
+import { DEFAULT_MAPPINGS, toTaskInput } from './transfer'
 
 const KEY = 'connectors'
 const STORED_TOKEN = /^sidpjm_[a-f0-9]{64}$/
@@ -21,6 +24,8 @@ const Row = z.object({
   baseUrl: z.string(),
   tokenSource: TokenSource,
   lastCheckedAt: z.string().nullable(),
+  /** How Helix words map to ours when a ticket is transferred; the user can edit them. */
+  mappings: z.object({ severity: z.record(z.string(), z.string()), environment: z.record(z.string(), z.string()) }).optional(),
 })
 type Row = z.infer<typeof Row>
 
@@ -67,7 +72,7 @@ export class ConnectorService {
 
   private view(row: Row): Connector {
     const token = this.token(row)
-    return { ...row, tokenHint: token ? tokenHint(token) : null }
+    return { ...row, mappings: row.mappings ?? DEFAULT_MAPPINGS, tokenHint: token ? tokenHint(token) : null }
   }
 
   list(): Connector[] {
@@ -112,6 +117,7 @@ export class ConnectorService {
       baseUrl: normalizeBaseUrl(input.baseUrl),
       tokenSource: this.source(input, id),
       lastCheckedAt: null,
+      mappings: input.mappings,
     }
     this.save([...this.rows(), row])
     return this.view(row)
@@ -120,7 +126,7 @@ export class ConnectorService {
   update(id: string, raw: unknown): Connector {
     const current = this.find(id)
     const input = parse(raw)
-    const next: Row = { ...current, label: input.label, baseUrl: normalizeBaseUrl(input.baseUrl), tokenSource: this.source(input, id, current), lastCheckedAt: null }
+    const next: Row = { ...current, label: input.label, baseUrl: normalizeBaseUrl(input.baseUrl), tokenSource: this.source(input, id, current), lastCheckedAt: null, mappings: input.mappings ?? current.mappings }
     this.save(this.rows().map((r) => (r.id === id ? next : r)))
     this.forget(id)
     return this.view(next)
@@ -182,6 +188,22 @@ export class ConnectorService {
 
   ticket(id: string, key: string): Promise<HelixTicket> {
     return this.client(id).ticket(key)
+  }
+
+  /**
+   * Copy one Helix ticket to our board. Always re-reads the full ticket (a list row has no rich text).
+   * One-way: nothing is written back. A ticket can be copied only once.
+   */
+  async transfer(id: string, key: string): Promise<Task> {
+    const row = this.find(id)
+    const existing = this.db.prepare("SELECT id FROM tasks WHERE source = 'helix' AND external_id = ?").get(key)
+    if (existing) throw new UserError('already_transferred', `${key} is already on the board`, 409)
+    const ticket = await this.client(id).ticket(key)
+    const workflowId = (wf: string) => (this.db.prepare('SELECT id FROM workflows WHERE id = ?').get(wf) ? wf : null)
+    // With a single project there is nothing to choose; otherwise a person picks it on the card.
+    const repos = this.db.prepare('SELECT id FROM repos').all() as { id: string }[]
+    const input = toTaskInput(ticket, row.mappings ?? DEFAULT_MAPPINGS, { planning: workflowId('planning'), defect: workflowId('defect') }, repos.length === 1 ? (repos[0]?.id ?? null) : null)
+    return createTask(this.db, input, { source: 'helix', externalId: ticket.key, externalUrl: ticket.url })
   }
 }
 

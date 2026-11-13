@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { createApp } from '../server/app'
 import { TOKEN_HEADER, localHosts } from '../server/security'
 import { openDb } from '../sqlite/db'
-import { BOARDS, ME, SEARCH } from './fixtures/helix'
+import { BOARDS, DEFECT, ME, SEARCH, STORY } from './fixtures/helix'
 
 const TOKEN = `sidpjm_${'c'.repeat(64)}`
 const sessionToken = 'a'.repeat(64)
@@ -18,17 +18,18 @@ function setup(env: NodeJS.ProcessEnv = {}) {
   const fakeFetch = (async (url: string | URL | Request, init?: RequestInit) => {
     const u = new URL(String(url))
     seen.push({ path: u.pathname, auth: ((init?.headers ?? {}) as Record<string, string>).Authorization ?? null })
-    const body = u.pathname === '/api/auth/me' ? ME : u.pathname === '/api/boards/' ? BOARDS : u.pathname === '/api/search' ? (searches++, SEARCH) : {}
+    const body = u.pathname === '/api/auth/me' ? ME : u.pathname === '/api/boards/' ? BOARDS : u.pathname === '/api/search' ? (searches++, SEARCH) : u.pathname === '/api/tickets/T2-3672' ? DEFECT : u.pathname === '/api/tickets/T2-3252' ? STORY : {}
     return new Response(JSON.stringify(body), { status: 200 })
   }) as typeof fetch
+  const db = openDb(':memory:')
   const app = createApp({
     security: { token: sessionToken, allowedHosts: localHosts(4317) },
-    db: openDb(':memory:'),
+    db,
     connectors: { secretsDir: dir, fetch: fakeFetch, env },
   })
   const call = (method: string, path: string, body?: unknown) =>
     app.request(path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) })
-  return { call, dir, seen, searches: () => searches }
+  return { call, dir, seen, searches: () => searches, db }
 }
 
 describe('connector routes', () => {
@@ -103,5 +104,33 @@ describe('connector routes', () => {
     const conn = await (await call('POST', '/api/connectors', { label: 'H', baseUrl: 'https://helix.test', token: TOKEN })).json()
     const edited = await (await call('PATCH', `/api/connectors/${conn.id}`, { label: 'Work Helix', baseUrl: 'https://helix.test' })).json()
     expect(edited).toMatchObject({ label: 'Work Helix', tokenHint: 'sidpjm_…cccc' })
+  })
+
+  it('copies a ticket to the board once, mapped for its kind, and never writes to Helix', async () => {
+    const { call, seen } = setup()
+    const conn = await (await call('POST', '/api/connectors', { label: 'H', baseUrl: 'https://helix.test', token: TOKEN })).json()
+    const res = await call('POST', `/api/connectors/${conn.id}/transfer`, { key: 'T2-3672' })
+    expect(res.status).toBe(201)
+    expect(await res.json()).toMatchObject({ source: 'helix', externalId: 'T2-3672', externalUrl: 'https://helix.test/tickets/T2-3672', kind: 'defect', workflowId: 'defect', column: 'backlog' })
+    expect((await call('POST', `/api/connectors/${conn.id}/transfer`, { key: 'T2-3672' })).status).toBe(409)
+    await call('POST', `/api/connectors/${conn.id}/transfer`, { key: 'T2-3252' })
+    const board = await (await call('GET', '/api/tasks')).json()
+    expect(board.map((t: { externalId: string }) => t.externalId).toSorted()).toEqual(['T2-3252', 'T2-3672'])
+    expect(seen.every((r) => r.path.startsWith('/api/'))).toBe(true)
+  })
+
+  it('refuses a transfer without a ticket key', async () => {
+    const { call } = setup()
+    const conn = await (await call('POST', '/api/connectors', { label: 'H', baseUrl: 'https://helix.test', token: TOKEN })).json()
+    expect((await call('POST', `/api/connectors/${conn.id}/transfer`, {})).status).toBe(400)
+  })
+
+  it('saves edited mappings with the connection and uses them on transfer', async () => {
+    const { call } = setup()
+    const conn = await (await call('POST', '/api/connectors', { label: 'H', baseUrl: 'https://helix.test', token: TOKEN })).json()
+    expect(conn.mappings.severity.high).toBe('major')
+    await call('PATCH', `/api/connectors/${conn.id}`, { label: 'H', baseUrl: 'https://helix.test', mappings: { severity: { medium: 'major' }, environment: { defect_staging: 'dev' } } })
+    const task = await (await call('POST', `/api/connectors/${conn.id}/transfer`, { key: 'T2-3672' })).json()
+    expect(task.values).toMatchObject({ severity: 'major', environment: 'dev' })
   })
 })

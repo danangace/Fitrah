@@ -41,6 +41,6 @@ describe('migration 002 (projects + workflows)', () => {
       base: 'origin/dev/tribe-2',
     })
     expect(db.prepare("SELECT workflow_id, values_json FROM workspaces WHERE id = 'free'").get()).toEqual({ workflow_id: null, values_json: '{}' })
-    expect(db.prepare("SELECT name FROM workflows").all()).toEqual([{ name: 'Planning' }])
+    expect(db.prepare("SELECT name FROM workflows ORDER BY name").all()).toEqual([{ name: 'Defect' }, { name: 'Planning' }])
   })
 })

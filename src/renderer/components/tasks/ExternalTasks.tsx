@@ -6,13 +6,14 @@ import { cn } from '../../lib/cn'
 import { errorText } from '../../lib/errors'
 import { statusLabel } from '../../lib/tasks-tabs'
 import { useRouter } from '../../store/router'
+import { toast } from '../../store/toast'
 import { Button } from '../ui/Button'
 import { Notice } from '../ui/Field'
 import { Select } from '../ui/Select'
 
 const ALL = 'all'
 
-/** Read-only list of the tickets in an outside system (Helix). Moving one to our board comes later. */
+/** Read-only list of the tickets in an outside system (Helix). Transfer copies one to our board; nothing is written back. */
 export function ExternalTasks() {
   const navigate = useRouter((s) => s.navigate)
   const [connectors, setConnectors] = useState<Connector[] | null>(null)
@@ -27,6 +28,9 @@ export function ExternalTasks() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [nonce, setNonce] = useState(0)
+  // Tickets already copied to our board (matched by key), and the one being copied now.
+  const [onBoard, setOnBoard] = useState<Set<string>>(new Set())
+  const [copying, setCopying] = useState<string | null>(null)
 
   useEffect(() => {
     api.listConnectors().then(
@@ -37,6 +41,23 @@ export function ExternalTasks() {
       (e: unknown) => setError(errorText(e)),
     )
   }, [])
+
+  useEffect(() => {
+    api.listTasks().then((tasks) => setOnBoard(new Set(tasks.filter((t) => t.externalId).map((t) => t.externalId as string))), () => {})
+  }, [])
+
+  const transfer = async (key: string) => {
+    setCopying(key)
+    try {
+      await api.transferTicket(connectorId, key)
+      setOnBoard((cur) => new Set(cur).add(key))
+      toast.success(`${key} is on your board`)
+    } catch (e) {
+      setError(errorText(e))
+    } finally {
+      setCopying(null)
+    }
+  }
 
   useEffect(() => {
     if (!connectorId) return
@@ -124,6 +145,15 @@ export function ExternalTasks() {
               <span className={cn('shrink-0 rounded px-1.5 py-0.5 text-[11px] font-medium', t.kind === 'defect' ? 'bg-destructive/15 text-red-200' : 'bg-secondary text-foreground/70')}>{t.kind === 'defect' ? 'Defect' : 'Task'}</span>
               <span className="w-28 shrink-0 truncate text-xs text-foreground/70">{statusLabel(t.status)}</span>
               <span className="w-16 shrink-0 truncate text-xs text-muted-foreground">{t.priority ?? ''}</span>
+              {onBoard.has(t.key) ? (
+                <button type="button" onClick={() => navigate({ name: 'tasks', tab: 'board' })} className="w-24 shrink-0 text-left text-xs text-success hover:underline" title="Show on the board">
+                  On board
+                </button>
+              ) : (
+                <Button className="w-24" disabled={copying === t.key} onClick={() => void transfer(t.key)}>
+                  {copying === t.key ? 'Copying…' : 'Transfer'}
+                </Button>
+              )}
               <a href={t.url} target="_blank" rel="noreferrer noopener" className="inline-flex shrink-0 items-center gap-1 text-xs text-foreground/70 hover:text-foreground">
                 Open in source <ExternalLink className="size-3" />
               </a>

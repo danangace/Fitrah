@@ -111,7 +111,7 @@ export const WorkspaceStatus = z.enum(['idle', 'working', 'needs_approval', 'wai
 export type WorkspaceStatus = z.infer<typeof WorkspaceStatus>
 
 /** Field types a workflow can ask for (D-16). */
-export const FieldType = z.enum(['text', 'link', 'docsFolder', 'branch', 'choice'])
+export const FieldType = z.enum(['text', 'link', 'docsFolder', 'branch', 'choice', 'longtext', 'links'])
 export type FieldType = z.infer<typeof FieldType>
 
 export const WorkflowField = z.object({

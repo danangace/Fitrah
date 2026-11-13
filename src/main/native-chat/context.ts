@@ -41,7 +41,8 @@ export function workspaceContext(ws: Workspace, repo: Repo, settings: Settings, 
     const value = ws.values[field.key] ?? ''
     const shown =
       field.type === 'docsFolder' && value && docsRoot ? `${value} (${join(docsRoot, value)})` : value || 'not set'
-    lines.push(`- ${field.label}: ${shown}`)
+    // Multi-line values (steps, links) stay inside their list item.
+    lines.push(`- ${field.label}: ${shown.replaceAll('\n', '\n  ')}`)
   }
   if (workflow.instructions.trim()) {
     lines.push('', '### Instructions', fillInstructions(workflow, ws.values))

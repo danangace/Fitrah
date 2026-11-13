@@ -12,7 +12,8 @@ export function activeTaskIn(tasks: readonly Task[], workspaceId: string, except
   return tasks.find((t) => t.workspaceId === workspaceId && t.id !== exceptId && t.column !== 'review' && t.column !== 'done')
 }
 
-/** New Planning tickets start with the Planning workflow when it exists. */
-export function defaultWorkflowId(workflows: readonly { id: string }[]): string | null {
-  return workflows.find((w) => w.id === 'planning')?.id ?? null
+/** A new task starts with the Planning workflow, a new defect with the Defect one, when they exist. */
+export function defaultWorkflowId(workflows: readonly { id: string }[], kind: 'task' | 'defect' = 'task'): string | null {
+  const id = kind === 'defect' ? 'defect' : 'planning'
+  return workflows.find((w) => w.id === id)?.id ?? null
 }

@@ -36,5 +36,11 @@ export function registerConnectorRoutes(app: Hono, service: ConnectorService): v
     )
     return c.json(page)
   })
+  // Copy one ticket to our board (the full ticket is read again first).
+  app.post(`${base}/:id/transfer`, async (c) => {
+    const key = ((await c.req.json()) as { key?: unknown }).key
+    if (typeof key !== 'string' || !key) throw new UserError('invalid_ticket_key', 'Pick a ticket')
+    return c.json(await service.transfer(c.req.param('id'), key), 201)
+  })
   app.get(`${base}/:id/tickets/:key`, async (c) => c.json(await service.ticket(c.req.param('id'), c.req.param('key'))))
 }

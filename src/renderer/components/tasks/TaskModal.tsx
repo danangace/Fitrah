@@ -30,7 +30,7 @@ export function TaskModal({ task, workflows, onClose, onChanged, onAssign }: {
   const [kind, setKind] = useState<'task' | 'defect'>(task?.kind ?? 'task')
   const [priority, setPriority] = useState(task?.priority ?? '')
   const [repoId, setRepoId] = useState(task ? (task.repoId ?? NONE) : (repos[0]?.id ?? NONE))
-  const [workflowId, setWorkflowId] = useState(task ? (task.workflowId ?? NONE) : (defaultWorkflowId(workflows) ?? NONE))
+  const [workflowId, setWorkflowId] = useState(task ? (task.workflowId ?? NONE) : (defaultWorkflowId(workflows, 'task') ?? NONE))
   const [column, setColumn] = useState<BoardColumn>(task?.column ?? 'backlog')
   const [values, setValues] = useState<Record<string, string>>(task?.values ?? {})
   const [busy, setBusy] = useState(false)
@@ -85,7 +85,12 @@ export function TaskModal({ task, workflows, onClose, onChanged, onAssign }: {
         </Field>
         <div className="grid grid-cols-3 gap-3">
           <Field label="Kind">
-            <Select aria-label="Kind" value={kind} onValueChange={(v) => setKind(v === 'defect' ? 'defect' : 'task')} options={[{ value: 'task', label: 'Task' }, { value: 'defect', label: 'Defect' }]} />
+            <Select aria-label="Kind" value={kind} onValueChange={(v) => {
+              const next = v === 'defect' ? 'defect' : 'task'
+              // A new ticket still on the old kind's default workflow follows the kind.
+              if (!task && workflowId === (defaultWorkflowId(workflows, kind) ?? NONE)) setWorkflowId(defaultWorkflowId(workflows, next) ?? NONE)
+              setKind(next)
+            }} options={[{ value: 'task', label: 'Task' }, { value: 'defect', label: 'Defect' }]} />
           </Field>
           <Field label="Priority">
             <Input aria-label="Priority" placeholder="e.g. high" value={priority} onChange={(e) => setPriority(e.target.value)} />

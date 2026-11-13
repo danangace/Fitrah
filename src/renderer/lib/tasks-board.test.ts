@@ -26,5 +26,7 @@ describe('tasks board helpers', () => {
   it('defaults to the Planning workflow only when it exists', () => {
     expect(defaultWorkflowId([{ id: 'planning' }, { id: 'x' }])).toBe('planning')
     expect(defaultWorkflowId([{ id: 'x' }])).toBeNull()
+    expect(defaultWorkflowId([{ id: 'planning' }, { id: 'defect' }], 'defect')).toBe('defect')
+    expect(defaultWorkflowId([{ id: 'planning' }], 'defect')).toBeNull()
   })
 })

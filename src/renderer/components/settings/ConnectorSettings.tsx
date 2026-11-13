@@ -5,16 +5,17 @@ import { api } from '../../api/nakoda'
 import { errorText } from '../../lib/errors'
 import { toast } from '../../store/toast'
 import { Button } from '../ui/Button'
-import { Card, Field, Input, Notice } from '../ui/Field'
+import { Card, Field, Input, Notice, TextArea } from '../ui/Field'
 import { Select } from '../ui/Select'
 import { useConfirm } from '../ui/confirm'
+import { formatMap, parseMap } from '../../lib/mapping-text'
 
 const DEFAULT_URL = 'https://project.sid.id'
 
 type Source = 'paste' | 'env'
-type Draft = { id: string | null; label: string; baseUrl: string; source: Source; token: string; envName: string }
+type Draft = { id: string | null; label: string; baseUrl: string; source: Source; token: string; envName: string; severityMap: string; envMap: string }
 
-const blank: Draft = { id: null, label: 'Helix', baseUrl: DEFAULT_URL, source: 'paste', token: '', envName: '' }
+const blank: Draft = { id: null, label: 'Helix', baseUrl: DEFAULT_URL, source: 'paste', token: '', envName: '', severityMap: '', envMap: '' }
 
 function ConnectorForm({ draft, envNames, onChange, onSave, onCancel }: {
   draft: Draft
@@ -58,6 +59,16 @@ function ConnectorForm({ draft, envNames, onChange, onSave, onCancel }: {
           </Field>
         )}
       </fieldset>
+      {editing && (
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Severity mapping" hint="Helix severity=ours (critical, major or minor), one per line. Used when a defect is transferred.">
+            <TextArea aria-label="Severity mapping" rows={4} className="font-mono text-xs" value={draft.severityMap} onChange={(e) => onChange({ ...draft, severityMap: e.target.value })} />
+          </Field>
+          <Field label="Environment mapping" hint="Helix ticket type=environment (dev, staging or production). Empty means someone chooses it.">
+            <TextArea aria-label="Environment mapping" rows={4} className="font-mono text-xs" value={draft.envMap} onChange={(e) => onChange({ ...draft, envMap: e.target.value })} />
+          </Field>
+        </div>
+      )}
       <div className="flex gap-2">
         <Button variant="primary" disabled={!ready} onClick={onSave}>
           {editing ? 'Save connection' : 'Add connection'}
@@ -108,6 +119,7 @@ export function ConnectorSettings() {
       kind: 'helix' as const,
       label: draft.label,
       baseUrl: draft.baseUrl,
+      ...(draft.id ? { mappings: { severity: parseMap(draft.severityMap), environment: parseMap(draft.envMap) } } : {}),
       ...(draft.source === 'paste' ? (draft.token.trim() ? { token: draft.token.trim() } : {}) : { envName: draft.envName }),
     }
     try {
@@ -146,7 +158,7 @@ export function ConnectorSettings() {
   }
 
   const edit = (c: Connector) =>
-    setDraft({ id: c.id, label: c.label, baseUrl: c.baseUrl, source: c.tokenSource.kind === 'env' ? 'env' : 'paste', token: '', envName: c.tokenSource.kind === 'env' ? c.tokenSource.name : '' })
+    setDraft({ id: c.id, label: c.label, baseUrl: c.baseUrl, source: c.tokenSource.kind === 'env' ? 'env' : 'paste', token: '', envName: c.tokenSource.kind === 'env' ? c.tokenSource.name : '', severityMap: formatMap(c.mappings.severity), envMap: formatMap(c.mappings.environment) })
 
   return (
     <section className="space-y-3">

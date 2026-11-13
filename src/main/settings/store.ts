@@ -11,6 +11,7 @@ export const DEFAULT_SETTINGS: Settings = {
     { label: 'Module docs', template: 'frontend/modules/{iteration}/{module}' },
     { label: 'Open Questions', template: 'frontend/modules/{iteration}/{module}/Open Questions.md' },
     { label: 'Plan', template: 'plans/{yyyy-mm}/{iteration}/{feature}/{feature}.md' },
+    { label: 'Bug pool', template: 'frontend/bugs/pool/{iteration}/{defect}/{defect}.md' },
   ],
   workspacesDir: '~/nakoda/workspaces',
   models: { claude: { list: ['sonnet', 'opus', 'haiku'], default: 'sonnet' } },

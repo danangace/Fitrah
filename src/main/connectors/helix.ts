@@ -197,6 +197,8 @@ export type HelixTicket = {
   iteration: string | null
   /** Markdown, in reading order; for a defect: steps, expected, actual. */
   description: string
+  /** Each rich-text field on its own (markdown), by Helix name, e.g. `steps_to_reproduce`. */
+  sections: Record<string, string>
   /** Every PRD / Figma link found in the ticket's custom fields. */
   prdLinks: string[]
   figmaLinks: string[]
@@ -229,7 +231,8 @@ export function mapTicket(raw: unknown, url: string): HelixTicket {
   const fields = (Array.isArray(t.fields) ? t.fields : []).map(asRecord)
   const field = (name: string) => fields.filter((f) => f.field_key === name).flatMap((f) => urlsOf(f.field_value))
   const iterationName = str(asRecord(t.milestone).name)
-  const description = SECTIONS.map(([key, heading]) => [heading, tiptapToMarkdown(t[key])] as const)
+  const sections = Object.fromEntries(SECTIONS.map(([key]) => [key, tiptapToMarkdown(t[key])] as const).filter(([, md]) => md !== ''))
+  const description = SECTIONS.map(([key, heading]) => [heading, sections[key] ?? ''] as const)
     .filter(([, md]) => md !== '')
     .map(([heading, md]) => `## ${heading}\n\n${md}`)
     .join('\n\n')
@@ -246,6 +249,7 @@ export function mapTicket(raw: unknown, url: string): HelixTicket {
     iterationName,
     iteration: iterationShort(iterationName),
     description,
+    sections,
     prdLinks: [...field('prd_links'), ...urlsOf(t.prd_link)],
     figmaLinks: [...field('figma_links'), ...urlsOf(t.figma_link)],
     url,

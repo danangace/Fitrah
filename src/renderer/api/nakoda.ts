@@ -126,6 +126,7 @@ export const api = {
   updateConnector: (id: string, input: ConnectorInput) => request('PATCH', `/api/connectors/${id}`, Connector, input),
   removeConnector: (id: string) => request('DELETE', `/api/connectors/${id}`, Ok),
   testConnector: (id: string) => request('POST', `/api/connectors/${id}/test`, TestResult),
+  transferTicket: (id: string, key: string) => request('POST', `/api/connectors/${id}/transfer`, Task, { key }),
   connectorBoards: (id: string) => request('GET', `/api/connectors/${id}/boards`, z.array(z.object({ id: z.number(), name: z.string() }))),
   connectorIterations: (id: string, boardId: number) => request('GET', `/api/connectors/${id}/iterations?boardId=${boardId}`, z.array(Iteration)),
   externalTickets: (id: string, q: ExternalQuery, refresh = false) => {

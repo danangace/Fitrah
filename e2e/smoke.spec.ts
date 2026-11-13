@@ -486,3 +486,69 @@ test('Task board: create a ticket, see what is missing, assign it, and one activ
   await expect(page.getByRole('region', { name: 'In progress' }).getByText('Fix invoice date')).toBeVisible()
   await page.screenshot({ path: shot('task-board'), animations: 'disabled' })
 })
+
+test('Transfer a Helix defect and a story to the board; the defect gets the Defect workflow', async ({ page }) => {
+  const token = `sidpjm_${'e'.repeat(64)}`
+  await page.goto(`/?token=${TOKEN}`)
+  // Connect (this test is self-contained and cleans up).
+  await page.locator('aside').getByRole('button', { name: 'Settings', exact: true }).click()
+  await page.getByRole('navigation', { name: 'Settings sections' }).getByRole('button', { name: 'Connectors', exact: true }).click()
+  await page.getByRole('button', { name: 'Add Helix' }).click()
+  await page.getByLabel('Helix address').fill('https://helix.example.test')
+  await page.getByLabel('Read-only token').fill(token)
+  await page.getByRole('button', { name: 'Add connection' }).click()
+  await expect(page.getByTestId('connection-test')).toContainText('Connected as Ada Lovelace')
+
+  // The mappings are editable on the connection.
+  await page.getByRole('button', { name: 'Edit' }).click()
+  await expect(page.getByLabel('Severity mapping')).toHaveValue(/high=major/)
+  await expect(page.getByLabel('Environment mapping')).toHaveValue('defect_staging=staging')
+  await page.getByRole('button', { name: 'Cancel' }).click()
+
+  // External: transfer both tickets.
+  await page.locator('aside').getByRole('button', { name: 'Back to Nakoda' }).click()
+  await page.locator('aside').getByRole('button', { name: 'Tasks', exact: true }).click()
+  await page.getByRole('tab', { name: 'External' }).click()
+  const row = (key: string) => page.getByTestId('external-list').locator('li', { hasText: key })
+  await row('T2-3672').getByRole('button', { name: 'Transfer' }).click()
+  await expect(row('T2-3672').getByText('On board')).toBeVisible()
+  await row('T2-3252').getByRole('button', { name: 'Transfer' }).click()
+  await expect(row('T2-3252').getByText('On board')).toBeVisible()
+  // Once only: there is no Transfer button any more.
+  await expect(row('T2-3672').getByRole('button', { name: 'Transfer' })).toHaveCount(0)
+
+  // Board: both are in Backlog with their source; the defect carries the Defect workflow's values.
+  await page.getByRole('tab', { name: 'Our board' }).click()
+  const backlog = page.getByRole('region', { name: 'Backlog' })
+  await expect(backlog.getByText('[FE] Link redirect after login')).toBeVisible()
+  await expect(backlog.getByText('Invoice Management - Phase 1')).toBeVisible()
+  const defect = page.getByTestId('task-card').filter({ hasText: '[FE] Link redirect after login' })
+  await expect(defect.getByText('Defect', { exact: true })).toBeVisible()
+  await expect(defect.getByText('T2-3672')).toBeVisible()
+  await defect.click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog.getByLabel('Workflow')).toContainText('Defect')
+  await expect(dialog.getByLabel('Environment')).toContainText('staging')
+  await expect(dialog.getByLabel('Severity')).toContainText('minor')
+  await expect(dialog.getByLabel('Iteration')).toHaveValue('i-15')
+  await expect(dialog.getByLabel('Steps to reproduce')).toHaveValue('1. Open the emailed link while logged out')
+  await expect(dialog.getByLabel('Defect', { exact: true })).toHaveValue('fe-link-redirect-after-login')
+  await expect(dialog.getByRole('link', { name: /Open in source/ })).toHaveAttribute('href', 'https://helix.example.test/tickets/T2-3672')
+  // What is left for a person: app, page URL and handling expectation.
+  await expect(dialog.getByText(/Missing: .*App.*URL page.*Handling expectation/)).toBeVisible()
+  await page.screenshot({ path: shot('task-defect'), animations: 'disabled' })
+  await page.keyboard.press('Escape')
+
+  // The story is a Planning ticket: PRD, Figma and iteration are filled; module is missing (and the
+  // project too when there is more than one to choose from).
+  const story = page.getByTestId('task-card').filter({ hasText: 'Invoice Management - Phase 1' })
+  await expect(story.getByText(/Missing: .*Module/)).toBeVisible()
+  await expect(story.getByText(/PRD|Figma|Iteration/)).toHaveCount(0)
+
+  // Clean up.
+  await page.locator('aside').getByRole('button', { name: 'Settings', exact: true }).click()
+  await page.getByRole('navigation', { name: 'Settings sections' }).getByRole('button', { name: 'Connectors', exact: true }).click()
+  await page.getByRole('button', { name: 'Remove' }).click()
+  await page.getByRole('alertdialog').getByRole('button', { name: 'Remove' }).click()
+  await expect(page.getByText('No connectors yet')).toBeVisible()
+})

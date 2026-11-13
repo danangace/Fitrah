@@ -16,6 +16,8 @@ export const Connector = z.object({
   /** `sidpjm_…a1b2`: enough to recognise the token, useless to use it. Null when no token is available. */
   tokenHint: z.string().nullable(),
   lastCheckedAt: z.string().nullable(),
+  /** How Helix words map to ours on transfer (editable). */
+  mappings: z.object({ severity: z.record(z.string(), z.string()), environment: z.record(z.string(), z.string()) }),
 })
 export type Connector = z.infer<typeof Connector>
 
@@ -26,6 +28,7 @@ export const ConnectorInput = z.object({
   baseUrl: z.string().trim().min(1, 'Enter the Helix address'),
   token: z.string().trim().optional(),
   envName: z.string().trim().optional(),
+  mappings: z.object({ severity: z.record(z.string(), z.string()), environment: z.record(z.string(), z.string()) }).optional(),
 })
 export type ConnectorInput = z.infer<typeof ConnectorInput>
 
