@@ -1,4 +1,4 @@
-import type { ExternalPage, ExternalQuery, ExternalTicket, Iteration, TestResult } from '../../shared/connectors'
+import { type ExternalPage, type ExternalQuery, type ExternalTicket, HELIX_STATUSES, type Iteration, type TestResult } from '../../shared/connectors'
 import { UserError } from '../errors'
 import { redactTokens } from './secrets'
 import { tiptapToMarkdown } from './tiptap'
@@ -145,6 +145,10 @@ export class HelixClient {
     if (query.iterationId !== undefined) {
       if (!Number.isInteger(query.iterationId)) throw new UserError('invalid_iteration', 'Unknown iteration')
       params.set('milestone_id', String(query.iterationId))
+    }
+    for (const status of query.statuses ?? []) {
+      if (!(HELIX_STATUSES as readonly string[]).includes(status)) throw new UserError('invalid_status', `Unknown status "${status}". Use one of: ${HELIX_STATUSES.join(', ')}`)
+      params.append('status', status)
     }
     const body = await this.get(`/api/search?${params}`)
     const rows = Array.isArray(body.data) ? body.data : []

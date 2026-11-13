@@ -78,4 +78,11 @@ export type ExternalFilters = z.infer<typeof ExternalFilters>
 export const Iteration = z.object({ id: z.number(), name: z.string(), status: z.string() })
 export type Iteration = z.infer<typeof Iteration>
 
-export type ExternalQuery = { page?: number; boardId?: number; iterationId?: number; mine?: boolean }
+/**
+ * Helix statuses seen on real tickets (2026-11-13). Helix has no endpoint that lists them and
+ * silently returns nothing for a value it does not know (`todo` instead of `to_do`), so the filter
+ * only offers these.
+ */
+export const HELIX_STATUSES = ['to_do', 'in_progress', 'in_review', 'in_testing', 'ready_to_test', 'ready_to_staging', 'done'] as const
+
+export type ExternalQuery = { page?: number; boardId?: number; iterationId?: number; mine?: boolean; statuses?: string[] }

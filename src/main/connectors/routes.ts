@@ -31,7 +31,7 @@ export function registerConnectorRoutes(app: Hono, service: ConnectorService): v
     const q = c.req.query()
     const page = await service.tickets(
       c.req.param('id'),
-      { page: intParam(q.page, 'page'), boardId: intParam(q.boardId, 'board'), iterationId: intParam(q.iterationId, 'iteration'), mine: q.mine !== '0' },
+      { page: intParam(q.page, 'page'), boardId: intParam(q.boardId, 'board'), iterationId: intParam(q.iterationId, 'iteration'), mine: q.mine !== '0', statuses: c.req.queries('status') },
       q.refresh === '1',
     )
     return c.json(page)

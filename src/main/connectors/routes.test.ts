@@ -84,6 +84,15 @@ describe('connector routes', () => {
     expect(searches()).toBe(2)
   })
 
+  it('passes status filters through and rejects an unknown status before calling Helix', async () => {
+    const { call, seen } = setup()
+    const conn = await (await call('POST', '/api/connectors', { label: 'H', baseUrl: 'https://helix.test', token: TOKEN })).json()
+    expect((await call('GET', `/api/connectors/${conn.id}/tickets?status=to_do&status=in_progress`)).status).toBe(200)
+    const before = seen.length
+    expect((await call('GET', `/api/connectors/${conn.id}/tickets?status=todo`)).status).toBe(400)
+    expect(seen.length).toBe(before)
+  })
+
   it('rejects a bad filter before calling Helix', async () => {
     const { call, seen } = setup()
     const conn = await (await call('POST', '/api/connectors', { label: 'H', baseUrl: 'https://helix.test', token: TOKEN })).json()

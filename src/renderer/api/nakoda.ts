@@ -136,6 +136,7 @@ export const api = {
     if (q.boardId) params.set('boardId', String(q.boardId))
     if (q.iterationId) params.set('iterationId', String(q.iterationId))
     if (q.mine === false) params.set('mine', '0')
+    for (const status of q.statuses ?? []) params.append('status', status)
     if (refresh) params.set('refresh', '1')
     return request('GET', `/api/connectors/${id}/tickets?${params}`, ExternalPage)
   },

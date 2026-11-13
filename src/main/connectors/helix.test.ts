@@ -120,6 +120,14 @@ describe('HelixClient', () => {
     expect(calls).toHaveLength(1)
   })
 
+  it('filters by status (repeatable) and refuses a status Helix would silently ignore', async () => {
+    const { helix, calls } = client({ '/api/search': () => json(SEARCH) })
+    await helix.list({ meId: 7, statuses: ['to_do', 'in_progress'] })
+    expect(new URL(calls[0]?.url ?? '').searchParams.getAll('status')).toEqual(['to_do', 'in_progress'])
+    await expect(helix.list({ meId: 7, statuses: ['todo'] })).rejects.toMatchObject({ code: 'invalid_status', message: expect.stringContaining('to_do') })
+    expect(calls).toHaveLength(1)
+  })
+
   it('maps a story: sections in order, first PRD and Figma links kept, all links collected', async () => {
     const { helix } = client({ '/api/tickets/T2-3252': () => json(STORY) })
     const t = await helix.ticket('T2-3252')

@@ -406,6 +406,10 @@ test('Connect Helix in Settings, then read the External tab (read-only)', async 
   await expect(list.getByText('T2-3672')).toBeVisible()
   await expect(list.getByText('T2-3252')).toBeVisible()
   await expect(list.getByText('Old and archived')).toHaveCount(0)
+  // The status filter offers Helix's real status names.
+  await pick(page, page.getByLabel('Status'), 'To do')
+  await expect(list.getByText('T2-3672')).toBeVisible()
+  await pick(page, page.getByLabel('Status'), 'All statuses')
   await expect(list.locator('li', { hasText: 'T2-3672' }).getByText('Defect')).toBeVisible()
   await expect(list.locator('li', { hasText: 'T2-3252' }).getByText('Task', { exact: true })).toBeVisible()
   await expect(list.locator('li', { hasText: 'T2-3672' }).getByRole('link', { name: /Open in source/ })).toHaveAttribute('href', 'https://helix.example.test/tickets/T2-3672')

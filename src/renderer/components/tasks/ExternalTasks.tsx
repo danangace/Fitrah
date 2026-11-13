@@ -1,6 +1,6 @@
 import { ExternalLink, RefreshCw } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import type { Connector, ExternalPage, Iteration } from '../../../shared/connectors'
+import { type Connector, type ExternalPage, HELIX_STATUSES, type Iteration } from '../../../shared/connectors'
 import { api } from '../../api/nakoda'
 import { cn } from '../../lib/cn'
 import { errorText } from '../../lib/errors'
@@ -22,6 +22,7 @@ export function ExternalTasks() {
   const [iterations, setIterations] = useState<Iteration[]>([])
   const [boardId, setBoardId] = useState(ALL)
   const [iterationId, setIterationId] = useState(ALL)
+  const [status, setStatus] = useState(ALL)
   const [scope, setScope] = useState<'mine' | 'everyone'>('mine')
   const [page, setPage] = useState(1)
   const [data, setData] = useState<ExternalPage | null>(null)
@@ -79,7 +80,7 @@ export function ExternalTasks() {
     api
       .externalTickets(
         connectorId,
-        { page, boardId: boardId === ALL ? undefined : Number(boardId), iterationId: iterationId === ALL ? undefined : Number(iterationId), mine: scope === 'mine' },
+        { page, boardId: boardId === ALL ? undefined : Number(boardId), iterationId: iterationId === ALL ? undefined : Number(iterationId), mine: scope === 'mine', statuses: status === ALL ? undefined : [status] },
         nonce > 0,
       )
       .then(
@@ -98,7 +99,7 @@ export function ExternalTasks() {
     return () => {
       current = false
     }
-  }, [connectorId, page, boardId, iterationId, scope, nonce])
+  }, [connectorId, page, boardId, iterationId, scope, status, nonce])
 
   const filter = <T,>(set: (v: T) => void) => (v: T) => {
     set(v)
@@ -126,6 +127,7 @@ export function ExternalTasks() {
         {boardId !== ALL && (
           <Select aria-label="Iteration" className="w-44" value={iterationId} onValueChange={filter(setIterationId)} options={[{ value: ALL, label: 'All iterations' }, ...iterations.map((i) => ({ value: String(i.id), label: i.name }))]} />
         )}
+        <Select aria-label="Status" className="w-44" value={status} onValueChange={filter(setStatus)} options={[{ value: ALL, label: 'All statuses' }, ...HELIX_STATUSES.map((s) => ({ value: s, label: statusLabel(s) }))]} />
         <Button variant="ghost" aria-label="Refresh" title="Refresh" disabled={loading} onClick={() => setNonce((n) => n + 1)}>
           <RefreshCw className={cn('size-4', loading && 'animate-spin')} />
         </Button>
