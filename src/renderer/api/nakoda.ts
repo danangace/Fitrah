@@ -19,6 +19,14 @@ import {
   type WorkspaceUpdate,
 } from '../../shared/schemas'
 import { ChatEvent } from '../../shared/events'
+import {
+  Connector,
+  type ConnectorInput,
+  ExternalPage,
+  type ExternalQuery,
+  Iteration,
+  TestResult,
+} from '../../shared/connectors'
 import { request } from './http-client'
 
 const Ok = z.object({ ok: z.literal(true) })
@@ -103,6 +111,23 @@ export const api = {
   stopChat: (id: string) => request('POST', `${API.chats}/${id}/stop`, Ok),
   answerApproval: (approvalId: string, decision: 'allow' | 'deny') =>
     request('POST', `/api/approvals/${approvalId}`, Ok, { decision }),
+  listConnectors: () => request('GET', '/api/connectors', z.array(Connector)),
+  connectorEnvVars: () => request('GET', '/api/connectors/env-vars', z.array(z.string())),
+  createConnector: (input: ConnectorInput) => request('POST', '/api/connectors', Connector, input),
+  updateConnector: (id: string, input: ConnectorInput) => request('PATCH', `/api/connectors/${id}`, Connector, input),
+  removeConnector: (id: string) => request('DELETE', `/api/connectors/${id}`, Ok),
+  testConnector: (id: string) => request('POST', `/api/connectors/${id}/test`, TestResult),
+  connectorBoards: (id: string) => request('GET', `/api/connectors/${id}/boards`, z.array(z.object({ id: z.number(), name: z.string() }))),
+  connectorIterations: (id: string, boardId: number) => request('GET', `/api/connectors/${id}/iterations?boardId=${boardId}`, z.array(Iteration)),
+  externalTickets: (id: string, q: ExternalQuery, refresh = false) => {
+    const params = new URLSearchParams()
+    if (q.page) params.set('page', String(q.page))
+    if (q.boardId) params.set('boardId', String(q.boardId))
+    if (q.iterationId) params.set('iterationId', String(q.iterationId))
+    if (q.mine === false) params.set('mine', '0')
+    if (refresh) params.set('refresh', '1')
+    return request('GET', `/api/connectors/${id}/tickets?${params}`, ExternalPage)
+  },
   startLogin: (label: string) => request('POST', `${API.accounts}/login`, LoginView, { label }),
   getLogin: (id: string) => request('GET', `${API.accounts}/login/${id}`, LoginView),
   submitLoginCode: (id: string, code: string) => request('POST', `${API.accounts}/login/${id}/code`, LoginView, { code }),

@@ -10,12 +10,14 @@ describe('route', () => {
     })
     expect(parseRoute('/settings')).toEqual({ name: 'settings', section: 'general' })
     expect(parseRoute('/settings/accounts')).toEqual({ name: 'settings', section: 'accounts' })
+    expect(parseRoute('/tasks')).toEqual({ name: 'tasks', tab: 'board' })
+    expect(parseRoute('/tasks/external')).toEqual({ name: 'tasks', tab: 'external' })
     expect(parseRoute('/workspaces/w1')).toEqual({ name: 'workspace', id: 'w1' })
     expect(parseRoute('/nope')).toEqual({ name: 'not-found' })
   })
 
   it('round-trips paths', () => {
-    for (const p of ['/', '/docs/a/b c.md', '/settings/repos', '/workspaces/w1']) {
+    for (const p of ['/', '/docs/a/b c.md', '/settings/repos', '/tasks/external', '/workspaces/w1']) {
       expect(routePath(parseRoute(p))).toBe(p.replace('b c', 'b%20c'))
     }
   })

@@ -3,7 +3,12 @@ import { join, resolve } from 'node:path'
 
 /** Variables that would switch Claude Code off the subscription login or leak a parent session. */
 const STRIPPED = (key: string) =>
-  key.startsWith('ANTHROPIC_') || key.startsWith('CLAUDE_CODE_') || key === 'CLAUDECODE' || key === 'CLAUDE_CONFIG_DIR'
+  key.startsWith('ANTHROPIC_') ||
+  key.startsWith('CLAUDE_CODE_') ||
+  key === 'CLAUDECODE' ||
+  key === 'CLAUDE_CONFIG_DIR' ||
+  // The Helix token that can write tickets stays out of chats; the read-only ones remain for the vault's Helix rule.
+  key === 'SIDPJM_PAT_AUTHOR_TICKET'
 
 /**
  * `~/.claude` is Claude Code's default folder. Its login lives in the Keychain entry

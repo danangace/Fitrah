@@ -371,3 +371,50 @@ test('the sidebar can be resized and remembers its width', async ({ page }) => {
   await page.reload()
   await expect(aside).toHaveCSS('width', `${widened}px`)
 })
+
+test('Connect Helix in Settings, then read the External tab (read-only)', async ({ page }) => {
+  const token = `sidpjm_${'d'.repeat(64)}`
+  await page.goto(`/?token=${TOKEN}`)
+
+  // Tasks → External with nothing connected points to Connectors.
+  await page.locator('aside').getByRole('button', { name: 'Tasks', exact: true }).click()
+  await page.getByRole('tab', { name: 'External' }).click()
+  await expect(page.getByText('No task source is connected yet.')).toBeVisible()
+  await page.getByRole('button', { name: 'Connect Helix' }).click()
+  await expect(page).toHaveURL(/\/settings\/connectors$/)
+
+  // Add a connection with a pasted token; it is tested right away.
+  await page.getByRole('button', { name: 'Add Helix' }).click()
+  await page.getByLabel('Helix address').fill('http://helix.example.test')
+  await page.getByLabel('Read-only token').fill(token)
+  await page.getByRole('button', { name: 'Add connection' }).click()
+  await expect(page.getByText('Helix must be reached over https')).toBeVisible()
+  await page.getByLabel('Helix address').fill('https://helix.example.test')
+  await page.getByRole('button', { name: 'Add connection' }).click()
+  await expect(page.getByTestId('connection-test')).toContainText('Connected as Ada Lovelace')
+  await expect(page.getByTestId('connection-test')).toContainText('Scope: read_only')
+  // The token is only ever shown as a hint.
+  await expect(page.getByText('sidpjm_…dddd')).toBeVisible()
+  await expect(page.locator('body')).not.toContainText(token)
+  await page.screenshot({ path: shot('connectors-helix'), animations: 'disabled' })
+
+  // External tab: my tickets, defect vs task, link to the source.
+  await page.locator('aside').getByRole('button', { name: 'Back to Nakoda' }).click()
+  await page.locator('aside').getByRole('button', { name: 'Tasks', exact: true }).click()
+  await page.getByRole('tab', { name: 'External' }).click()
+  const list = page.getByTestId('external-list')
+  await expect(list.getByText('T2-3672')).toBeVisible()
+  await expect(list.getByText('T2-3252')).toBeVisible()
+  await expect(list.getByText('Old and archived')).toHaveCount(0)
+  await expect(list.locator('li', { hasText: 'T2-3672' }).getByText('Defect')).toBeVisible()
+  await expect(list.locator('li', { hasText: 'T2-3252' }).getByText('Task', { exact: true })).toBeVisible()
+  await expect(list.locator('li', { hasText: 'T2-3672' }).getByRole('link', { name: /Open in source/ })).toHaveAttribute('href', 'https://helix.example.test/tickets/T2-3672')
+  await page.screenshot({ path: shot('external-tab'), animations: 'disabled' })
+
+  // Clean up so the empty-state test above stays true on a re-run.
+  await page.locator('aside').getByRole('button', { name: 'Settings', exact: true }).click()
+  await page.getByRole('navigation', { name: 'Settings sections' }).getByRole('button', { name: 'Connectors', exact: true }).click()
+  await page.getByRole('button', { name: 'Remove' }).click()
+  await page.getByRole('alertdialog').getByRole('button', { name: 'Remove' }).click()
+  await expect(page.getByText('No connectors yet')).toBeVisible()
+})

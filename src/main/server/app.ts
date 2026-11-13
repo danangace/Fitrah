@@ -7,6 +7,9 @@ import { APP_INFO } from '../../shared/app-info'
 import { UserError } from '../errors'
 import { type ModelLister, ModelCatalogs } from '../accounts/models'
 import { registerAccountRoutes } from '../accounts/routes'
+import { registerConnectorRoutes } from '../connectors/routes'
+import { SecretStore } from '../connectors/secrets'
+import { ConnectorService, type ConnectorServiceOptions } from '../connectors/service'
 import { registerDocsRoutes } from '../docs/routes'
 import { DocsService } from '../docs/service'
 import { DocsWatcher } from '../docs/watch'
@@ -33,6 +36,8 @@ export type AppOptions = {
   chats?: ChatService
   /** How each agent lists an account's models (tests pass a fake; default: the Claude adapter). */
   modelListers?: ModelLister
+  /** Where tokens are kept and how Helix is reached (tests pass a temp folder and a fake fetch). */
+  connectors?: { secretsDir?: string } & ConnectorServiceOptions
   /** Folder with the built UI; when missing, only the API is served. */
   webRoot?: string
 }
@@ -78,6 +83,7 @@ export function createRuntimeApp(options: AppOptions): { app: Hono; chats: ChatS
   })
   registerSettingsRoutes(app, db)
   registerAccountRoutes(app, db, new ModelCatalogs(db, options.modelListers ?? { claude: claudeAdapter.listModels }))
+  registerConnectorRoutes(app, new ConnectorService(db, new SecretStore(options.connectors?.secretsDir), options.connectors))
   registerWorkflowRoutes(app, db)
   registerProjectRoutes(app, db)
   registerDocsRoutes(app, docs)

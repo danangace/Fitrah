@@ -9,6 +9,7 @@ import { serve } from '@hono/node-server'
 import { WebSocketServer } from 'ws'
 import { WEB_ROOT } from '../src/main/config'
 import { insertAccount } from '../src/main/accounts/service'
+import { BOARDS, ME, MILESTONES, SEARCH } from '../src/main/connectors/fixtures/helix'
 import { ChatService } from '../src/main/native-chat/service'
 import { fakeAdapter } from '../src/main/native-chat/testing'
 import { createRuntimeApp } from '../src/main/server/app'
@@ -82,7 +83,20 @@ const modelListers = {
     { value: 'haiku', displayName: 'Haiku 5.5', description: 'Fastest for quick answers', resolvedModel: 'claude-haiku-5-5', efforts: [] },
   ].map((m) => ({ ...m, efforts: [...m.efforts] })),
 }
-const { app } = createRuntimeApp({ security: { token: E2E_TOKEN, allowedHosts: localHosts(E2E_PORT) }, db, chats, webRoot: WEB_ROOT, modelListers })
+// A fake Helix (sanitized answers), so the Connectors and External screens run without the network.
+const fakeHelix = (async (url: string | URL | Request) => {
+  const path = new URL(String(url)).pathname
+  const body = path === '/api/auth/me' ? ME : path === '/api/boards/' ? BOARDS : path.endsWith('/milestones') ? MILESTONES : path === '/api/search' ? SEARCH : null
+  return new Response(JSON.stringify(body ?? { error: 'not_found' }), { status: body ? 200 : 404 })
+}) as typeof fetch
+const { app } = createRuntimeApp({
+  security: { token: E2E_TOKEN, allowedHosts: localHosts(E2E_PORT) },
+  db,
+  chats,
+  webRoot: WEB_ROOT,
+  modelListers,
+  connectors: { fetch: fakeHelix },
+})
 serve({ fetch: app.fetch, hostname: '127.0.0.1', port: E2E_PORT, websocket: { server: new WebSocketServer({ noServer: true }) } }, () =>
   console.info(`e2e server on ${E2E_PORT}`),
 )

@@ -11,6 +11,7 @@ import { HomePage } from './pages/HomePage'
 import { Placeholder } from './pages/Placeholder'
 import { ProjectPage } from './pages/ProjectPage'
 import { SettingsPage } from './pages/SettingsPage'
+import { TasksPage } from './pages/TasksPage'
 import { WorkspacePage } from './pages/WorkspacePage'
 import { useRouter } from './store/router'
 import { useModal } from './store/ui'
@@ -24,6 +25,8 @@ function Page() {
       return <DocsPage path={route.path} />
     case 'settings':
       return <SettingsPage section={route.section} />
+    case 'tasks':
+      return <TasksPage tab={route.tab} />
     case 'workspace':
       return <WorkspacePage id={route.id} chats={(ws) => <ChatsPanel workspace={ws} />} />
     case 'project':
