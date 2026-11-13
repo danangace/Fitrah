@@ -1,10 +1,11 @@
 import { Loader2, RefreshCw, Star } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
-import type { Account, ModelCatalog, ModelOption, Settings } from '../../../shared/schemas'
+import type { Account, Effort, ModelCatalog, ModelOption, PermissionMode, Settings } from '../../../shared/schemas'
 import { api } from '../../api/nakoda'
 import { accountName } from '../../lib/accounts'
 import { cn } from '../../lib/cn'
 import { errorText } from '../../lib/errors'
+import { EFFORTS, PERMISSIONS } from '../../lib/models'
 import { timeAgo } from '../../lib/usage'
 import { toast } from '../../store/toast'
 import { Button } from '../ui/Button'
@@ -106,6 +107,8 @@ export function ModelSettings() {
     }
   }
 
+  const setDefaults = (patch: Partial<Settings['chatDefaults']>) =>
+    setSettings({ ...settings, chatDefaults: { ...settings.chatDefaults, ...patch } })
   const offered = catalog?.models ?? []
   // Models switched on earlier that this account no longer lists: shown so you can turn them off.
   const missing = claude.list.filter((m) => !offered.some((o) => o.value === m))
@@ -169,6 +172,34 @@ export function ModelSettings() {
             />
           ))}
       </ul>
+      <div className="space-y-2 border-t border-border pt-3">
+        <h3 className="text-sm font-semibold text-foreground">New chat defaults</h3>
+        <p className="text-xs text-muted-foreground">
+          Every new chat starts with these, so you don't have to set them each time. The chat's own pickers still change them per chat.
+        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="flex items-center gap-2 text-sm text-foreground/80">
+            Effort
+            <Select
+              aria-label="Default effort"
+              className="w-40"
+              value={settings.chatDefaults.effort ?? 'default'}
+              onValueChange={(v) => setDefaults({ effort: v === 'default' ? null : (v as Effort) })}
+              options={[{ value: 'default', label: "Claude's default" }, ...EFFORTS.map((e) => ({ value: e.id, label: e.label }))]}
+            />
+          </label>
+          <label className="flex items-center gap-2 text-sm text-foreground/80">
+            Permission
+            <Select
+              aria-label="Default permission"
+              className="w-56"
+              value={settings.chatDefaults.permissionMode}
+              onValueChange={(v) => setDefaults({ permissionMode: v as PermissionMode })}
+              options={PERMISSIONS.map((p) => ({ value: p.id, label: p.label }))}
+            />
+          </label>
+        </div>
+      </div>
     </Card>
   )
 }

@@ -10,6 +10,7 @@ describe('ApprovalManager', () => {
       emit({ type: 'turn.done', ok: true, numTurns: 1 })
     })
     const { db, service, chat, events } = await chatFixture(adapter)
+    service.update(chat.id, { permissionMode: 'ask' })
     const approvals = new ApprovalManager(db, service)
     service.setDecider(approvals.decide)
     service.send(chat.id, 'go')

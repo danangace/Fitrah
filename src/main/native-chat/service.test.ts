@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { getSettings, saveSettings } from '../settings/store'
 import { ChatService } from './service'
 import { chatFixture, fakeAdapter } from './testing'
 
@@ -63,13 +64,20 @@ describe('ChatService', () => {
 
   it('updates model, effort and permission from the composer; next turn uses them', async () => {
     const { service, chat, adapter } = await chatFixture()
-    expect(service.get(chat.id)).toMatchObject({ permissionMode: 'accept-edits', effort: null })
+    expect(service.get(chat.id)).toMatchObject({ permissionMode: 'full', effort: 'medium' })
     service.update(chat.id, { model: 'opus', effort: 'high', permissionMode: 'full' })
     expect(service.get(chat.id)).toMatchObject({ model: 'opus', effort: 'high', permissionMode: 'full' })
     service.send(chat.id, 'go')
     await settle()
     expect(adapter.calls[0]).toMatchObject({ model: 'opus', effort: 'high' })
     expect(() => service.update(chat.id, { permissionMode: 'yolo' })).toThrow()
+  })
+
+  it('new chats start from the defaults in Settings', async () => {
+    const { db, service, ws, account } = await chatFixture()
+    saveSettings(db, { ...getSettings(db), chatDefaults: { effort: null, permissionMode: 'ask' } })
+    const chat = service.create({ workspaceId: ws.id, agent: 'claude', accountId: account.id, model: 'haiku' })
+    expect(chat).toMatchObject({ effort: null, permissionMode: 'ask' })
   })
 
   it('the workspace shows the agent, model and account folder of its last used chat', async () => {

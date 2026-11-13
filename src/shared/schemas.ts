@@ -28,6 +28,20 @@ export const DocPath = z.object({
 })
 export type DocPath = z.infer<typeof DocPath>
 
+export const PermissionMode = z.enum(['ask', 'accept-edits', 'full'])
+export type PermissionMode = z.infer<typeof PermissionMode>
+
+export const Effort = z.enum(['low', 'medium', 'high', 'xhigh', 'max'])
+export type Effort = z.infer<typeof Effort>
+
+/** What a new chat starts with (Settings → Models); the composer pickers change it per chat. */
+export const ChatDefaults = z.object({
+  /** null = Claude's own default. */
+  effort: Effort.nullable().default('medium'),
+  permissionMode: PermissionMode.default('full'),
+})
+export type ChatDefaults = z.infer<typeof ChatDefaults>
+
 export const Settings = z.object({
   /** Markdown folder browsed read-only (e.g. the Obsidian vault). */
   docsRoot: nullableText,
@@ -36,6 +50,7 @@ export const Settings = z.object({
   workspacesDir: z.string().min(1),
   models: z.object({ claude: AgentModels }).catchall(AgentModels),
   openIn: OpenIn.default({ kind: 'default' }),
+  chatDefaults: ChatDefaults.default({ effort: 'medium', permissionMode: 'full' }),
 })
 export type Settings = z.infer<typeof Settings>
 
@@ -179,12 +194,6 @@ export const ChatStatus = WorkspaceStatus
 export type ChatStatus = WorkspaceStatus
 
 /** How much a chat may do without asking (composer permission picker). */
-export const PermissionMode = z.enum(['ask', 'accept-edits', 'full'])
-export type PermissionMode = z.infer<typeof PermissionMode>
-
-export const Effort = z.enum(['low', 'medium', 'high', 'xhigh', 'max'])
-export type Effort = z.infer<typeof Effort>
-
 /** One model an account may use, as Claude Code reports it (Settings → Models toggles these). */
 export const ModelOption = z.object({
   /** What Nakoda passes as `model`, e.g. `opus` or `claude-fable-5-1`. */

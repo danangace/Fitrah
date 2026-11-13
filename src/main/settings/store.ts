@@ -15,6 +15,7 @@ export const DEFAULT_SETTINGS: Settings = {
   workspacesDir: '~/nakoda/workspaces',
   models: { claude: { list: ['sonnet', 'opus', 'haiku'], default: 'sonnet' } },
   openIn: { kind: 'default' },
+  chatDefaults: { effort: 'medium', permissionMode: 'full' },
 }
 
 const SETTINGS_KEY = 'app'

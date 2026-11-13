@@ -81,12 +81,14 @@ export class ChatService {
     const account = getAccount(this.db, data.accountId)
     if (account.agent !== data.agent) throw new UserError('account_mismatch', 'That account belongs to another agent')
     const id = randomUUID()
+    // New chats start from Settings → Models → "New chat defaults".
+    const { effort, permissionMode } = getSettings(this.db).chatDefaults
     const title = data.title?.trim() || `${data.agent} · ${data.model}`
     this.db
       .prepare(
-        "INSERT INTO chats (id, workspace_id, agent, account_id, model, title, permission_mode, created_at) VALUES (?, ?, ?, ?, ?, ?, 'accept-edits', ?)",
+        "INSERT INTO chats (id, workspace_id, agent, account_id, model, title, permission_mode, effort, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
       )
-      .run(id, ws.id, data.agent, account.id, data.model, title, nowIso())
+      .run(id, ws.id, data.agent, account.id, data.model, title, permissionMode, effort, nowIso())
     return this.get(id)
   }
 
