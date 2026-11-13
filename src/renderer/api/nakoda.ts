@@ -86,6 +86,7 @@ export const api = {
   attachAccount: (agent: AgentId, configDir: string, label?: string) =>
     request('POST', API.accounts, Account, { agent, configDir, label }),
   checkAccount: (id: string) => request('POST', `${API.accounts}/${id}/check`, Account),
+  refreshAccountUsage: (id: string) => request('POST', `${API.accounts}/${id}/usage`, Account),
   setDefaultAccount: (id: string) => request('POST', `${API.accounts}/${id}/default`, Account),
   accountModels: (id: string, refresh = false) => request('GET', `${API.accounts}/${id}/models${refresh ? '?refresh=1' : ''}`, ModelCatalog),
   renameAccount: (id: string, label: string) => request('PATCH', `${API.accounts}/${id}`, Account, { label }),

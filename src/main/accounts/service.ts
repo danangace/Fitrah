@@ -110,9 +110,9 @@ export async function refreshAccount(db: Db, id: string, provider = providers[ge
   return getAccount(db, id)
 }
 
-/** Save the limits a chat just reported (merged per window key). */
-export function saveAccountUsage(db: Db, id: string, windows: UsageWindow[]): Account['usage'] {
-  const current = getAccount(db, id).usage?.windows ?? []
+/** Save the limits a chat just reported (merged per window key; `replace` drops older windows, for a full refresh). */
+export function saveAccountUsage(db: Db, id: string, windows: UsageWindow[], replace = false): Account['usage'] {
+  const current = replace ? [] : (getAccount(db, id).usage?.windows ?? [])
   const merged = [...current.filter((w) => !windows.some((n) => n.key === w.key)), ...windows]
   const updatedAt = nowIso()
   db.prepare('UPDATE accounts SET usage_json = ?, usage_updated_at = ? WHERE id = ?').run(JSON.stringify(merged), updatedAt, id)

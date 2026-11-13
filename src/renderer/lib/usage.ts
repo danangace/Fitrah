@@ -10,7 +10,14 @@ const LABELS: Record<string, { long: string; short: string; order: number }> = {
 
 export function windowLabel(key: string): { long: string; short: string } {
   const known = LABELS[key]
-  return known ? { long: known.long, short: known.short } : { long: key.replaceAll('_', ' '), short: key }
+  if (known) return { long: known.long, short: known.short }
+  // Model weekly limits arrive as `seven_day_<model>`, e.g. seven_day_fable → "Fable weekly".
+  const model = key.match(/^seven_day_(.+)$/)?.[1]
+  if (model) {
+    const name = model.replaceAll('_', ' ').replace(/^./, (c) => c.toUpperCase())
+    return { long: `${name} weekly`, short: model }
+  }
+  return { long: key.replaceAll('_', ' '), short: key }
 }
 
 export function sortWindows(windows: UsageWindow[]): UsageWindow[] {

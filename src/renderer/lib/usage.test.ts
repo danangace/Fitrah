@@ -31,6 +31,10 @@ describe('usage helpers', () => {
     expect(week).toEqual(weekly)
   })
 
+  it('labels a model weekly limit', () => {
+    expect(windowLabel('seven_day_fable')).toEqual({ long: 'Fable weekly', short: 'fable' })
+  })
+
   it('says how old the numbers are', () => {
     const now = Date.parse('2026-11-11T12:00:00Z')
     expect(timeAgo('2026-11-11T11:56:00Z', now)).toBe('4m ago')

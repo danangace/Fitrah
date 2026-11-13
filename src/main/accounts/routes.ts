@@ -5,9 +5,10 @@ import { AgentId } from '../../shared/schemas'
 import { UserError } from '../errors'
 import type { Db } from '../sqlite/db'
 import { ClaudeLoginManager } from './claude/login'
+import { fetchClaudeUsage } from './claude/usage'
 import type { ModelCatalogs } from './models'
 import { attachAccount, detectLogins, removeAccount } from './manage'
-import { listAccounts, refreshAccount, renameAccount, setDefaultAccount } from './service'
+import { getAccount, listAccounts, refreshAccount, saveAccountUsage, renameAccount, setDefaultAccount } from './service'
 
 const AttachBody = z.object({ agent: AgentId, configDir: z.string().min(1), label: z.string().optional() })
 
@@ -42,6 +43,15 @@ export function registerAccountRoutes(app: Hono, db: Db, catalogs: ModelCatalogs
     return c.json({ ok: true })
   })
   app.post(`${API.accounts}/:id/check`, async (c) => c.json(await refreshAccount(db, c.req.param('id'))))
+  // Ask Claude for the plan's real limits now (no message sent) and store them.
+  app.post(`${API.accounts}/:id/usage`, async (c) => {
+    const account = getAccount(db, c.req.param('id'))
+    if (account.agent !== 'claude') throw new UserError('agent_not_supported', `${account.agent} usage cannot be refreshed yet`)
+    const windows = await fetchClaudeUsage(account.configDir).catch(() => null)
+    if (!windows) throw new UserError('usage_unavailable', 'Claude did not return plan limits for this login (API key, or not signed in).', 409)
+    saveAccountUsage(db, account.id, windows, true)
+    return c.json(getAccount(db, account.id))
+  })
   app.post(`${API.accounts}/:id/default`, (c) => c.json(setDefaultAccount(db, c.req.param('id'))))
   app.patch(`${API.accounts}/:id`, async (c) => {
     const body = z.object({ label: z.string() }).safeParse(await c.req.json())

@@ -68,15 +68,17 @@ export function StatusBar() {
   useAppEvents((e) => {
     if (e.type === 'account.usage' || e.type === 'account.warning') void load()
   })
-  const refresh = () =>
-    api.listAccounts().then(
-      (list) => {
-        setAccounts(list)
-        setNow(Date.now())
-        toast.success('Usage refreshed', 'Showing the latest limits Claude reported.')
-      },
-      () => toast.error('Could not refresh usage', 'The Nakoda runtime did not answer. Try again.'),
-    )
+  // Asks Claude for the real limits of every account (not only what chats reported), then reloads.
+  const refresh = async () => {
+    const list = await api.listAccounts().catch(() => null)
+    if (!list) return toast.error('Could not refresh usage', 'The Nakoda runtime did not answer. Try again.')
+    const results = await Promise.allSettled(list.filter((a) => a.agent === 'claude').map((a) => api.refreshAccountUsage(a.id)))
+    setAccounts(await api.listAccounts().catch(() => list))
+    setNow(Date.now())
+    const failed = results.filter((r) => r.status === 'rejected').length
+    if (failed === 0) toast.success('Usage refreshed', 'Showing the limits Claude reports right now.')
+    else toast.error('Some accounts could not be refreshed', 'Showing the last limits Claude reported with a message.')
+  }
   const claude = accounts.filter((a) => a.agent === 'claude')
   const main = claude.find((a) => a.isDefault && a.usage) ?? claude.find((a) => a.usage) ?? claude.find((a) => a.isDefault)
   const windows = liveWindows(main?.usage?.windows ?? [], now).slice(0, 2)
@@ -113,7 +115,7 @@ export function StatusBar() {
           ))}
           {claude.length === 0 && <p className="text-[13px] text-muted-foreground">Attach a Claude account to see its usage.</p>}
         </div>
-        <p className="mt-2 text-xs text-muted-foreground/70">From the limits Claude reports with each message. Nakoda never reads your login token.</p>
+        <p className="mt-2 text-xs text-muted-foreground/70">Refresh asks Claude for your current limits; they also update with each message. Nakoda never reads your login token.</p>
         <button
           type="button"
           onClick={() => {

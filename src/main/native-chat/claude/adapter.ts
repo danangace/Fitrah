@@ -1,9 +1,9 @@
 import { query } from '@anthropic-ai/claude-agent-sdk'
 import { claudeEnv } from '../../accounts/env'
-import { tmpdir } from 'node:os'
 import type { ModelOption } from '../../../shared/schemas'
 import type { AgentAdapter, Turn, TurnOptions } from '../types'
 import { readClaudeHistory } from './history'
+import { withIdleSession } from './idle-session'
 import { type SdkLike, mapClaudeMessage } from './map'
 
 /**
@@ -60,21 +60,11 @@ export const claudeAdapter: AgentAdapter = {
 }
 
 /**
- * The models a login may use, straight from Claude Code (`supportedModels()`). The session is
- * started with a prompt stream that never sends a message, so nothing is billed; it is closed as
- * soon as the list arrives (about 4 s).
+ * The models a login may use, straight from Claude Code (`supportedModels()`). Nothing is billed;
+ * the idle session is closed as soon as the list arrives (about 4 s).
  */
 export async function listClaudeModels(configDir: string): Promise<ModelOption[]> {
-  let release: (() => void) | undefined
-  const idle = new Promise<void>((resolve) => {
-    release = resolve
-  })
-  // A prompt stream that ends (without a message) only when we are done.
-  const noMessages: AsyncIterable<never> = {
-    [Symbol.asyncIterator]: () => ({ next: () => idle.then(() => ({ done: true as const, value: undefined as never })) }),
-  }
-  const session = query({ prompt: noMessages, options: { cwd: tmpdir(), env: claudeEnv(configDir) } })
-  try {
+  return withIdleSession(configDir, async (session) => {
     const models = await session.supportedModels()
     return models.map((m) => ({
       value: m.value,
@@ -83,8 +73,5 @@ export async function listClaudeModels(configDir: string): Promise<ModelOption[]
       resolvedModel: m.resolvedModel ?? null,
       efforts: m.supportedEffortLevels ?? [],
     }))
-  } finally {
-    release?.()
-    session.close()
-  }
+  })
 }
