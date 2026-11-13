@@ -40,6 +40,11 @@ export const STORY = {
     objective: doc('Let finance manage invoices'),
     scope: doc('List', 'Detail'),
     acceptance_criteria: doc('Totals match'),
+    children: [
+      { ticket_key: 'T2-3274', type: 'subtask', title: '[FE] Invoice list', status: 'done', archived: false },
+      { ticket_key: 'T2-3391', type: 'defect', title: 'Total ignores discount', status: 'in_progress', archived: false },
+      { ticket_key: 'T2-3000', type: 'subtask', title: 'Old, archived', status: 'done', archived: true },
+    ],
     fields: [
       { ticket_id: 2, field_key: 'prd_links', field_value: 'https://docs.example.test/prd-1, https://docs.example.test/prd-2' },
       { ticket_id: 2, field_key: 'figma_links', field_value: 'https://www.figma.com/design/abc/invoices' },

@@ -126,7 +126,11 @@ describe('HelixClient', () => {
     expect(t).toMatchObject({ key: 'T2-3252', kind: 'task', iterationName: 'Iteration 14b', iteration: 'i-14b', board: 'TRIBE 2' })
     expect(t.prdLinks).toEqual(['https://docs.example.test/prd-1', 'https://docs.example.test/prd-2'])
     expect(t.figmaLinks).toEqual(['https://www.figma.com/design/abc/invoices'])
-    expect(t.description).toBe('## Objective\n\nLet finance manage invoices\n\n## Scope\n\nList\n\nDetail\n\n## Acceptance criteria\n\nTotals match')
+    expect(t.children.map((c) => c.key)).toEqual(['T2-3274', 'T2-3391'])
+    expect(t.description).toBe(
+      '## Objective\n\nLet finance manage invoices\n\n## Scope\n\nList\n\nDetail\n\n## Acceptance criteria\n\nTotals match\n\n' +
+        '## Subtasks (2)\n\n- [T2-3274](https://helix.test/tickets/T2-3274) · subtask · done — [FE] Invoice list\n- [T2-3391](https://helix.test/tickets/T2-3391) · defect · in_progress — Total ignores discount',
+    )
   })
 
   it('maps a defect with its steps, expected and actual behaviour', async () => {

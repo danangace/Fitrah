@@ -199,6 +199,8 @@ export type HelixTicket = {
   description: string
   /** Each rich-text field on its own (markdown), by Helix name, e.g. `steps_to_reproduce`. */
   sections: Record<string, string>
+  /** Child tickets (subtasks and defects), live ones only, each with a link to Helix. */
+  children: { key: string; type: string; title: string; status: string; url: string }[]
   /** Every PRD / Figma link found in the ticket's custom fields. */
   prdLinks: string[]
   figmaLinks: string[]
@@ -232,9 +234,16 @@ export function mapTicket(raw: unknown, url: string): HelixTicket {
   const field = (name: string) => fields.filter((f) => f.field_key === name).flatMap((f) => urlsOf(f.field_value))
   const iterationName = str(asRecord(t.milestone).name)
   const sections = Object.fromEntries(SECTIONS.map(([key]) => [key, tiptapToMarkdown(t[key])] as const).filter(([, md]) => md !== ''))
-  const description = SECTIONS.map(([key, heading]) => [heading, sections[key] ?? ''] as const)
-    .filter(([, md]) => md !== '')
-    .map(([heading, md]) => `## ${heading}\n\n${md}`)
+  const origin = new URL(url).origin
+  const children = (Array.isArray(t.children) ? t.children : [])
+    .map(asRecord)
+    .filter((c) => c.archived !== true && str(c.ticket_key))
+    .map((c) => ({ key: str(c.ticket_key) ?? '', type: str(c.type) ?? '', title: str(c.title) ?? '', status: str(c.status) ?? '', url: `${origin}/tickets/${encodeURIComponent(str(c.ticket_key) ?? '')}` }))
+  const subtasks = children.length
+    ? `## Subtasks (${children.length})\n\n${children.map((c) => `- [${c.key}](${c.url}) · ${[c.type, c.status].filter(Boolean).join(' · ')} — ${c.title}`).join('\n')}`
+    : ''
+  const description = [...SECTIONS.map(([key, heading]) => [heading, sections[key] ?? ''] as const).filter(([, md]) => md !== '').map(([heading, md]) => `## ${heading}\n\n${md}`), subtasks]
+    .filter(Boolean)
     .join('\n\n')
   return {
     key: str(t.ticket_key) ?? '',
@@ -250,6 +259,7 @@ export function mapTicket(raw: unknown, url: string): HelixTicket {
     iteration: iterationShort(iterationName),
     description,
     sections,
+    children,
     prdLinks: [...field('prd_links'), ...urlsOf(t.prd_link)],
     figmaLinks: [...field('figma_links'), ...urlsOf(t.figma_link)],
     url,

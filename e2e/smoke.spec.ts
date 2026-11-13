@@ -544,6 +544,11 @@ test('Transfer a Helix defect and a story to the board; the defect gets the Defe
   const story = page.getByTestId('task-card').filter({ hasText: 'Invoice Management - Phase 1' })
   await expect(story.getByText(/Missing: .*Module/)).toBeVisible()
   await expect(story.getByText(/PRD|Figma|Iteration/)).toHaveCount(0)
+  // Its subtasks came along, linked to Helix (the archived one did not).
+  await story.click()
+  await expect(dialog.getByLabel('Description')).toHaveValue(/## Subtasks \(2\)[\s\S]*T2-3274[\s\S]*T2-3391/)
+  await expect(dialog.getByLabel('Description')).not.toHaveValue(/T2-3000/)
+  await page.keyboard.press('Escape')
 
   // Clean up.
   await page.locator('aside').getByRole('button', { name: 'Settings', exact: true }).click()

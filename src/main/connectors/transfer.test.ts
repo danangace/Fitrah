@@ -14,6 +14,7 @@ describe('toTaskInput', () => {
     expect(input.values).toEqual({ prd: 'https://docs.example.test/prd-1', figma: 'https://www.figma.com/design/abc/invoices', iteration: 'i-14b', module: '' })
     expect(input.description).toContain('## Objective')
     expect(input.description).toContain('## Other references\n\n- https://docs.example.test/prd-2')
+    expect(input.description).toContain('## Subtasks (2)')
   })
 
   it('turns a defect into a Defect ticket with its steps, expected, actual and mapped severity and environment', async () => {
