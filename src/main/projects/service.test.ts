@@ -50,7 +50,7 @@ describe('projects', () => {
   })
 
   it('reads a folder name from clone URLs', () => {
-    expect(repoNameFromUrl('git@github.com:danangace/Fitrah.git')).toBe('Fitrah')
+    expect(repoNameFromUrl('git@github.com:danangace/Nakoda.git')).toBe('Nakoda')
     expect(repoNameFromUrl('https://gitlab.com/group/sub/website-cf-monorepo/')).toBe('website-cf-monorepo')
   })
 })

@@ -18,8 +18,8 @@ Nakoda runs on your machine: a small local runtime plus a web UI in your browser
 ## 2. Install and start
 
 ```bash
-git clone git@github.com:danangace/Fitrah.git
-cd Fitrah
+git clone git@github.com:danangace/Nakoda.git
+cd Nakoda
 nvm use
 pnpm install
 pnpm nakoda start
