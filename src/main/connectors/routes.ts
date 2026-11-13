@@ -42,5 +42,6 @@ export function registerConnectorRoutes(app: Hono, service: ConnectorService): v
     if (typeof key !== 'string' || !key) throw new UserError('invalid_ticket_key', 'Pick a ticket')
     return c.json(await service.transfer(c.req.param('id'), key), 201)
   })
+  app.get(`${base}/:id/tickets/:key/children`, async (c) => c.json(await service.children(c.req.param('id'), c.req.param('key'))))
   app.get(`${base}/:id/tickets/:key`, async (c) => c.json(await service.ticket(c.req.param('id'), c.req.param('key'))))
 }

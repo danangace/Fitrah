@@ -178,6 +178,17 @@ export class HelixClient {
     }
   }
 
+  /**
+   * A ticket's child tickets (subtasks, defects), as list rows. Helix search never returns
+   * subtasks (verified 2026-11-13: `type=subtask` gives 0), so their parent is the only way to them.
+   */
+  async children(key: string): Promise<ExternalTicket[]> {
+    if (!/^[A-Za-z0-9_-]+$/.test(key)) throw new UserError('invalid_ticket_key', 'That is not a ticket key')
+    const data = asRecord((await this.get(`/api/tickets/${encodeURIComponent(key)}`)).data)
+    const rows = Array.isArray(data.children) ? data.children : []
+    return rows.map(asRecord).filter((r) => r.archived !== true && str(r.ticket_key)).map((r) => this.listItem(r))
+  }
+
   /** The full ticket, always read fresh (a list row has no rich text). */
   async ticket(key: string): Promise<HelixTicket> {
     if (!/^[A-Za-z0-9_-]+$/.test(key)) throw new UserError('invalid_ticket_key', 'That is not a ticket key')

@@ -413,7 +413,21 @@ test('Connect Helix in Settings, then read the External tab (read-only)', async 
   await expect(list.locator('li', { hasText: 'T2-3672' }).getByText('Defect')).toBeVisible()
   await expect(list.locator('li', { hasText: 'T2-3252' }).getByText('Task', { exact: true })).toBeVisible()
   await expect(list.locator('li', { hasText: 'T2-3672' }).getByRole('link', { name: /Open in source/ })).toHaveAttribute('href', 'https://helix.example.test/tickets/T2-3672')
+  // Subtasks: Helix search never lists them, so a story opens to show its children.
+  const storyItem = page.getByTestId('external-item').filter({ hasText: 'Invoice Management - Phase 1' })
+  await storyItem.getByRole('button', { name: 'Show subtasks of T2-3252' }).click()
+  const subtasks = storyItem.getByTestId('subtasks')
+  await expect(subtasks.getByText('T2-3274')).toBeVisible()
+  await expect(subtasks.getByText('T2-3391')).toBeVisible()
+  await expect(subtasks.getByText('Old, archived')).toHaveCount(0)
+  await expect(subtasks.getByRole('button', { name: 'Transfer' })).toHaveCount(2)
   await page.screenshot({ path: shot('external-tab'), animations: 'disabled' })
+  // The status filter applies to subtasks too (an open story stays open).
+  await pick(page, page.getByLabel('Status'), 'In progress')
+  const filtered = page.getByTestId('external-item').filter({ hasText: 'Invoice Management - Phase 1' }).getByTestId('subtasks')
+  await expect(filtered.getByText('T2-3391')).toBeVisible()
+  await expect(filtered.getByText('T2-3274')).toHaveCount(0)
+  await pick(page, page.getByLabel('Status'), 'All statuses')
 
   // Clean up so the empty-state test above stays true on a re-run.
   await page.locator('aside').getByRole('button', { name: 'Settings', exact: true }).click()

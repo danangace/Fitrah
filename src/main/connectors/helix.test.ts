@@ -128,6 +128,17 @@ describe('HelixClient', () => {
     expect(calls).toHaveLength(1)
   })
 
+  it('reads a ticket\'s subtasks from the ticket (search never returns them), archived ones left out', async () => {
+    const { helix } = client({ '/api/tickets/T2-3252': () => json(STORY) })
+    const kids = await helix.children('T2-3252')
+    expect(kids.map((k) => [k.key, k.type, k.kind, k.status])).toEqual([
+      ['T2-3274', 'subtask', 'task', 'done'],
+      ['T2-3391', 'defect', 'defect', 'in_progress'],
+    ])
+    expect(kids[0]?.url).toBe('https://helix.test/tickets/T2-3274')
+    await expect(helix.children('../x')).rejects.toMatchObject({ code: 'invalid_ticket_key' })
+  })
+
   it('maps a story: sections in order, first PRD and Figma links kept, all links collected', async () => {
     const { helix } = client({ '/api/tickets/T2-3252': () => json(STORY) })
     const t = await helix.ticket('T2-3252')

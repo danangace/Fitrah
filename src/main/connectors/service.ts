@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { z } from 'zod/v4'
-import { type Connector, ConnectorInput, type ExternalPage, type ExternalQuery, type TestResult, TokenSource } from '../../shared/connectors'
+import { type Connector, ConnectorInput, type ExternalPage, type ExternalTicket, type ExternalQuery, type TestResult, TokenSource } from '../../shared/connectors'
 import { UserError } from '../errors'
 import { nowIso } from '../paths'
 import type { Db } from '../sqlite/db'
@@ -184,6 +184,10 @@ export class ConnectorService {
     const page = await client.list({ ...query, meId: me.id })
     this.lists.set(cacheKey, { at: Date.now(), page })
     return page
+  }
+
+  children(id: string, key: string): Promise<ExternalTicket[]> {
+    return this.client(id).children(key)
   }
 
   ticket(id: string, key: string): Promise<HelixTicket> {

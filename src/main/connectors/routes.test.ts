@@ -128,6 +128,13 @@ describe('connector routes', () => {
     expect(seen.every((r) => r.path.startsWith('/api/'))).toBe(true)
   })
 
+  it('lists the subtasks of a ticket', async () => {
+    const { call } = setup()
+    const conn = await (await call('POST', '/api/connectors', { label: 'H', baseUrl: 'https://helix.test', token: TOKEN })).json()
+    const kids = await (await call('GET', `/api/connectors/${conn.id}/tickets/T2-3252/children`)).json()
+    expect(kids.map((k: { key: string }) => k.key)).toEqual(['T2-3274', 'T2-3391'])
+  })
+
   it('refuses a transfer without a ticket key', async () => {
     const { call } = setup()
     const conn = await (await call('POST', '/api/connectors', { label: 'H', baseUrl: 'https://helix.test', token: TOKEN })).json()

@@ -1,6 +1,6 @@
-import { ExternalLink, RefreshCw } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { type Connector, type ExternalPage, HELIX_STATUSES, type Iteration } from '../../../shared/connectors'
+import { ChevronRight, ExternalLink, RefreshCw } from 'lucide-react'
+import { type ReactNode, useEffect, useState } from 'react'
+import { type Connector, type ExternalPage, type ExternalTicket, HELIX_STATUSES, type Iteration } from '../../../shared/connectors'
 import { api } from '../../api/nakoda'
 import { cn } from '../../lib/cn'
 import { errorText } from '../../lib/errors'
@@ -12,6 +12,91 @@ import { Notice } from '../ui/Field'
 import { Select } from '../ui/Select'
 
 const ALL = 'all'
+
+/** Types that can have child tickets in Helix (subtasks, defects). */
+const PARENT_TYPES = new Set(['story', 'task', 'epic', 'tech_improvement'])
+
+type RowActions = {
+  onBoard: Set<string>
+  copying: string | null
+  onTransfer: (key: string) => void
+  onShowBoard: () => void
+}
+
+function Row({ t, child, actions, toggle }: { t: ExternalTicket; child?: boolean; actions: RowActions; toggle?: ReactNode }) {
+  return (
+    <div className={cn('flex items-center gap-3 py-2.5 pr-3', child ? 'pl-10' : 'pl-3')}>
+      <span className="flex w-24 shrink-0 items-center gap-1 font-mono text-xs text-muted-foreground">
+        {toggle}
+        {t.key}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm text-foreground">{t.title}</span>
+        <span className="block truncate text-xs text-muted-foreground">{[child ? t.type : null, t.board, t.iteration, t.assignee].filter(Boolean).join(' · ')}</span>
+      </span>
+      <span className={cn('shrink-0 rounded px-1.5 py-0.5 text-[11px] font-medium', t.kind === 'defect' ? 'bg-destructive/15 text-red-200' : 'bg-secondary text-foreground/70')}>{t.kind === 'defect' ? 'Defect' : 'Task'}</span>
+      <span className="w-28 shrink-0 truncate text-xs text-foreground/70">{statusLabel(t.status)}</span>
+      <span className="w-16 shrink-0 truncate text-xs text-muted-foreground">{t.priority ?? ''}</span>
+      {actions.onBoard.has(t.key) ? (
+        <button type="button" onClick={actions.onShowBoard} className="w-24 shrink-0 text-left text-xs text-success hover:underline" title="Show on the board">
+          On board
+        </button>
+      ) : (
+        <Button className="w-24" disabled={actions.copying === t.key} onClick={() => actions.onTransfer(t.key)}>
+          {actions.copying === t.key ? 'Copying…' : 'Transfer'}
+        </Button>
+      )}
+      <a href={t.url} target="_blank" rel="noreferrer noopener" className="inline-flex shrink-0 items-center gap-1 text-xs text-foreground/70 hover:text-foreground">
+        Open in source <ExternalLink className="size-3" />
+      </a>
+    </div>
+  )
+}
+
+/**
+ * One ticket, and for a story / task its subtasks on demand. Helix search never returns subtasks,
+ * so they are read from the parent when you open it. The status filter applies to them too.
+ */
+function TicketItem({ ticket, connectorId, status, ...actions }: { ticket: ExternalTicket; connectorId: string; status: string | null } & RowActions) {
+  const [open, setOpen] = useState(false)
+  const [children, setChildren] = useState<ExternalTicket[] | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const canHaveChildren = PARENT_TYPES.has(ticket.type)
+  const toggle = () => {
+    setOpen((o) => !o)
+    if (children === null) api.ticketChildren(connectorId, ticket.key).then(setChildren, (e: unknown) => setError(errorText(e)))
+  }
+  const shown = children?.filter((c) => !status || c.status === status) ?? []
+  return (
+    <li data-testid="external-item">
+      <Row
+        t={ticket}
+        actions={actions}
+        toggle={
+          canHaveChildren ? (
+            <button type="button" aria-expanded={open} aria-label={`${open ? 'Hide' : 'Show'} subtasks of ${ticket.key}`} onClick={toggle} className="rounded p-0.5 hover:bg-secondary hover:text-foreground">
+              <ChevronRight className={cn('size-3.5 transition-transform', open && 'rotate-90')} />
+            </button>
+          ) : (
+            <span className="w-[18px]" />
+          )
+        }
+      />
+      {open && (
+        <div className="border-t border-border/60 bg-secondary/20" data-testid="subtasks">
+          {error && <p className="py-2 pl-10 text-xs text-red-300">{error}</p>}
+          {!error && children === null && <p className="py-2 pl-10 text-xs text-muted-foreground">Loading subtasks…</p>}
+          {children && shown.length === 0 && (
+            <p className="py-2 pl-10 text-xs text-muted-foreground">{children.length === 0 ? 'No subtasks.' : `No subtasks with status ${statusLabel(status ?? '')} (${children.length} in total).`}</p>
+          )}
+          {shown.map((c) => (
+            <Row key={c.key} t={c} child actions={actions} />
+          ))}
+        </div>
+      )}
+    </li>
+  )
+}
 
 /** Read-only list of the tickets in an outside system (Helix). Transfer copies one to our board; nothing is written back. */
 export function ExternalTasks() {
@@ -138,28 +223,16 @@ export function ExternalTasks() {
       {data && data.items.length > 0 && (
         <ul className="divide-y divide-border rounded-md border border-border" data-testid="external-list">
           {data.items.map((t) => (
-            <li key={t.key} className="flex items-center gap-3 px-3 py-2.5">
-              <span className="w-20 shrink-0 font-mono text-xs text-muted-foreground">{t.key}</span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm text-foreground">{t.title}</span>
-                <span className="block truncate text-xs text-muted-foreground">{[t.board, t.iteration, t.assignee].filter(Boolean).join(' · ')}</span>
-              </span>
-              <span className={cn('shrink-0 rounded px-1.5 py-0.5 text-[11px] font-medium', t.kind === 'defect' ? 'bg-destructive/15 text-red-200' : 'bg-secondary text-foreground/70')}>{t.kind === 'defect' ? 'Defect' : 'Task'}</span>
-              <span className="w-28 shrink-0 truncate text-xs text-foreground/70">{statusLabel(t.status)}</span>
-              <span className="w-16 shrink-0 truncate text-xs text-muted-foreground">{t.priority ?? ''}</span>
-              {onBoard.has(t.key) ? (
-                <button type="button" onClick={() => navigate({ name: 'tasks', tab: 'board' })} className="w-24 shrink-0 text-left text-xs text-success hover:underline" title="Show on the board">
-                  On board
-                </button>
-              ) : (
-                <Button className="w-24" disabled={copying === t.key} onClick={() => void transfer(t.key)}>
-                  {copying === t.key ? 'Copying…' : 'Transfer'}
-                </Button>
-              )}
-              <a href={t.url} target="_blank" rel="noreferrer noopener" className="inline-flex shrink-0 items-center gap-1 text-xs text-foreground/70 hover:text-foreground">
-                Open in source <ExternalLink className="size-3" />
-              </a>
-            </li>
+            <TicketItem
+              key={t.key}
+              ticket={t}
+              connectorId={connectorId}
+              status={status === ALL ? null : status}
+              onBoard={onBoard}
+              copying={copying}
+              onTransfer={(key) => void transfer(key)}
+              onShowBoard={() => navigate({ name: 'tasks', tab: 'board' })}
+            />
           ))}
         </ul>
       )}
