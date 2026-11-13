@@ -9,7 +9,7 @@ import { serve } from '@hono/node-server'
 import { WebSocketServer } from 'ws'
 import { WEB_ROOT } from '../src/main/config'
 import { insertAccount } from '../src/main/accounts/service'
-import { BOARDS, DEFECT, ME, MILESTONES, SEARCH, STORY } from '../src/main/connectors/fixtures/helix'
+import { BOARDS, DEFECT, ME, MILESTONES, SEARCH, STORY, SUBTASK } from '../src/main/connectors/fixtures/helix'
 import { ChatService } from '../src/main/native-chat/service'
 import { fakeAdapter } from '../src/main/native-chat/testing'
 import { createRuntimeApp } from '../src/main/server/app'
@@ -86,7 +86,7 @@ const modelListers = {
 // A fake Helix (sanitized answers), so the Connectors and External screens run without the network.
 const fakeHelix = (async (url: string | URL | Request) => {
   const path = new URL(String(url)).pathname
-  const body = path === '/api/auth/me' ? ME : path === '/api/boards/' ? BOARDS : path.endsWith('/milestones') ? MILESTONES : path === '/api/search' ? SEARCH : path === '/api/tickets/T2-3672' ? DEFECT : path === '/api/tickets/T2-3252' ? STORY : null
+  const body = path === '/api/auth/me' ? ME : path === '/api/boards/' ? BOARDS : path.endsWith('/milestones') ? MILESTONES : path === '/api/search' ? SEARCH : path === '/api/tickets/T2-3672' ? DEFECT : path === '/api/tickets/T2-3252' ? STORY : path === '/api/tickets/T2-3274' ? SUBTASK : null
   return new Response(JSON.stringify(body ?? { error: 'not_found' }), { status: body ? 200 : 404 })
 }) as typeof fetch
 const { app } = createRuntimeApp({

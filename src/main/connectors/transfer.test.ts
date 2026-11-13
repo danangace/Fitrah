@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { DEFECT, STORY } from './fixtures/helix'
+import { DEFECT, STORY, SUBTASK } from './fixtures/helix'
 import { HelixClient } from './helix'
-import { DEFAULT_MAPPINGS, slug, toTaskInput } from './transfer'
+import { DEFAULT_MAPPINGS, slug, toTaskInput, withParent } from './transfer'
 
 const ids = { planning: 'planning', defect: 'defect' }
 const ticket = async (body: unknown) =>
@@ -44,6 +44,22 @@ describe('toTaskInput', () => {
     const input = toTaskInput(await ticket(raw), DEFAULT_MAPPINGS, { planning: null, defect: null }, null)
     expect(input.workflowId).toBeNull()
     expect(input.values.references?.split('\n')).toHaveLength(3)
+  })
+})
+
+describe('withParent', () => {
+  it('gives a subtask its story\'s text, PRD, Figma and (when missing) iteration, keeping its own iteration', async () => {
+    const sub = await ticket(SUBTASK)
+    expect(sub.parentKey).toBe('T2-3252')
+    expect(sub.description).toBe('')
+    const merged = withParent(sub, await ticket(STORY))
+    const input = toTaskInput(merged, DEFAULT_MAPPINGS, ids, null)
+    expect(input).toMatchObject({ kind: 'task', workflowId: 'planning', title: '[FE] Invoice list' })
+    expect(input.values).toEqual({ prd: 'https://docs.example.test/prd-1', figma: 'https://www.figma.com/design/abc/invoices', iteration: 'i-13', module: '' })
+    expect(input.description).toContain('## Parent story: [T2-3252](https://helix.test/tickets/T2-1) — Invoice Management - Phase 1')
+    expect(input.description).toContain('### Objective\n\nLet finance manage invoices')
+    // The story's own subtask list is not repeated inside the subtask.
+    expect(input.description).not.toContain('Subtasks (')
   })
 })
 

@@ -8,7 +8,7 @@ import { HelixClient, type HelixTicket, normalizeBaseUrl } from './helix'
 import type { Task } from '../../shared/tasks'
 import { createTask } from '../tasks/service'
 import { type SecretStore, tokenHint } from './secrets'
-import { DEFAULT_MAPPINGS, toTaskInput } from './transfer'
+import { DEFAULT_MAPPINGS, toTaskInput, withParent } from './transfer'
 
 const KEY = 'connectors'
 const STORED_TOKEN = /^sidpjm_[a-f0-9]{64}$/
@@ -202,7 +202,10 @@ export class ConnectorService {
     const row = this.find(id)
     const existing = this.db.prepare("SELECT id FROM tasks WHERE source = 'helix' AND external_id = ?").get(key)
     if (existing) throw new UserError('already_transferred', `${key} is already on the board`, 409)
-    const ticket = await this.client(id).ticket(key)
+    const client = this.client(id)
+    let ticket = await client.ticket(key)
+    // A subtask's description, PRD and Figma live on its parent story.
+    if (ticket.parentKey) ticket = withParent(ticket, await client.ticket(ticket.parentKey))
     const workflowId = (wf: string) => (this.db.prepare('SELECT id FROM workflows WHERE id = ?').get(wf) ? wf : null)
     // With a single project there is nothing to choose; otherwise a person picks it on the card.
     const repos = this.db.prepare('SELECT id FROM repos').all() as { id: string }[]

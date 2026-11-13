@@ -1,4 +1,4 @@
-import { type HelixTicket } from './helix'
+import { type HelixTicket, SECTIONS } from './helix'
 
 /** Editable on the connection: how Helix words map to Nakoda's. */
 export type Mappings = { severity: Record<string, string>; environment: Record<string, string> }
@@ -8,6 +8,26 @@ export const DEFAULT_MAPPINGS: Mappings = {
   severity: { critical: 'critical', high: 'major', medium: 'minor', low: 'minor' },
   // Helix ticket type → environment. Only staging is known; the rest stays empty for a human.
   environment: { defect_staging: 'staging' },
+}
+
+/**
+ * A subtask carries little of its own: no description, no PRD or Figma. It gets them from its
+ * parent story: the story's text under "Parent story", and its links and iteration when missing.
+ */
+export function withParent(ticket: HelixTicket, parent: HelixTicket): HelixTicket {
+  const parentText = SECTIONS.map(([key, heading]) => [heading, parent.sections[key] ?? ''] as const)
+    .filter(([, md]) => md !== '')
+    .map(([heading, md]) => `### ${heading}\n\n${md}`)
+    .join('\n\n')
+  const block = `## Parent story: [${parent.key}](${parent.url}) — ${parent.title}${parentText ? `\n\n${parentText}` : ''}`
+  return {
+    ...ticket,
+    description: [ticket.description, block].filter(Boolean).join('\n\n'),
+    prdLinks: ticket.prdLinks.length ? ticket.prdLinks : parent.prdLinks,
+    figmaLinks: ticket.figmaLinks.length ? ticket.figmaLinks : parent.figmaLinks,
+    iteration: ticket.iteration ?? parent.iteration,
+    iterationName: ticket.iterationName ?? parent.iterationName,
+  }
 }
 
 /** Folder-safe name from a title: "[FE] Link redirect!" → "fe-link-redirect". */

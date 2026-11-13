@@ -70,3 +70,20 @@ export const DEFECT = {
     fields: [],
   },
 }
+
+/** A subtask: almost nothing of its own; its story is in `parent` (no `fields` there). */
+export const SUBTASK = {
+  data: {
+    id: 3,
+    ticket_key: 'T2-3274',
+    type: 'subtask',
+    title: '[FE] Invoice list',
+    status: 'to_do',
+    priority: 'medium',
+    environment: '',
+    parent_id: 2,
+    milestone: { id: 71, name: 'Iteration 13', status: 'closed' },
+    board: { id: 4, name: 'TRIBE 2' },
+    parent: { id: 2, ticket_key: 'T2-3252', type: 'story', title: 'Invoice Management - Phase 1' },
+  },
+}

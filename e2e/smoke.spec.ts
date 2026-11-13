@@ -557,6 +557,22 @@ test('Transfer a Helix defect and a story to the board; the defect gets the Defe
   await page.screenshot({ path: shot('task-defect'), animations: 'disabled' })
   await page.keyboard.press('Escape')
 
+  // A subtask (only reachable through its story) transfers too, with the story's PRD, Figma and text.
+  await page.getByRole('tab', { name: 'External' }).click()
+  const storyRow = page.getByTestId('external-item').filter({ hasText: 'Invoice Management - Phase 1' })
+  await storyRow.getByRole('button', { name: 'Show subtasks of T2-3252' }).click()
+  const subRow = storyRow.getByTestId('subtasks').locator('div', { hasText: 'T2-3274' }).last()
+  await subRow.getByRole('button', { name: 'Transfer' }).click()
+  await expect(subRow.getByText('On board')).toBeVisible()
+  await page.getByRole('tab', { name: 'Our board' }).click()
+  const subCard = page.getByTestId('task-card').filter({ hasText: '[FE] Invoice list' })
+  await expect(subCard.getByText(/Missing: .*Module/)).toBeVisible()
+  await expect(subCard.getByText(/PRD|Figma|Iteration|Description/)).toHaveCount(0)
+  await subCard.click()
+  await expect(dialog.getByLabel('Description')).toHaveValue(/Parent story: \[T2-3252\]/)
+  await expect(dialog.getByLabel('Iteration')).toHaveValue('i-13')
+  await page.keyboard.press('Escape')
+
   // The story is a Planning ticket: PRD, Figma and iteration are filled; module is missing (and the
   // project too when there is more than one to choose from).
   const story = page.getByTestId('task-card').filter({ hasText: 'Invoice Management - Phase 1' })

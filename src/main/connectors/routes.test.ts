@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { createApp } from '../server/app'
 import { TOKEN_HEADER, localHosts } from '../server/security'
 import { openDb } from '../sqlite/db'
-import { BOARDS, DEFECT, ME, SEARCH, STORY } from './fixtures/helix'
+import { BOARDS, DEFECT, ME, SEARCH, STORY, SUBTASK } from './fixtures/helix'
 
 const TOKEN = `sidpjm_${'c'.repeat(64)}`
 const sessionToken = 'a'.repeat(64)
@@ -18,7 +18,7 @@ function setup(env: NodeJS.ProcessEnv = {}) {
   const fakeFetch = (async (url: string | URL | Request, init?: RequestInit) => {
     const u = new URL(String(url))
     seen.push({ path: u.pathname, auth: ((init?.headers ?? {}) as Record<string, string>).Authorization ?? null })
-    const body = u.pathname === '/api/auth/me' ? ME : u.pathname === '/api/boards/' ? BOARDS : u.pathname === '/api/search' ? (searches++, SEARCH) : u.pathname === '/api/tickets/T2-3672' ? DEFECT : u.pathname === '/api/tickets/T2-3252' ? STORY : {}
+    const body = u.pathname === '/api/auth/me' ? ME : u.pathname === '/api/boards/' ? BOARDS : u.pathname === '/api/search' ? (searches++, SEARCH) : u.pathname === '/api/tickets/T2-3672' ? DEFECT : u.pathname === '/api/tickets/T2-3252' ? STORY : u.pathname === '/api/tickets/T2-3274' ? SUBTASK : {}
     return new Response(JSON.stringify(body), { status: 200 })
   }) as typeof fetch
   const db = openDb(':memory:')
@@ -133,6 +133,15 @@ describe('connector routes', () => {
     const conn = await (await call('POST', '/api/connectors', { label: 'H', baseUrl: 'https://helix.test', token: TOKEN })).json()
     const kids = await (await call('GET', `/api/connectors/${conn.id}/tickets/T2-3252/children`)).json()
     expect(kids.map((k: { key: string }) => k.key)).toEqual(['T2-3274', 'T2-3391'])
+  })
+
+  it('transfers a subtask with what it inherits from its parent story', async () => {
+    const { call, seen } = setup()
+    const conn = await (await call('POST', '/api/connectors', { label: 'H', baseUrl: 'https://helix.test', token: TOKEN })).json()
+    const task = await (await call('POST', `/api/connectors/${conn.id}/transfer`, { key: 'T2-3274' })).json()
+    expect(task).toMatchObject({ externalId: 'T2-3274', kind: 'task', workflowId: 'planning', values: { prd: 'https://docs.example.test/prd-1', iteration: 'i-13' } })
+    expect(task.description).toContain('Parent story: [T2-3252](https://helix.test/tickets/T2-3252)')
+    expect(seen.map((r) => r.path)).toEqual(['/api/tickets/T2-3274', '/api/tickets/T2-3252'])
   })
 
   it('refuses a transfer without a ticket key', async () => {

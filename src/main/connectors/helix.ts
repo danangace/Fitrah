@@ -214,6 +214,8 @@ export type HelixTicket = {
   description: string
   /** Each rich-text field on its own (markdown), by Helix name, e.g. `steps_to_reproduce`. */
   sections: Record<string, string>
+  /** The parent ticket's key (a subtask's story), if any. */
+  parentKey: string | null
   /** Child tickets (subtasks and defects), live ones only, each with a link to Helix. */
   children: { key: string; type: string; title: string; status: string; url: string }[]
   /** Every PRD / Figma link found in the ticket's custom fields. */
@@ -231,7 +233,7 @@ export function iterationShort(name: string | null): string | null {
 const urlsOf = (value: unknown): string[] =>
   typeof value === 'string' ? value.split(/[,\s]+/).filter((u) => /^https?:\/\//i.test(u)) : []
 
-const SECTIONS: [field: string, heading: string][] = [
+export const SECTIONS: [field: string, heading: string][] = [
   ['description', 'Description'],
   ['objective', 'Objective'],
   ['scope', 'Scope'],
@@ -274,6 +276,7 @@ export function mapTicket(raw: unknown, url: string): HelixTicket {
     iteration: iterationShort(iterationName),
     description,
     sections,
+    parentKey: str(asRecord(t.parent).ticket_key),
     children,
     prdLinks: [...field('prd_links'), ...urlsOf(t.prd_link)],
     figmaLinks: [...field('figma_links'), ...urlsOf(t.figma_link)],
