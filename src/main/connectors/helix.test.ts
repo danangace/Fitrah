@@ -142,6 +142,21 @@ describe('HelixClient', () => {
     await expect(helix.children('../x')).rejects.toMatchObject({ code: 'invalid_ticket_key' })
   })
 
+  it('finds my subtasks under every parent in an iteration, whoever owns the parent', async () => {
+    // The story is assigned to someone else (search by assignee would never show it); one subtask is mine.
+    const others = { ...SEARCH, data: SEARCH.data.map((r) => ({ ...r, assignee: { id: 99, name: 'Someone Else', username: 'x' } })) }
+    const { helix, calls } = client({ '/api/search': () => json(others), '/api/tickets/T2-3252': () => json(STORY) })
+    const mine = await helix.mySubtasks({ boardId: 4, iterationId: 95, meId: 7 })
+    expect(mine.map((t) => [t.key, t.type, t.status])).toEqual([['T2-3275', 'subtask', 'open']])
+    expect(mine[0]).toMatchObject({ parent: { key: 'T2-3252', title: 'Invoice Management - Phase 1' }, iteration: 'Iteration 14b', board: 'TRIBE 2' })
+    const search = new URL(calls[0]?.url ?? '')
+    expect(search.searchParams.get('milestone_id')).toBe('95')
+    expect(search.searchParams.get('board_id')).toBe('4')
+    expect(search.searchParams.has('assignee_id')).toBe(false)
+    // Only parents are opened: the defect and the archived task are not read.
+    expect(calls.map((c) => new URL(c.url).pathname)).toEqual(['/api/search', '/api/tickets/T2-3252'])
+  })
+
   it('maps a story: sections in order, first PRD and Figma links kept, all links collected', async () => {
     const { helix } = client({ '/api/tickets/T2-3252': () => json(STORY) })
     const t = await helix.ticket('T2-3252')

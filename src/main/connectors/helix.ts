@@ -44,6 +44,12 @@ export function ticketKind(type: string): 'task' | 'defect' {
   return /^(defect|bug)/i.test(type) ? 'defect' : 'task'
 }
 
+/** Ticket types that can have subtasks in Helix. */
+export const PARENT_TYPES = new Set(['story', 'task', 'epic', 'tech_improvement'])
+const PARENT_PAGE_SIZE = 200
+const MAX_PARENT_PAGES = 5
+const PARENT_CONCURRENCY = 4
+
 export class HelixClient {
   private readonly base: string
   private readonly token: string
@@ -174,6 +180,7 @@ export class HelixClient {
       board: str(r.board_name),
       iteration: str(r.milestone_name),
       assignee: str(asRecord(r.assignee).name),
+      assigneeId: Number(r.assignee_id ?? asRecord(r.assignee).id) || null,
       dueDate: str(r.due_date),
       url: this.ticketUrl(key),
     }
@@ -188,6 +195,36 @@ export class HelixClient {
     const data = asRecord((await this.get(`/api/tickets/${encodeURIComponent(key)}`)).data)
     const rows = Array.isArray(data.children) ? data.children : []
     return rows.map(asRecord).filter((r) => r.archived !== true && str(r.ticket_key)).map((r) => this.listItem(r))
+  }
+
+  /**
+   * Subtasks assigned to `meId` in one iteration. Helix search filters on the top-level ticket's
+   * assignee and never returns subtasks (verified 2026-11-13), so a subtask of yours under a story
+   * assigned to someone else (or to nobody) is only reachable through that story. So: list every
+   * parent in the iteration, whoever owns it, and read its children. Bounded by needing an iteration.
+   */
+  async mySubtasks(query: { boardId?: number; iterationId: number; meId: number }): Promise<ExternalTicket[]> {
+    if (!Number.isInteger(query.iterationId)) throw new UserError('invalid_iteration', 'Unknown iteration')
+    if (query.boardId !== undefined && !Number.isInteger(query.boardId)) throw new UserError('invalid_board', 'Unknown board')
+    const parents: ExternalTicket[] = []
+    for (let page = 1; page <= MAX_PARENT_PAGES; page++) {
+      const params = new URLSearchParams({ page: String(page), limit: String(PARENT_PAGE_SIZE), milestone_id: String(query.iterationId) })
+      if (query.boardId !== undefined) params.set('board_id', String(query.boardId))
+      const body = await this.get(`/api/search?${params}`)
+      const rows = (Array.isArray(body.data) ? body.data : []).map(asRecord)
+      parents.push(...rows.filter((r) => r.archived !== true && PARENT_TYPES.has(str(r.type) ?? '')).map((r) => this.listItem(r)))
+      if (rows.length < PARENT_PAGE_SIZE || page * PARENT_PAGE_SIZE >= (Number(body.total) || 0)) break
+    }
+    const mine: ExternalTicket[] = []
+    // A few at a time, to be gentle with Helix.
+    for (let i = 0; i < parents.length; i += PARENT_CONCURRENCY) {
+      const batch = parents.slice(i, i + PARENT_CONCURRENCY)
+      const kids = await Promise.all(batch.map((p) => this.children(p.key)))
+      batch.forEach((p, j) => {
+        for (const c of kids[j] ?? []) if (c.type === 'subtask' && c.assigneeId === query.meId) mine.push({ ...c, iteration: c.iteration ?? p.iteration, board: c.board ?? p.board, parent: { key: p.key, title: p.title } })
+      })
+    }
+    return mine
   }
 
   /** The full ticket, always read fresh (a list row has no rich text). */

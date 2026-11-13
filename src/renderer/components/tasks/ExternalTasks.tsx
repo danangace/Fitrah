@@ -32,7 +32,7 @@ function Row({ t, child, actions, toggle }: { t: ExternalTicket; child?: boolean
       </span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-sm text-foreground">{t.title}</span>
-        <span className="block truncate text-xs text-muted-foreground">{[child ? t.type : null, t.board, t.iteration, t.assignee].filter(Boolean).join(' · ')}</span>
+        <span className="block truncate text-xs text-muted-foreground">{[t.parent ? `in ${t.parent.key} · ${t.parent.title}` : null, child ? t.type : null, t.board, t.iteration, t.assignee].filter(Boolean).join(' · ')}</span>
       </span>
       <span className={cn('shrink-0 rounded px-1.5 py-0.5 text-[11px] font-medium', t.kind === 'defect' ? 'bg-destructive/15 text-red-200' : 'bg-secondary text-foreground/70')}>{t.kind === 'defect' ? 'Defect' : 'Task'}</span>
       <span className="w-28 shrink-0 truncate text-xs text-foreground/70">{statusLabel(t.status)}</span>
@@ -121,6 +121,10 @@ export function ExternalTasks() {
   // Tickets already copied to our board (matched by key), and the one being copied now.
   const [onBoard, setOnBoard] = useState<Set<string>>(new Set())
   const [copying, setCopying] = useState<string | null>(null)
+  // Subtasks assigned to you: Helix search cannot find them, so they are read through every parent in
+  // the chosen iteration (whoever the parent belongs to). Only with an iteration, to keep it bounded.
+  const [mySubtasks, setMySubtasks] = useState<ExternalTicket[] | null>(null)
+  const [subError, setSubError] = useState<string | null>(null)
 
   useEffect(() => {
     api.listConnectors().then(
@@ -190,6 +194,20 @@ export function ExternalTasks() {
     }
   }, [connectorId, page, boardId, iterationId, scope, status, nonce])
 
+  useEffect(() => {
+    setMySubtasks(null)
+    setSubError(null)
+    if (!connectorId || scope !== 'mine' || iterationId === ALL) return
+    let current = true
+    api.mySubtasks(connectorId, { boardId: boardId === ALL ? undefined : Number(boardId), iterationId: Number(iterationId) }, nonce > 0).then(
+      (items) => current && setMySubtasks(items),
+      (e: unknown) => current && setSubError(errorText(e)),
+    )
+    return () => {
+      current = false
+    }
+  }, [connectorId, scope, boardId, iterationId, nonce])
+
   const filter = <T,>(set: (v: T) => void) => (v: T) => {
     set(v)
     setPage(1)
@@ -204,6 +222,9 @@ export function ExternalTasks() {
     )
   }
 
+  const subGroup = HELIX_SUBTASK_STATUSES.find((s) => s.status === subStatus)
+  const myShown = mySubtasks?.filter((c) => !subGroup || statusCategory(c) === subGroup.category) ?? []
+  const actions: RowActions = { onBoard, copying, onTransfer: (key) => void transfer(key), onShowBoard: () => navigate({ name: 'tasks', tab: 'board' }) }
   const lastPage = data ? Math.max(1, Math.ceil(data.total / data.limit)) : 1
   return (
     <div className="space-y-3">
@@ -233,10 +254,7 @@ export function ExternalTasks() {
               ticket={t}
               connectorId={connectorId}
               status={subStatus === ALL ? null : subStatus}
-              onBoard={onBoard}
-              copying={copying}
-              onTransfer={(key) => void transfer(key)}
-              onShowBoard={() => navigate({ name: 'tasks', tab: 'board' })}
+              {...actions}
             />
           ))}
         </ul>
@@ -253,6 +271,30 @@ export function ExternalTasks() {
             Next
           </Button>
         </div>
+      )}
+      {scope === 'mine' && iterationId === ALL && <p className="text-xs text-muted-foreground">Pick a board and an iteration to also see the subtasks assigned to you (Helix only finds them through their story).</p>}
+      {scope === 'mine' && iterationId !== ALL && (
+        <section className="space-y-2" data-testid="my-subtasks">
+          <h3 className="text-xs font-medium text-muted-foreground">
+            Subtasks assigned to you{mySubtasks ? ` · ${subGroup ? `${myShown.length} of ` : ''}${mySubtasks.length}` : ''}
+          </h3>
+          {subError && <Notice tone="error">{subError}</Notice>}
+          {!subError && mySubtasks === null && <p className="text-xs text-muted-foreground">Looking through the stories in this iteration…</p>}
+          {mySubtasks && myShown.length === 0 && (
+            <div className="rounded-md border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
+              {mySubtasks.length === 0 ? 'No subtasks assigned to you in this iteration.' : `No ${subGroup?.label.toLowerCase() ?? ''} subtasks assigned to you.`}
+            </div>
+          )}
+          {myShown.length > 0 && (
+            <ul className="divide-y divide-border rounded-md border border-border">
+              {myShown.map((t) => (
+                <li key={t.key} data-testid="my-subtask">
+                  <Row t={t} actions={actions} toggle={<span className="w-[18px]" />} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
       )}
     </div>
   )

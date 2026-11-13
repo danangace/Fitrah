@@ -435,6 +435,15 @@ test('Connect Helix in Settings, then read the External tab (read-only)', async 
   // The story itself (Done) stays in the list.
   await expect(page.getByTestId('external-item').filter({ hasText: 'Invoice Management - Phase 1' })).toBeVisible()
   await pick(page, page.getByLabel('Subtask status'), 'All subtask statuses')
+  // My subtasks are found through every story in the iteration, even one assigned to someone else.
+  await expect(page.getByText(/Pick a board and an iteration to also see the subtasks assigned to you/)).toBeVisible()
+  await pick(page, page.getByLabel('Board'), 'TRIBE 2')
+  await pick(page, page.getByLabel('Iteration'), 'Iteration 15')
+  const mySubtasks = page.getByTestId('my-subtasks')
+  await expect(mySubtasks.getByText('Subtasks assigned to you · 1')).toBeVisible()
+  await expect(mySubtasks.getByTestId('my-subtask').filter({ hasText: 'T2-3275' })).toContainText('in T2-3252 · Invoice Management - Phase 1')
+  await expect(mySubtasks.getByText('T2-3274')).toHaveCount(0)
+  await expect(mySubtasks.getByRole('button', { name: 'Transfer' })).toHaveCount(1)
 
   // Clean up so the empty-state test above stays true on a re-run.
   await page.locator('aside').getByRole('button', { name: 'Settings', exact: true }).click()

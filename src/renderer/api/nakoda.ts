@@ -129,6 +129,12 @@ export const api = {
   removeConnector: (id: string) => request('DELETE', `/api/connectors/${id}`, Ok),
   testConnector: (id: string) => request('POST', `/api/connectors/${id}/test`, TestResult),
   ticketChildren: (id: string, key: string) => request('GET', `/api/connectors/${id}/tickets/${encodeURIComponent(key)}/children`, z.array(ExternalTicket)),
+  mySubtasks: (id: string, q: { boardId?: number; iterationId: number }, refresh = false) => {
+    const params = new URLSearchParams({ iterationId: String(q.iterationId) })
+    if (q.boardId) params.set('boardId', String(q.boardId))
+    if (refresh) params.set('refresh', '1')
+    return request('GET', `/api/connectors/${id}/my-subtasks?${params}`, z.array(ExternalTicket))
+  },
   transferTicket: (id: string, key: string) => request('POST', `/api/connectors/${id}/transfer`, Task, { key }),
   connectorBoards: (id: string) => request('GET', `/api/connectors/${id}/boards`, z.array(z.object({ id: z.number(), name: z.string() }))),
   connectorIterations: (id: string, boardId: number) => request('GET', `/api/connectors/${id}/iterations?boardId=${boardId}`, z.array(Iteration)),

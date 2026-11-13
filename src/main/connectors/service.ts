@@ -38,6 +38,7 @@ export class ConnectorService {
   private readonly env: NodeJS.ProcessEnv
   private readonly lists = new Map<string, { at: number; page: ExternalPage }>()
   private readonly me = new Map<string, { at: number; id: number }>()
+  private readonly subtasks = new Map<string, { at: number; items: ExternalTicket[] }>()
 
   constructor(
     private readonly db: Db,
@@ -142,6 +143,7 @@ export class ConnectorService {
   private forget(id: string): void {
     this.me.delete(id)
     for (const k of this.lists.keys()) if (k.startsWith(`${id}|`)) this.lists.delete(k)
+    for (const k of this.subtasks.keys()) if (k.startsWith(`${id}|`)) this.subtasks.delete(k)
   }
 
   private client(id: string): HelixClient {
@@ -176,14 +178,29 @@ export class ConnectorService {
     const hit = this.lists.get(cacheKey)
     if (!refresh && hit && Date.now() - hit.at < LIST_CACHE_MS) return hit.page
     const client = this.client(id)
+    const page = await client.list({ ...query, meId: await this.meId(id, client) })
+    this.lists.set(cacheKey, { at: Date.now(), page })
+    return page
+  }
+
+  private async meId(id: string, client: HelixClient): Promise<number> {
     let me = this.me.get(id)
     if (!me || Date.now() - me.at > ME_CACHE_MS) {
       me = { at: Date.now(), id: (await client.test()).owner.id }
       this.me.set(id, me)
     }
-    const page = await client.list({ ...query, meId: me.id })
-    this.lists.set(cacheKey, { at: Date.now(), page })
-    return page
+    return me.id
+  }
+
+  /** Subtasks assigned to you in one iteration, found through every parent in it (see HelixClient.mySubtasks). */
+  async mySubtasks(id: string, query: { boardId?: number; iterationId: number }, refresh = false): Promise<ExternalTicket[]> {
+    const cacheKey = `${id}|${JSON.stringify(query)}`
+    const hit = this.subtasks.get(cacheKey)
+    if (!refresh && hit && Date.now() - hit.at < LIST_CACHE_MS) return hit.items
+    const client = this.client(id)
+    const items = await client.mySubtasks({ ...query, meId: await this.meId(id, client) })
+    this.subtasks.set(cacheKey, { at: Date.now(), items })
+    return items
   }
 
   children(id: string, key: string): Promise<ExternalTicket[]> {

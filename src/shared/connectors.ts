@@ -59,6 +59,9 @@ export const ExternalTicket = z.object({
   board: z.string().nullable(),
   iteration: z.string().nullable(),
   assignee: z.string().nullable(),
+  assigneeId: z.number().nullable().optional(),
+  /** For a subtask listed on its own: the story it belongs to. */
+  parent: z.object({ key: z.string(), title: z.string() }).nullable().optional(),
   dueDate: z.string().nullable(),
   url: z.string(),
 })

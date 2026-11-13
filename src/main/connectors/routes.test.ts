@@ -128,6 +128,14 @@ describe('connector routes', () => {
     expect(seen.every((r) => r.path.startsWith('/api/'))).toBe(true)
   })
 
+  it('lists my subtasks in an iteration, and needs an iteration to do it', async () => {
+    const { call } = setup()
+    const conn = await (await call('POST', '/api/connectors', { label: 'H', baseUrl: 'https://helix.test', token: TOKEN })).json()
+    const mine = await (await call('GET', `/api/connectors/${conn.id}/my-subtasks?boardId=4&iterationId=95`)).json()
+    expect(mine.map((k: { key: string }) => k.key)).toEqual(['T2-3275'])
+    expect((await call('GET', `/api/connectors/${conn.id}/my-subtasks`)).status).toBe(400)
+  })
+
   it('lists the subtasks of a ticket', async () => {
     const { call } = setup()
     const conn = await (await call('POST', '/api/connectors', { label: 'H', baseUrl: 'https://helix.test', token: TOKEN })).json()

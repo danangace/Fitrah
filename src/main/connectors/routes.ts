@@ -36,6 +36,13 @@ export function registerConnectorRoutes(app: Hono, service: ConnectorService): v
     )
     return c.json(page)
   })
+  // Your subtasks in one iteration (Helix search cannot find them; they are read through their parents).
+  app.get(`${base}/:id/my-subtasks`, async (c) => {
+    const q = c.req.query()
+    const iterationId = intParam(q.iterationId, 'iteration')
+    if (iterationId === undefined) throw new UserError('invalid_query', 'Pick an iteration first')
+    return c.json(await service.mySubtasks(c.req.param('id'), { boardId: intParam(q.boardId, 'board'), iterationId }, q.refresh === '1'))
+  })
   // Copy one ticket to our board (the full ticket is read again first).
   app.post(`${base}/:id/transfer`, async (c) => {
     const key = ((await c.req.json()) as { key?: unknown }).key
