@@ -8,7 +8,7 @@ import { DEFAULT_SETTINGS, addRepo, getSettings, listRepos, removeRepo, saveSett
 
 const tmp = (p: string) => mkdtempSync(join(tmpdir(), p))
 const gitRepo = () => {
-  const dir = tmp('fitrah-repo-')
+  const dir = tmp('nakoda-repo-')
   execFileSync('git', ['init', '-q', dir])
   return dir
 }
@@ -26,7 +26,7 @@ describe('settings', () => {
 
   it('saves a valid docs root and a model list (AC-S3)', () => {
     const db = openDb(':memory:')
-    const docsRoot = tmp('fitrah-docs-')
+    const docsRoot = tmp('nakoda-docs-')
     const models = { claude: { list: ['opus', 'haiku'], default: 'opus' } }
     saveSettings(db, { ...DEFAULT_SETTINGS, docsRoot, models })
     expect(getSettings(db)).toMatchObject({ docsRoot, models })
@@ -78,7 +78,7 @@ describe('repos', () => {
 
   it('rejects a folder that is not a git repo and a duplicate', async () => {
     const db = openDb(':memory:')
-    await expect(addRepo(db, { path: tmp('fitrah-plain-'), featureBase: 'main' })).rejects.toThrow(/Not a git repository/)
+    await expect(addRepo(db, { path: tmp('nakoda-plain-'), featureBase: 'main' })).rejects.toThrow(/Not a git repository/)
     const path = gitRepo()
     await addRepo(db, { path, featureBase: 'main' })
     await expect(addRepo(db, { path, featureBase: 'main' })).rejects.toThrow(/already added/)

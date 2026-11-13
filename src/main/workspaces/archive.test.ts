@@ -11,7 +11,7 @@ import { gitOut, makeRepoWithOrigin } from './testing'
 async function setup() {
   const db = openDb(':memory:')
   const { repo } = makeRepoWithOrigin()
-  saveSettings(db, { ...DEFAULT_SETTINGS, workspacesDir: mkdtempSync(join(tmpdir(), 'fitrah-ws-')) })
+  saveSettings(db, { ...DEFAULT_SETTINGS, workspacesDir: mkdtempSync(join(tmpdir(), 'nakoda-ws-')) })
   const r = await addRepo(db, { path: repo, featureBase: 'origin/dev/tribe-2' })
   const ws = await createWorkspace(db, { repoId: r.id, name: 'w', base: 'origin/dev/tribe-2' })
   const branches = () => gitOut(repo, 'branch', '--list', ws.branch)

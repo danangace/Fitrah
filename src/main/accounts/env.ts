@@ -16,7 +16,7 @@ export function isDefaultClaudeDir(configDir: string, home = homedir()): boolean
 }
 
 /**
- * Environment for any Claude Code process Fitrah starts: the account's config folder (unset for
+ * Environment for any Claude Code process Nakoda starts: the account's config folder (unset for
  * the default `~/.claude`), and no API-key variables, so the claude.ai subscription login is used.
  */
 export function claudeEnv(configDir: string, base: NodeJS.ProcessEnv = process.env, home = homedir()): Record<string, string> {

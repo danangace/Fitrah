@@ -8,13 +8,13 @@ import { buildTree, listFiles, resolveLink } from './index'
 import { DocsService, splitFrontmatter } from './service'
 
 function vault() {
-  const root = mkdtempSync(join(tmpdir(), 'fitrah-vault-'))
+  const root = mkdtempSync(join(tmpdir(), 'nakoda-vault-'))
   const w = (rel: string, content = '') => {
     mkdirSync(join(root, rel, '..'), { recursive: true })
     writeFileSync(join(root, rel), content)
   }
-  w('brainstorm/agent-orchestrator/README.md', '---\ntags: [brainstorm]\n---\n# Hi\nSee [[Design - Fitrah]] and ![[_sources/figma/1-2.png|600]] and [[Missing]].')
-  w('brainstorm/agent-orchestrator/Design - Fitrah.md', '# Design')
+  w('brainstorm/agent-orchestrator/README.md', '---\ntags: [brainstorm]\n---\n# Hi\nSee [[Design - Nakoda]] and ![[_sources/figma/1-2.png|600]] and [[Missing]].')
+  w('brainstorm/agent-orchestrator/Design - Nakoda.md', '# Design')
   w('brainstorm/agent-orchestrator/_sources/figma/1-2.png', 'png')
   w('frontend/modules/README.md', '# Modules')
   w('.obsidian/workspace.json', '{}')
@@ -34,7 +34,7 @@ describe('docs index', () => {
   it('resolves wiki-links and embeds Obsidian-style (AC-D2, AC-D3)', () => {
     const files = listFiles(vault())
     const from = 'brainstorm/agent-orchestrator/README.md'
-    expect(resolveLink(files, 'Design - Fitrah', from)).toBe('brainstorm/agent-orchestrator/Design - Fitrah.md')
+    expect(resolveLink(files, 'Design - Nakoda', from)).toBe('brainstorm/agent-orchestrator/Design - Nakoda.md')
     expect(resolveLink(files, '_sources/figma/1-2.png', from)).toBe('brainstorm/agent-orchestrator/_sources/figma/1-2.png')
     // basename match anywhere: the shortest path wins
     expect(resolveLink(files, 'README', 'frontend/x.md')).toBe('frontend/modules/README.md')
@@ -54,7 +54,7 @@ describe('DocsService', () => {
     expect(doc.frontmatter).toEqual({ tags: ['brainstorm'] })
     expect(doc.body.startsWith('# Hi')).toBe(true)
     expect(doc.links).toEqual({
-      'Design - Fitrah': 'brainstorm/agent-orchestrator/Design - Fitrah.md',
+      'Design - Nakoda': 'brainstorm/agent-orchestrator/Design - Nakoda.md',
       '_sources/figma/1-2.png': 'brainstorm/agent-orchestrator/_sources/figma/1-2.png',
       Missing: null,
     })

@@ -99,7 +99,7 @@ export function setDefaultAccount(db: Db, id: string): Account {
   return getAccount(db, id)
 }
 
-/** Re-read the login status from the agent CLI. Fitrah stores what it reports, never tokens. */
+/** Re-read the login status from the agent CLI. Nakoda stores what it reports, never tokens. */
 export async function refreshAccount(db: Db, id: string, provider = providers[getAccount(db, id).agent]): Promise<Account> {
   const account = getAccount(db, id)
   if (!provider) throw new UserError('agent_not_supported', `${account.agent} is not supported yet`)

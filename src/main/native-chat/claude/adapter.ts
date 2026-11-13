@@ -34,7 +34,7 @@ export const claudeAdapter: AgentAdapter = {
           const answer = await options.onToolRequest({ tool, input })
           return answer === 'allow'
             ? { behavior: 'allow', updatedInput: input }
-            : { behavior: 'deny', message: 'The user denied this action in Fitrah.' }
+            : { behavior: 'deny', message: 'The user denied this action in Nakoda.' }
         },
       },
     })

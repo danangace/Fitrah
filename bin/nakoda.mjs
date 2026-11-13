@@ -3,4 +3,4 @@
 import { register } from 'tsx/esm/api'
 
 register()
-await import('../src/cli/fitrah.ts')
+await import('../src/cli/nakoda.ts')

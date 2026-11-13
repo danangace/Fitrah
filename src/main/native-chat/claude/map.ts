@@ -1,7 +1,7 @@
 import type { AdapterEvent } from '../types'
 import { summarizeTool } from '../summarize'
 
-/** Loose view of SDK messages: only the fields Fitrah reads (keeps the SDK out of the mapper). */
+/** Loose view of SDK messages: only the fields Nakoda reads (keeps the SDK out of the mapper). */
 type Block = { type: string; text?: string; id?: string; name?: string; input?: unknown; tool_use_id?: string; is_error?: boolean; content?: unknown }
 export type SdkLike = {
   type: string
@@ -35,7 +35,7 @@ const short = (text: string, max = 300) => (text.length > max ? `${text.slice(0,
 const isRateLimit = (text: string) => /rate limit|usage limit|limit reached|too many requests|\b429\b/i.test(text)
 const isAuth = (text: string) => /not logged in|please run \/login|invalid api key|authentication|unauthorized|\b401\b/i.test(text)
 
-/** Translate one Claude Agent SDK message into Fitrah chat events (no SDK types leak out). */
+/** Translate one Claude Agent SDK message into Nakoda chat events (no SDK types leak out). */
 export function mapClaudeMessage(msg: SdkLike): AdapterEvent[] {
   switch (msg.type) {
     case 'system':

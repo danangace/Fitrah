@@ -17,7 +17,7 @@ const waitFor = async (check: () => boolean) => {
   for (let i = 0; i < 100 && !check(); i++) await new Promise((r) => setTimeout(r, 20))
 }
 
-beforeEach(() => vi.stubEnv('FITRAH_HOME', mkdtempSync(join(tmpdir(), 'fitrah-home-'))))
+beforeEach(() => vi.stubEnv('NAKODA_HOME', mkdtempSync(join(tmpdir(), 'nakoda-home-'))))
 afterEach(() => vi.unstubAllEnvs())
 
 describe('ClaudeLoginManager', () => {

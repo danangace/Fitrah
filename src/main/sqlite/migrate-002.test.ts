@@ -10,7 +10,7 @@ const MIGRATIONS = join(import.meta.dirname, 'migrations')
 describe('migration 002 (projects + workflows)', () => {
   it('keeps an existing workspace and moves its task info into Planning values (AC-M1)', () => {
     // A v0.1 database: only migration 001, with a repo, settings and a workspace like Danang's.
-    const v1Dir = mkdtempSync(join(tmpdir(), 'fitrah-mig-'))
+    const v1Dir = mkdtempSync(join(tmpdir(), 'nakoda-mig-'))
     mkdirSync(v1Dir, { recursive: true })
     copyFileSync(join(MIGRATIONS, '001_init.sql'), join(v1Dir, '001_init.sql'))
     const db = new DatabaseSync(':memory:')

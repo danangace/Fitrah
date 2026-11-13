@@ -1,6 +1,6 @@
 import { z } from 'zod/v4'
 
-/** Agents Fitrah can drive. V1 ships Claude only; 'codex' is reserved (Design §7.3). */
+/** Agents Nakoda can drive. V1 ships Claude only; 'codex' is reserved (Design §7.3). */
 export const AgentId = z.enum(['claude', 'codex'])
 export type AgentId = z.infer<typeof AgentId>
 
@@ -13,7 +13,7 @@ export const AgentModels = z.object({
 })
 export type AgentModels = z.infer<typeof AgentModels>
 
-/** Where `fitrah start` / `fitrah open` open the UI. */
+/** Where `nakoda start` / `nakoda open` open the UI. */
 export const OpenIn = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('default') }),
   z.object({ kind: z.literal('chrome'), profile: z.string().min(1) }),
@@ -71,7 +71,7 @@ export type UsageWindow = z.infer<typeof UsageWindow>
 export const AccountUsage = z.object({ windows: z.array(UsageWindow), updatedAt: z.string() })
 export type AccountUsage = z.infer<typeof AccountUsage>
 
-/** An account is a folder holding an agent CLI login. Fitrah never stores tokens. */
+/** An account is a folder holding an agent CLI login. Nakoda never stores tokens. */
 export const Account = z.object({
   id: z.string(),
   agent: AgentId,
@@ -84,7 +84,7 @@ export const Account = z.object({
   warning: nullableText,
   isDefault: z.boolean(),
   lastCheckedAt: nullableText,
-  /** Latest limits seen in a chat; null until the account has been used in Fitrah. */
+  /** Latest limits seen in a chat; null until the account has been used in Nakoda. */
   usage: AccountUsage.nullable(),
 })
 export type Account = z.infer<typeof Account>
@@ -130,7 +130,7 @@ const slug = z
 
 export const WorkspaceInput = z.object({
   repoId: z.string().min(1),
-  /** Optional; Fitrah generates one when empty. */
+  /** Optional; Nakoda generates one when empty. */
   name: slug.optional(),
   /** null / missing = Free chat. */
   workflowId: z.string().nullable().optional(),
@@ -187,7 +187,7 @@ export type Effort = z.infer<typeof Effort>
 
 /** One model an account may use, as Claude Code reports it (Settings → Models toggles these). */
 export const ModelOption = z.object({
-  /** What Fitrah passes as `model`, e.g. `opus` or `claude-fable-5-1`. */
+  /** What Nakoda passes as `model`, e.g. `opus` or `claude-fable-5-1`. */
   value: z.string(),
   displayName: z.string(),
   description: z.string().default(''),

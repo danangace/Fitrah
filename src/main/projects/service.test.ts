@@ -26,13 +26,13 @@ describe('projects', () => {
     // A normal clone records origin's default branch; the fixture cloned an empty origin, so set it.
     gitOut(repo, 'remote', 'set-head', 'origin', 'main')
     expect(await inspectFolder(repo)).toMatchObject({ name: 'repo', isGitRepo: true, defaultBase: 'origin/main' })
-    expect(await inspectFolder(mkdtempSync(join(tmpdir(), 'fitrah-plain-')))).toMatchObject({ isGitRepo: false, defaultBase: null })
+    expect(await inspectFolder(mkdtempSync(join(tmpdir(), 'nakoda-plain-')))).toMatchObject({ isGitRepo: false, defaultBase: null })
   })
 
   it('clones from a URL and adds the project (AC-P2)', async () => {
     const db = openDb(':memory:')
     const { origin } = makeRepoWithOrigin()
-    const parent = mkdtempSync(join(tmpdir(), 'fitrah-clone-'))
+    const parent = mkdtempSync(join(tmpdir(), 'nakoda-clone-'))
     const project = await cloneProject(db, { url: origin, parentDir: parent })
     expect(project).toMatchObject({ name: 'origin', path: join(parent, 'origin'), featureBase: 'origin/main' })
     expect(listRepos(db)).toHaveLength(1)
@@ -42,7 +42,7 @@ describe('projects', () => {
 
   it('creates a new project with a first commit (AC-P3)', async () => {
     const db = openDb(':memory:')
-    const parent = mkdtempSync(join(tmpdir(), 'fitrah-new-'))
+    const parent = mkdtempSync(join(tmpdir(), 'nakoda-new-'))
     const project = await createProject(db, { parentDir: parent, name: 'side-project' })
     expect(project).toMatchObject({ name: 'side-project', featureBase: 'main' })
     expect(gitOut(project.path, 'log', '--oneline').split('\n')).toHaveLength(1)

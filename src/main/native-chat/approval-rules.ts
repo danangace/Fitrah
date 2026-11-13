@@ -48,7 +48,7 @@ export function isInside(worktree: string, path: string): boolean {
 }
 
 /**
- * Fitrah's approval rules (OQ-22). Claude Code itself already lets read-only commands such as
+ * Nakoda's approval rules (OQ-22). Claude Code itself already lets read-only commands such as
  * `ls` through without asking (Spike - Login S4); everything that reaches here is checked.
  */
 export function approvalRule(request: ToolRequest, worktree: string, mode: PermissionMode = 'accept-edits'): RuleResult {

@@ -15,7 +15,7 @@ describe('createApp', () => {
   it('answers the health check without a token', async () => {
     const res = await createApp({ security }).request('/api/health', { headers: host })
     expect(res.status).toBe(200)
-    expect(await res.json()).toEqual({ ok: true, name: 'Fitrah' })
+    expect(await res.json()).toEqual({ ok: true, name: 'Nakoda' })
   })
 
   it('rejects api calls without or with a wrong token (AC-F2)', async () => {
@@ -44,7 +44,7 @@ describe('createApp', () => {
   })
 
   it('serves the built ui with spa fallback', async () => {
-    const webRoot = mkdtempSync(join(tmpdir(), 'fitrah-web-'))
+    const webRoot = mkdtempSync(join(tmpdir(), 'nakoda-web-'))
     writeFileSync(join(webRoot, 'index.html'), '<div id="root"></div>')
     const app = createApp({ security, webRoot })
     expect(await (await app.request('/', { headers: host })).text()).toContain('root')

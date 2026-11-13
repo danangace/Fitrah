@@ -13,9 +13,9 @@ async function pick(page: Page, trigger: Locator, option: string) {
 }
 
 test('start, accounts, docs, workspace and chat (AC-B1 smoke)', async ({ page }) => {
-  // Start: the link from `fitrah start` carries the token; it becomes a cookie and leaves the URL.
+  // Start: the link from `nakoda start` carries the token; it becomes a cookie and leaves the URL.
   await page.goto(`/?token=${TOKEN}`)
-  await expect(page.locator('aside [title="Fitrah: Finance Iteration Tools, Review & Agent Hub"]')).toContainText('Fitrah')
+  await expect(page.locator(`aside [title="Nakoda: You're the captain, the agents are your crew"]`)).toContainText('Nakoda')
   await expect(page).not.toHaveURL(/token=/)
   await page.screenshot({ path: shot('1-home') })
 
@@ -36,7 +36,7 @@ test('start, accounts, docs, workspace and chat (AC-B1 smoke)', async ({ page })
   await expect(page.getByRole('heading', { name: 'Second note' })).toBeVisible()
 
   // Back to the main sidebar
-  await page.getByRole('button', { name: 'Back to Fitrah' }).click()
+  await page.getByRole('button', { name: 'Back to Nakoda' }).click()
 
   // Workspace: the small modal, Free chat, default agent → the first chat is ready
   await page.getByRole('button', { name: 'New workspace in repo', exact: true }).click()
@@ -109,11 +109,11 @@ test('a browser without the session sees how to connect', async ({ browser }) =>
   const context = await browser.newContext()
   const page = await context.newPage()
   await page.goto('/')
-  await expect(page.getByText("This browser isn't connected to Fitrah")).toBeVisible()
-  await expect(page.getByText('fitrah open --print', { exact: false })).toBeVisible()
+  await expect(page.getByText("This browser isn't connected to Nakoda")).toBeVisible()
+  await expect(page.getByText('nakoda open --print', { exact: false })).toBeVisible()
   // A wrong token does not connect either.
   await page.goto('/?token=wrong')
-  await expect(page.getByText("This browser isn't connected to Fitrah")).toBeVisible()
+  await expect(page.getByText("This browser isn't connected to Nakoda")).toBeVisible()
   await context.close()
 })
 

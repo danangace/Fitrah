@@ -12,7 +12,7 @@ import { fillInstructions } from '../workflows/service'
 export function workspaceContext(ws: Workspace, repo: Repo, settings: Settings, workflow: Workflow | null): string {
   const docsRoot = settings.docsRoot ? expandHome(settings.docsRoot) : null
   const lines = [
-    '# Fitrah workspace context',
+    '# Nakoda workspace context',
     `- Project: ${repo.name} (${repo.path})`,
     `- Worktree (your working directory): ${ws.worktreePath}`,
     `- Branch: ${ws.branch} (created from ${ws.base})`,

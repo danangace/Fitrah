@@ -1,7 +1,7 @@
 import { RefreshCw, Sparkles, UserCog } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import type { Account, UsageWindow } from '../../../shared/schemas'
-import { api } from '../../api/fitrah'
+import { api } from '../../api/nakoda'
 import { cn } from '../../lib/cn'
 import { formatReset, liveWindows, percent, timeAgo, usageTone, windowLabel } from '../../lib/usage'
 import { useAppEvents } from '../../store/events'
@@ -31,7 +31,7 @@ function AccountUsageCard({ account, now }: { account: Account; now: number }) {
         {account.usage && <span className="text-xs text-muted-foreground">Updated {timeAgo(account.usage.updatedAt, now)}</span>}
       </div>
       {windows.length === 0 ? (
-        <p className="text-[13px] text-muted-foreground">No usage yet. It shows up after this account's first message in Fitrah.</p>
+        <p className="text-[13px] text-muted-foreground">No usage yet. It shows up after this account's first message in Nakoda.</p>
       ) : (
         <div className="space-y-3">
           {windows.map((w) => (
@@ -52,7 +52,7 @@ function AccountUsageCard({ account, now }: { account: Account; now: number }) {
 
 /**
  * Bottom status bar with Claude quota, like Orca's / the Claude statusline. Numbers come from
- * what each chat turn reports; Fitrah never reads the login token.
+ * what each chat turn reports; Nakoda never reads the login token.
  */
 export function StatusBar() {
   const navigate = useRouter((s) => s.navigate)
@@ -75,7 +75,7 @@ export function StatusBar() {
         setNow(Date.now())
         toast.success('Usage refreshed', 'Showing the latest limits Claude reported.')
       },
-      () => toast.error('Could not refresh usage', 'The Fitrah runtime did not answer. Try again.'),
+      () => toast.error('Could not refresh usage', 'The Nakoda runtime did not answer. Try again.'),
     )
   const claude = accounts.filter((a) => a.agent === 'claude')
   const main = claude.find((a) => a.isDefault && a.usage) ?? claude.find((a) => a.usage) ?? claude.find((a) => a.isDefault)
@@ -113,7 +113,7 @@ export function StatusBar() {
           ))}
           {claude.length === 0 && <p className="text-[13px] text-muted-foreground">Attach a Claude account to see its usage.</p>}
         </div>
-        <p className="mt-2 text-xs text-muted-foreground/70">From the limits Claude reports with each message. Fitrah never reads your login token.</p>
+        <p className="mt-2 text-xs text-muted-foreground/70">From the limits Claude reports with each message. Nakoda never reads your login token.</p>
         <button
           type="button"
           onClick={() => {

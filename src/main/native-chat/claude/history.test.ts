@@ -6,7 +6,7 @@ import { readClaudeHistory } from './history'
 
 describe('readClaudeHistory', () => {
   it('rebuilds user, assistant and tool events from a transcript (AC-C7)', () => {
-    const configDir = mkdtempSync(join(tmpdir(), 'fitrah-claude-'))
+    const configDir = mkdtempSync(join(tmpdir(), 'nakoda-claude-'))
     const dir = join(configDir, 'projects', '-ws-repo-w')
     mkdirSync(dir, { recursive: true })
     const lines = [
@@ -27,6 +27,6 @@ describe('readClaudeHistory', () => {
   })
 
   it('returns nothing when the transcript is missing', () => {
-    expect(readClaudeHistory(mkdtempSync(join(tmpdir(), 'fitrah-claude-')), 'nope')).toEqual([])
+    expect(readClaudeHistory(mkdtempSync(join(tmpdir(), 'nakoda-claude-')), 'nope')).toEqual([])
   })
 })

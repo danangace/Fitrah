@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import type { Repo, Workspace } from '../../shared/schemas'
-import { api } from '../api/fitrah'
+import { api } from '../api/nakoda'
 
 type State = {
   workspaces: Workspace[]

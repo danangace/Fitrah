@@ -1,7 +1,7 @@
 import { Loader2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import type { Account, Settings, Workflow, WorkflowField } from '../../../shared/schemas'
-import { api } from '../../api/fitrah'
+import { api } from '../../api/nakoda'
 import { describeModel, useAccountModels } from '../../lib/account-models'
 import { docFolders } from '../../lib/docs-folders'
 import { errorText } from '../../lib/errors'
@@ -43,7 +43,7 @@ export function WorkflowFieldInput({
         aria-label={field.label}
         value={value}
         placeholder={placeholder}
-        list={field.type === 'docsFolder' ? 'fitrah-doc-folders' : undefined}
+        list={field.type === 'docsFolder' ? 'nakoda-doc-folders' : undefined}
         onChange={(e) => onChange(e.target.value)}
       />
     </Field>
@@ -166,7 +166,7 @@ export function CreateWorkspaceModal({ projectId, onClose }: { projectId?: strin
                     onChange={(v) => setValues((cur) => ({ ...cur, [f.key]: v }))}
                   />
                 ))}
-                <datalist id="fitrah-doc-folders">
+                <datalist id="nakoda-doc-folders">
                   {folders.map((f) => (
                     <option key={f} value={f} />
                   ))}

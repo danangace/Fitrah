@@ -4,9 +4,9 @@ import { parseRoute, routePath } from './route'
 describe('route', () => {
   it('parses each page', () => {
     expect(parseRoute('/')).toEqual({ name: 'home' })
-    expect(parseRoute('/docs/brainstorm/Design%20-%20Fitrah.md')).toEqual({
+    expect(parseRoute('/docs/brainstorm/Design%20-%20Nakoda.md')).toEqual({
       name: 'docs',
-      path: 'brainstorm/Design - Fitrah.md',
+      path: 'brainstorm/Design - Nakoda.md',
     })
     expect(parseRoute('/settings')).toEqual({ name: 'settings', section: 'general' })
     expect(parseRoute('/settings/accounts')).toEqual({ name: 'settings', section: 'accounts' })

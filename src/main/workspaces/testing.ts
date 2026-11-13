@@ -7,7 +7,7 @@ const run = (cwd: string, ...args: string[]) => execFileSync('git', args, { cwd,
 
 /** A repo with a real `origin` remote (bare) holding `main` and `dev/tribe-2`, like the monorepo. */
 export function makeRepoWithOrigin(): { repo: string; origin: string } {
-  const base = mkdtempSync(join(tmpdir(), 'fitrah-git-'))
+  const base = mkdtempSync(join(tmpdir(), 'nakoda-git-'))
   const origin = join(base, 'origin.git')
   const repo = join(base, 'repo')
   execFileSync('git', ['init', '-q', '--bare', '-b', 'main', origin])

@@ -1,7 +1,7 @@
 import { Check, ChevronDown, FilePen, Hand, Search, ShieldAlert, UserRound } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import type { Account, Chat, Effort, PermissionMode } from '../../../shared/schemas'
-import { api } from '../../api/fitrah'
+import { api } from '../../api/nakoda'
 import { configDirName } from '../../lib/accounts'
 import { describeModel, useAccountModels } from '../../lib/account-models'
 import { cn } from '../../lib/cn'

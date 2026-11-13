@@ -17,8 +17,8 @@ export function findTranscript(configDir: string, sessionId: string): string | n
 type Line = SdkLike & { isSidechain?: boolean; isMeta?: boolean; timestamp?: string }
 
 /**
- * Rebuild a chat's events from Claude's own transcript after a Fitrah restart (AC-C7).
- * Conversations are never copied into Fitrah; the transcript stays the source.
+ * Rebuild a chat's events from Claude's own transcript after a Nakoda restart (AC-C7).
+ * Conversations are never copied into Nakoda; the transcript stays the source.
  */
 export function readClaudeHistory(configDir: string, sessionId: string): AdapterEvent[] {
   const file = findTranscript(configDir, sessionId)

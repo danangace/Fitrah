@@ -1,8 +1,8 @@
 {
-  "name": "fitrah",
+  "name": "nakoda",
   "version": "0.1.0-beta",
   "private": true,
-  "description": "Fitrah: Finance Iteration Tools, Review & Agent Hub. A personal agent orchestrator for doc-driven development.",
+  "description": "Nakoda: you're the captain, the agents are your crew. A personal agent orchestrator for doc-driven engineering.",
   "license": "MIT",
   "type": "module",
   "engines": {
@@ -10,13 +10,13 @@
   },
   "packageManager": "pnpm@11.24.0",
   "scripts": {
-    "dev:runtime": "FITRAH_DEV=1 tsx watch src/main/index.ts",
+    "dev:runtime": "NAKODA_DEV=1 tsx watch src/main/index.ts",
     "dev:ui": "vite --config vite.web.config.ts",
     "build:ui": "vite build --config vite.web.config.ts",
     "typecheck": "tsc --noEmit",
     "lint": "oxlint",
     "test": "vitest run",
-    "fitrah": "tsx src/cli/fitrah.ts",
+    "nakoda": "tsx src/cli/nakoda.ts",
     "test:e2e": "playwright test"
   },
   "dependencies": {
@@ -54,6 +54,6 @@
     "vitest": "^5.1.0"
   },
   "bin": {
-    "fitrah": "./bin/fitrah.mjs"
+    "nakoda": "./bin/nakoda.mjs"
   }
 }

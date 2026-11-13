@@ -1,7 +1,7 @@
 import { Check, Pencil, RefreshCw, Star, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import type { Account, DetectedLogin } from '../../../shared/schemas'
-import { api } from '../../api/fitrah'
+import { api } from '../../api/nakoda'
 import { configDirName } from '../../lib/accounts'
 import { cn } from '../../lib/cn'
 import { errorText } from '../../lib/errors'
@@ -29,7 +29,7 @@ function AccountRow({ account, onChange, onError }: { account: Account; onChange
     const managed = account.kind === 'managed'
     const ok = await confirm({
       title: managed ? `Sign out ${account.label}?` : `Forget ${account.label}?`,
-      description: managed ? 'This signs out and deletes the Fitrah-managed login folder.' : 'Your login folder is not touched.',
+      description: managed ? 'This signs out and deletes the Nakoda-managed login folder.' : 'Your login folder is not touched.',
       confirmLabel: managed ? 'Sign out' : 'Forget',
       destructive: true,
     })

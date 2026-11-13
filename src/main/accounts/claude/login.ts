@@ -28,7 +28,7 @@ const LINK_RE = /https:\/\/(?:claude\.(?:ai|com)|platform\.claude\.com|console\.
 
 export type SpawnLogin = (configDir: string) => ChildProcess
 
-/** `claude auth login --claudeai` in a fresh Fitrah-managed folder (checked 2026-11-11: works without a TTY). */
+/** `claude auth login --claudeai` in a fresh Nakoda-managed folder (checked 2026-11-11: works without a TTY). */
 export const spawnClaudeLogin: SpawnLogin = (configDir) =>
   spawn('claude', ['auth', 'login', '--claudeai'], { env: claudeEnv(configDir), stdio: ['pipe', 'pipe', 'pipe'] })
 

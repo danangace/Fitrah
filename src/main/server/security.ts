@@ -4,8 +4,8 @@ import { join } from 'node:path'
 import type { MiddlewareHandler } from 'hono'
 import { getCookie } from 'hono/cookie'
 
-export const TOKEN_HEADER = 'x-fitrah-token'
-export const TOKEN_COOKIE = 'fitrah_token'
+export const TOKEN_HEADER = 'x-nakoda-token'
+export const TOKEN_COOKIE = 'nakoda_token'
 
 export type SecurityConfig = {
   token: string

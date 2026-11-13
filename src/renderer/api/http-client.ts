@@ -39,7 +39,7 @@ export async function request<S extends z.ZodType>(
 }
 
 /**
- * First load: `fitrah start` opens `/?token=…`. Exchange it once for the HttpOnly session
+ * First load: `nakoda start` opens `/?token=…`. Exchange it once for the HttpOnly session
  * cookie, then remove it from the address bar.
  */
 export async function bootstrapSession(
@@ -53,7 +53,7 @@ export async function bootstrapSession(
   const res = await fetchImpl(API.session, {
     method: 'POST',
     credentials: 'same-origin',
-    headers: { 'x-fitrah-token': token },
+    headers: { 'x-nakoda-token': token },
   })
   if (!res.ok) throw new ApiError(res.status, 'session_failed')
   url.searchParams.delete('token')

@@ -17,7 +17,7 @@ export function sortWindows(windows: UsageWindow[]): UsageWindow[] {
 }
 
 /**
- * Fitrah only learns usage from what Claude reports with a message, so a snapshot can outlive its
+ * Nakoda only learns usage from what Claude reports with a message, so a snapshot can outlive its
  * window. Once a window's reset time has passed it is back to 0% (the next reset is unknown until
  * the next message), instead of showing the old number.
  */

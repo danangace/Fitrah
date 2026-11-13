@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { type DocFile, api } from '../api/fitrah'
+import { type DocFile, api } from '../api/nakoda'
 import { Markdown } from '../components/docs-browser/Markdown'
 import { Notice } from '../components/ui/Field'
 import { errorText } from '../lib/errors'

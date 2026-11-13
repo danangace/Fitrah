@@ -1,13 +1,13 @@
 import { ArrowUp, Folder, GitBranch, Home } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { type DirListing, api } from '../../api/fitrah'
+import { type DirListing, api } from '../../api/nakoda'
 import { cn } from '../../lib/cn'
 import { errorText } from '../../lib/errors'
 import { Checkbox } from '../ui/Checkbox'
 import { Notice } from '../ui/Field'
 
 /**
- * Fitrah's own folder picker (a web page can't open the Mac one and get a path). The runtime
+ * Nakoda's own folder picker (a web page can't open the Mac one and get a path). The runtime
  * lists folders; you click into them and pick one.
  */
 export function FolderBrowser({

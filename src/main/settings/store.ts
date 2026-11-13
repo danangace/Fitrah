@@ -12,7 +12,7 @@ export const DEFAULT_SETTINGS: Settings = {
     { label: 'Open Questions', template: 'frontend/modules/{iteration}/{module}/Open Questions.md' },
     { label: 'Plan', template: 'plans/{yyyy-mm}/{iteration}/{feature}/{feature}.md' },
   ],
-  workspacesDir: '~/fitrah/workspaces',
+  workspacesDir: '~/nakoda/workspaces',
   models: { claude: { list: ['sonnet', 'opus', 'haiku'], default: 'sonnet' } },
   openIn: { kind: 'default' },
 }
@@ -98,7 +98,7 @@ export function getRepo(db: Db, id: string): Repo {
   return toRepo(row)
 }
 
-/** Repo settings live in Fitrah's DB; nothing is written into the repo itself (OQ-16, AC-S4). */
+/** Repo settings live in Nakoda's DB; nothing is written into the repo itself (OQ-16, AC-S4). */
 export async function addRepo(db: Db, input: unknown): Promise<Repo> {
   const parsed = RepoInput.safeParse(input)
   if (!parsed.success) throw new UserError('invalid_repo', parsed.error.issues[0]?.message ?? 'Invalid repo')

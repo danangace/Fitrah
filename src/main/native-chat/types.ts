@@ -23,7 +23,7 @@ export type TurnOptions = {
   prompt: string
   /** Workspace facts (PRD, Figma, iteration, module, branch…) added to the agent's system prompt. */
   context: string
-  /** Every adapter event, already translated to Fitrah's event model. */
+  /** Every adapter event, already translated to Nakoda's event model. */
   onEvent: (event: AdapterEvent) => void
   /** Called for each tool use the agent asks permission for. */
   onToolRequest: (request: ToolRequest) => Promise<ApprovalAnswer>
@@ -38,7 +38,7 @@ export type Turn = {
 
 /**
  * One adapter per agent (Codex-ready seam, Design §7.3). Only adapters import an agent SDK;
- * the rest of Fitrah, and the whole UI, only sees Fitrah chat events.
+ * the rest of Nakoda, and the whole UI, only sees Nakoda chat events.
  */
 export type AgentAdapter = {
   agent: AgentId

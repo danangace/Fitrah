@@ -6,7 +6,7 @@ import { listChromeProfiles, openCommand } from './browsers'
 
 describe('browsers', () => {
   it('lists Chrome profiles from Local State', () => {
-    const home = mkdtempSync(join(tmpdir(), 'fitrah-home-'))
+    const home = mkdtempSync(join(tmpdir(), 'nakoda-home-'))
     const dir = join(home, 'Library', 'Application Support', 'Google', 'Chrome')
     mkdirSync(dir, { recursive: true })
     writeFileSync(join(dir, 'Local State'), JSON.stringify({ profile: { info_cache: { Default: { name: 'Work' }, 'Profile 1': { name: 'Me' } } } }))
@@ -14,7 +14,7 @@ describe('browsers', () => {
       { dir: 'Default', name: 'Work' },
       { dir: 'Profile 1', name: 'Me' },
     ])
-    expect(listChromeProfiles(mkdtempSync(join(tmpdir(), 'fitrah-empty-')))).toEqual([])
+    expect(listChromeProfiles(mkdtempSync(join(tmpdir(), 'nakoda-empty-')))).toEqual([])
   })
 
   it('opens a chosen Chrome profile on macOS, else the default browser', () => {

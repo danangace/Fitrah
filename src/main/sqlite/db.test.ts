@@ -11,7 +11,7 @@ const tables = (db: ReturnType<typeof openDb>) =>
 
 describe('openDb', () => {
   it('creates the file with every table (AC-F3)', () => {
-    const file = join(mkdtempSync(join(tmpdir(), 'fitrah-db-')), 'nested', 'fitrah.db')
+    const file = join(mkdtempSync(join(tmpdir(), 'nakoda-db-')), 'nested', 'nakoda.db')
     const db = openDb(file)
     expect(tables(db)).toEqual(
       expect.arrayContaining(['accounts', 'approvals', 'chats', 'repos', 'schema_migrations', 'settings', 'workspaces']),

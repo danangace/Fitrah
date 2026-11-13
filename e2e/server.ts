@@ -20,8 +20,8 @@ import { makeRepoWithOrigin } from '../src/main/workspaces/testing'
 export const E2E_PORT = 4398
 export const E2E_TOKEN = 'e'.repeat(64)
 
-const home = mkdtempSync(join(tmpdir(), 'fitrah-e2e-'))
-process.env.FITRAH_HOME = join(home, '.fitrah')
+const home = mkdtempSync(join(tmpdir(), 'nakoda-e2e-'))
+process.env.NAKODA_HOME = join(home, '.nakoda')
 
 const vault = join(home, 'vault')
 mkdirSync(join(vault, 'notes'), { recursive: true })

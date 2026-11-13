@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { parseArgs } from 'node:util'
 import { APP_INFO, appTitle } from '../shared/app-info'
-import { DEFAULT_PORT, HOST, WEB_ROOT, fitrahHome } from '../main/config'
+import { DEFAULT_PORT, HOST, WEB_ROOT, databaseFile, envSetting, nakodaHome } from '../main/config'
 import { startRuntime } from '../main/index'
 import { getSettings } from '../main/settings/store'
 import { openDb } from '../main/sqlite/db'
@@ -12,7 +12,7 @@ const USAGE = `${appTitle()}
 
 Usage:
   ${APP_INFO.cli} start [--port <n>] [--no-open]   start the runtime and open the UI
-  ${APP_INFO.cli} open [--port <n>] [--print]      open the UI of a running Fitrah (browser / profile from Settings)
+  ${APP_INFO.cli} open [--port <n>] [--print]      open the UI of a running Nakoda (browser / profile from Settings)
                                               (--print: only print the link, e.g. for another browser)
   ${APP_INFO.cli} help
 `
@@ -42,28 +42,28 @@ async function start(port: number | undefined, open: boolean): Promise<void> {
   process.on('SIGTERM', stop)
 }
 
-/** Open (or print) the link with the session token for an already running Fitrah. */
+/** Open (or print) the link with the session token for an already running Nakoda. */
 async function openUi(port: number, printOnly: boolean): Promise<void> {
   const url = `http://${HOST}:${port}`
   const running = await fetch(`${url}/api/health`).then((r) => r.ok, () => false)
   if (!running) {
-    console.error(`Fitrah is not running on ${url}. Start it with: ${APP_INFO.cli} start`)
+    console.error(`Nakoda is not running on ${url}. Start it with: ${APP_INFO.cli} start`)
     process.exitCode = 1
     return
   }
-  const tokenFile = join(fitrahHome(), 'token')
+  const tokenFile = join(nakodaHome(), 'token')
   if (!existsSync(tokenFile)) {
-    console.error(`No session token at ${tokenFile}. Start Fitrah once with: ${APP_INFO.cli} start`)
+    console.error(`No session token at ${tokenFile}. Start Nakoda once with: ${APP_INFO.cli} start`)
     process.exitCode = 1
     return
   }
   const link = `${url}/?token=${readFileSync(tokenFile, 'utf8').trim()}`
   if (printOnly) {
     console.info(link)
-    console.info('Keep this link private: it gives full access to your Fitrah.')
+    console.info('Keep this link private: it gives full access to your Nakoda.')
     return
   }
-  const db = openDb(join(fitrahHome(), 'fitrah.db'))
+  const db = openDb(databaseFile())
   const openIn = getSettings(db).openIn
   db.close()
   openUrl(link, openIn)
@@ -84,7 +84,7 @@ switch (positionals[0]) {
     await start(values.port ? Number(values.port) : undefined, !values['no-open'])
     break
   case 'open':
-    await openUi(values.port ? Number(values.port) : Number(process.env.FITRAH_PORT ?? DEFAULT_PORT), values.print)
+    await openUi(values.port ? Number(values.port) : Number(envSetting('PORT') ?? DEFAULT_PORT), values.print)
     break
   default:
     console.info(USAGE)

@@ -2,7 +2,7 @@ import { Plus, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { BUILTIN_PLACEHOLDERS } from '../../../shared/doc-paths'
 import type { DocPath, Settings } from '../../../shared/schemas'
-import { api } from '../../api/fitrah'
+import { api } from '../../api/nakoda'
 import { errorText } from '../../lib/errors'
 import { Button } from '../ui/Button'
 import { toast } from '../../store/toast'
@@ -100,11 +100,11 @@ export function GeneralSettings() {
         />
       </Field>
       <Field
-        label="Open Fitrah in"
-        hint="Used by `fitrah start` and `fitrah open`. Pick the Chrome profile you work in, so its login stays there."
+        label="Open Nakoda in"
+        hint="Used by `nakoda start` and `nakoda open`. Pick the Chrome profile you work in, so its login stays there."
       >
         <Select
-          aria-label="Open Fitrah in"
+          aria-label="Open Nakoda in"
           value={settings.openIn.kind === 'chrome' ? `chrome:${settings.openIn.profile}` : 'default'}
           onValueChange={(v) => set({ openIn: v === 'default' ? { kind: 'default' } : { kind: 'chrome', profile: v.slice('chrome:'.length) } })}
           options={[{ value: 'default', label: 'Default browser' }, ...profiles.map((p) => ({ value: `chrome:${p.dir}`, label: `Chrome · ${p.name}` }))]}

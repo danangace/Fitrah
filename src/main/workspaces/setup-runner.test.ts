@@ -10,13 +10,13 @@ import { createWorkspace, getWorkspace } from './service'
 import { SetupRunner } from './setup-runner'
 import { makeRepoWithOrigin } from './testing'
 
-beforeEach(() => vi.stubEnv('FITRAH_HOME', mkdtempSync(join(tmpdir(), 'fitrah-home-'))))
+beforeEach(() => vi.stubEnv('NAKODA_HOME', mkdtempSync(join(tmpdir(), 'nakoda-home-'))))
 afterEach(() => vi.unstubAllEnvs())
 
 async function workspaceWith(script: string) {
   const db = openDb(':memory:')
   const { repo } = makeRepoWithOrigin()
-  saveSettings(db, { ...DEFAULT_SETTINGS, workspacesDir: mkdtempSync(join(tmpdir(), 'fitrah-ws-')) })
+  saveSettings(db, { ...DEFAULT_SETTINGS, workspacesDir: mkdtempSync(join(tmpdir(), 'nakoda-ws-')) })
   const r = await addRepo(db, { path: repo, featureBase: 'origin/dev/tribe-2', setupScript: script })
   const ws = await createWorkspace(db, { repoId: r.id, name: 'w', base: 'origin/dev/tribe-2' })
   const bus = new EventBus()

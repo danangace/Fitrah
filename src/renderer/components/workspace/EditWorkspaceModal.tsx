@@ -1,7 +1,7 @@
 import { Loader2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { Workflow, Workspace } from '../../../shared/schemas'
-import { api } from '../../api/fitrah'
+import { api } from '../../api/nakoda'
 import { docFolders } from '../../lib/docs-folders'
 import { errorText } from '../../lib/errors'
 import { toast } from '../../store/toast'
@@ -94,7 +94,7 @@ export function EditWorkspaceModal({ workspace, onClose, onSaved }: { workspace:
               />
             ))}
             {hasBranchField && <p className="text-xs text-muted-foreground">The base branch only applied when the workspace was created.</p>}
-            <datalist id="fitrah-doc-folders">
+            <datalist id="nakoda-doc-folders">
               {folders.map((f) => (
                 <option key={f} value={f} />
               ))}

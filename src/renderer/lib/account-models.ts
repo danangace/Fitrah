@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { ModelOption } from '../../shared/schemas'
-import { api } from '../api/fitrah'
+import { api } from '../api/nakoda'
 import { modelInfo } from './models'
 
 // One request per account per page load; the runtime keeps the list in its DB.

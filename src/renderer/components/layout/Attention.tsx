@@ -1,7 +1,7 @@
 import { Bell, TriangleAlert } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { Account } from '../../../shared/schemas'
-import { api } from '../../api/fitrah'
+import { api } from '../../api/nakoda'
 import { notificationFor } from '../../lib/notify'
 import { useAppEvents } from '../../store/events'
 import { useRouter } from '../../store/router'
@@ -16,7 +16,7 @@ export function WorkspaceNotifier() {
     const body = notificationFor(e.status, document.hidden)
     if (!body) return
     const ws = useWorkspaces.getState().workspaces.find((w) => w.id === e.workspaceId)
-    const n = new Notification(`Fitrah · ${ws?.name ?? 'workspace'}`, { body, tag: e.workspaceId })
+    const n = new Notification(`Nakoda · ${ws?.name ?? 'workspace'}`, { body, tag: e.workspaceId })
     n.addEventListener('click', () => {
       window.focus()
       navigate({ name: 'workspace', id: e.workspaceId })

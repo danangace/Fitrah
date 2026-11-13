@@ -11,7 +11,7 @@ import { DocsWatcher } from './watch'
 
 describe('DocsWatcher', () => {
   it('emits docs.changed when a note is saved (AC-D6)', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'fitrah-vault-'))
+    const root = mkdtempSync(join(tmpdir(), 'nakoda-vault-'))
     writeFileSync(join(root, 'note.md'), '# v1')
     const db = openDb(':memory:')
     saveSettings(db, { ...DEFAULT_SETTINGS, docsRoot: root })

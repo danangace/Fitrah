@@ -9,7 +9,7 @@ export default defineConfig({
   root: resolve(import.meta.dirname, 'src/renderer'),
   plugins: [react(), tailwindcss()],
   server: {
-    // Dev: the UI runs on Vite (5173) and proxies the runtime (start it with FITRAH_DEV=1).
+    // Dev: the UI runs on Vite (5173) and proxies the runtime (start it with NAKODA_DEV=1).
     proxy: {
       '/api': 'http://127.0.0.1:4317',
       '/ws': { target: 'ws://127.0.0.1:4317', ws: true },

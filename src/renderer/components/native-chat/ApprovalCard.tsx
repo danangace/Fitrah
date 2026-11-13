@@ -1,6 +1,6 @@
 import { ShieldAlert, ShieldCheck, ShieldX } from 'lucide-react'
 import { useState } from 'react'
-import { api } from '../../api/fitrah'
+import { api } from '../../api/nakoda'
 import { errorText } from '../../lib/errors'
 import type { ApprovalItem } from '../../lib/transcript'
 import { Button } from '../ui/Button'

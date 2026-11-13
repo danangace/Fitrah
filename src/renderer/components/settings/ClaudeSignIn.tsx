@@ -1,13 +1,13 @@
 import { Copy, ExternalLink } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { type LoginView, api } from '../../api/fitrah'
+import { type LoginView, api } from '../../api/nakoda'
 import { errorText } from '../../lib/errors'
 import { Button } from '../ui/Button'
 import { Field, Input, Notice } from '../ui/Field'
 
 const ACTIVE = new Set(['starting', 'waiting_for_user'])
 
-/** Sign in a new Claude account (claude.ai subscription) without leaving Fitrah. */
+/** Sign in a new Claude account (claude.ai subscription) without leaving Nakoda. */
 export function ClaudeSignIn({ onDone }: { onDone: () => void }) {
   const [label, setLabel] = useState('')
   const [code, setCode] = useState('')

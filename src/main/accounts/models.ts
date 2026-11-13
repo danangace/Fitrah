@@ -10,7 +10,7 @@ export type ModelLister = Partial<Record<AgentId, (configDir: string) => Promise
 const key = (accountId: string) => `models:${accountId}`
 
 /**
- * The models each account may use, asked from the agent once and kept in Fitrah's DB (so the
+ * The models each account may use, asked from the agent once and kept in Nakoda's DB (so the
  * settings page and the chat picker are instant after a restart). `refresh` asks again, e.g.
  * after a new model ships or the plan changes. Concurrent asks for one account share one call.
  */

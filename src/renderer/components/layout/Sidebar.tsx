@@ -82,12 +82,12 @@ export function Sidebar({ workspaces }: { workspaces?: ReactNode }) {
         }}
         className="absolute inset-y-0 -right-1 z-10 w-2 cursor-col-resize hover:bg-foreground/10"
       />
-      <div className="flex flex-col items-start gap-1.5 px-4 pt-4 pb-3 text-left" title={`${APP_INFO.name}: ${APP_INFO.acronym}`}>
+      <div className="flex flex-col items-start gap-1.5 px-4 pt-4 pb-3 text-left" title={`${APP_INFO.name}: ${APP_INFO.tagline}`}>
         <div className="flex items-center justify-start gap-2">
-          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary text-sm font-bold text-primary-foreground">F</span>
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary text-sm font-bold text-primary-foreground">{APP_INFO.name.charAt(0)}</span>
           <span className="text-base font-semibold tracking-tight text-foreground">{APP_INFO.name}</span>
         </div>
-        <div className="text-[11px] leading-tight text-muted-foreground">{APP_INFO.acronym}</div>
+        <div className="text-[11px] leading-tight text-muted-foreground">{APP_INFO.tagline}</div>
       </div>
       {route.name === 'docs' ? (
         <DocsSidebar path={route.path} />

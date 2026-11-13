@@ -11,7 +11,7 @@ import { gitOut, makeRepoWithOrigin } from './testing'
 async function setup(setupScript = '') {
   const db = openDb(':memory:')
   const { repo, origin } = makeRepoWithOrigin()
-  const workspacesDir = mkdtempSync(join(tmpdir(), 'fitrah-ws-'))
+  const workspacesDir = mkdtempSync(join(tmpdir(), 'nakoda-ws-'))
   saveSettings(db, { ...DEFAULT_SETTINGS, workspacesDir })
   const r = await addRepo(db, { path: repo, featureBase: 'origin/dev/tribe-2', branchPrefix: 'feat/tribe-2/', setupScript })
   return { db, repo, origin, repoId: r.id, workspacesDir }
@@ -42,7 +42,7 @@ describe('createWorkspace', () => {
   it('creates a free-chat worktree: prefix + name, from the fetched project base', async () => {
     const { db, repo, origin, repoId, workspacesDir } = await setup()
     // A newer commit lands on origin after the clone: the workspace must start from it.
-    const other = join(mkdtempSync(join(tmpdir(), 'fitrah-other-')), 'c')
+    const other = join(mkdtempSync(join(tmpdir(), 'nakoda-other-')), 'c')
     execFileSync('git', ['clone', '-q', '-b', 'dev/tribe-2', origin, other], { stdio: 'pipe' })
     writeFileSync(join(other, 'new.txt'), 'x')
     execFileSync('git', ['add', '.'], { cwd: other })

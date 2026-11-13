@@ -8,8 +8,8 @@ import { insertAccount, listAccounts } from './service'
 
 let home: string
 beforeEach(() => {
-  home = mkdtempSync(join(tmpdir(), 'fitrah-home-'))
-  vi.stubEnv('FITRAH_HOME', join(home, '.fitrah'))
+  home = mkdtempSync(join(tmpdir(), 'nakoda-home-'))
+  vi.stubEnv('NAKODA_HOME', join(home, '.nakoda'))
   vi.stubEnv('CLAUDE_CONFIG_DIR', '')
 })
 afterEach(() => vi.unstubAllEnvs())
@@ -41,7 +41,7 @@ describe('removeAccount', () => {
     expect(listAccounts(db)).toEqual([])
   })
 
-  it('signs out and deletes a managed folder inside fitrah accounts (AC-A4)', async () => {
+  it('signs out and deletes a managed folder inside nakoda accounts (AC-A4)', async () => {
     const dir = join(managedAccountsRoot(), 'claude', 'x')
     mkdirSync(dir, { recursive: true })
     const db = openDb(':memory:')
@@ -52,7 +52,7 @@ describe('removeAccount', () => {
     expect(existsSync(dir)).toBe(false)
   })
 
-  it('refuses to delete a managed folder outside fitrah accounts', async () => {
+  it('refuses to delete a managed folder outside nakoda accounts', async () => {
     const dir = join(home, 'precious')
     mkdirSync(dir)
     const db = openDb(':memory:')

@@ -33,7 +33,7 @@ describe('bootstrapSession', () => {
     const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(200, { ok: true }))
     const replaceState = vi.fn()
     await bootstrapSession({ href: 'http://127.0.0.1:4317/docs?token=abc&x=1' }, { replaceState }, fetchImpl)
-    expect(fetchImpl).toHaveBeenCalledWith('/api/session', expect.objectContaining({ headers: { 'x-fitrah-token': 'abc' } }))
+    expect(fetchImpl).toHaveBeenCalledWith('/api/session', expect.objectContaining({ headers: { 'x-nakoda-token': 'abc' } }))
     expect(replaceState).toHaveBeenCalledWith(null, '', '/docs?x=1')
   })
 

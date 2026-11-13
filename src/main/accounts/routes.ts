@@ -13,7 +13,7 @@ const AttachBody = z.object({ agent: AgentId, configDir: z.string().min(1), labe
 
 export function registerAccountRoutes(app: Hono, db: Db, catalogs: ModelCatalogs): void {
   const logins = new ClaudeLoginManager(db)
-  // Sign in a new Claude account (managed folder under ~/.fitrah/accounts).
+  // Sign in a new Claude account (managed folder under ~/.nakoda/accounts).
   app.post(`${API.accounts}/login`, async (c) => {
     const body = z.object({ label: z.string().min(1) }).safeParse(await c.req.json())
     if (!body.success) throw new UserError('invalid_label', 'Give the account a label')

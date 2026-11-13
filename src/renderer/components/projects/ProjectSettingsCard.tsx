@@ -1,7 +1,7 @@
 import { Check, Loader2, Trash2 } from 'lucide-react'
 import { type ReactNode, useEffect, useState } from 'react'
 import type { Repo } from '../../../shared/schemas'
-import { api } from '../../api/fitrah'
+import { api } from '../../api/nakoda'
 import { useWorkspaces } from '../../store/workspaces'
 import { cn } from '../../lib/cn'
 import { errorText } from '../../lib/errors'
@@ -24,7 +24,7 @@ function Badge({ tone, children }: { tone: 'ok' | 'warn' | 'muted' | 'info'; chi
   return <span className={cn('rounded px-1.5 py-0.5 text-xs', tones[tone])}>{children}</span>
 }
 
-/** Project settings: base, branch prefix, setup / archive scripts (D-14). Stored in Fitrah, never in the repo. */
+/** Project settings: base, branch prefix, setup / archive scripts (D-14). Stored in Nakoda, never in the repo. */
 export function ProjectSettingsCard({ repo, onChange }: { repo: Repo; onChange: () => void }) {
   const [form, setForm] = useState<RepoForm>(formFromRepo(repo))
   const [saving, setSaving] = useState(false)
@@ -59,7 +59,7 @@ export function ProjectSettingsCard({ repo, onChange }: { repo: Repo; onChange: 
   const remove = async () => {
     const ok = await confirm({
       title: `Remove ${repo.name}?`,
-      description: 'It is removed from Fitrah only. The folder itself is not touched.',
+      description: 'It is removed from Nakoda only. The folder itself is not touched.',
       confirmLabel: 'Remove',
       destructive: true,
     })

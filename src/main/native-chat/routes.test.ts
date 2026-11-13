@@ -35,14 +35,14 @@ describe('chat routes', () => {
     })
     expect(deniedResult).toBe(401)
 
-    const ws = new WebSocket(`ws://127.0.0.1:${port}/ws/chat`, { headers: { 'x-fitrah-token': token } })
+    const ws = new WebSocket(`ws://127.0.0.1:${port}/ws/chat`, { headers: { 'x-nakoda-token': token } })
     const received: ChatEvent[] = []
     ws.on('message', (data) => received.push(JSON.parse(String(data)) as ChatEvent))
     await new Promise((r) => ws.on('open', r))
 
     const res = await fetch(`${base}/api/chats/${chat.id}/messages`, {
       method: 'POST',
-      headers: { 'x-fitrah-token': token, 'content-type': 'application/json' },
+      headers: { 'x-nakoda-token': token, 'content-type': 'application/json' },
       body: JSON.stringify({ text: 'hi' }),
     })
     expect(res.status).toBe(202)

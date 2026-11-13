@@ -1,6 +1,6 @@
 import { ChevronRight, FolderOpen, Globe, Loader2, Plus } from 'lucide-react'
 import { useState } from 'react'
-import { type Inspection, api } from '../../api/fitrah'
+import { type Inspection, api } from '../../api/nakoda'
 import { errorText } from '../../lib/errors'
 import { useRouter } from '../../store/router'
 import { useWorkspaces } from '../../store/workspaces'

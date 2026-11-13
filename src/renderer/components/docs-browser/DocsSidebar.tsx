@@ -1,7 +1,7 @@
 import { ArrowLeft } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import type { DocNodeT } from '../../../shared/schemas'
-import { api } from '../../api/fitrah'
+import { api } from '../../api/nakoda'
 import { errorText } from '../../lib/errors'
 import { useAppEvents } from '../../store/events'
 import { useRouter } from '../../store/router'
@@ -37,7 +37,7 @@ export function DocsSidebar({ path }: { path: string }) {
           className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm font-medium text-foreground/70 transition-colors hover:bg-foreground/5 hover:text-foreground"
         >
           <ArrowLeft className="size-4 shrink-0" />
-          <span>Back to Fitrah</span>
+          <span>Back to Nakoda</span>
         </button>
       </div>
       <div className="mt-2 flex h-8 items-center px-2">

@@ -1,7 +1,7 @@
 import { Loader2, RefreshCw, Star } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import type { Account, ModelCatalog, ModelOption, Settings } from '../../../shared/schemas'
-import { api } from '../../api/fitrah'
+import { api } from '../../api/nakoda'
 import { accountName } from '../../lib/accounts'
 import { cn } from '../../lib/cn'
 import { errorText } from '../../lib/errors'

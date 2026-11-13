@@ -6,7 +6,7 @@ import { loadOrCreateToken, localHosts, tokenMatches } from './security'
 
 describe('security', () => {
   it('creates a 600 token file once and reuses it', () => {
-    const home = mkdtempSync(join(tmpdir(), 'fitrah-home-'))
+    const home = mkdtempSync(join(tmpdir(), 'nakoda-home-'))
     const first = loadOrCreateToken(home)
     expect(first).toMatch(/^[0-9a-f]{64}$/)
     expect(statSync(join(home, 'token')).mode & 0o777).toBe(0o600)

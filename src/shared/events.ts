@@ -2,7 +2,7 @@ import { z } from 'zod/v4'
 import { AccountUsage, ChatStatus, UsageWindow, WorkspaceStatus } from './schemas'
 
 /**
- * Fitrah's own chat events. The UI only understands these; each agent adapter translates its
+ * Nakoda's own chat events. The UI only understands these; each agent adapter translates its
  * SDK messages into them (Codex-ready seam, Design §7.3). Nothing in the UI imports an agent SDK.
  */
 export const ChatEvent = z.discriminatedUnion('type', [

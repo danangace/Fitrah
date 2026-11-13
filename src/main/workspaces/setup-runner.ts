@@ -1,13 +1,13 @@
 import { spawn } from 'node:child_process'
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { fitrahHome } from '../config'
+import { nakodaHome } from '../config'
 import type { EventBus } from '../events/bus'
 import { getRepo } from '../settings/store'
 import type { Db } from '../sqlite/db'
 import { getWorkspace, setSetupStatus } from './service'
 
-const logFile = (workspaceId: string) => join(fitrahHome(), 'logs', `${workspaceId}-setup.log`)
+const logFile = (workspaceId: string) => join(nakodaHome(), 'logs', `${workspaceId}-setup.log`)
 
 /** Runs the repo's setup script inside a new worktree and streams its output (AC-W3). */
 export class SetupRunner {
@@ -24,7 +24,7 @@ export class SetupRunner {
       return Promise.resolve('skipped')
     }
     const file = logFile(workspaceId)
-    mkdirSync(join(fitrahHome(), 'logs'), { recursive: true })
+    mkdirSync(join(nakodaHome(), 'logs'), { recursive: true })
     writeFileSync(file, `$ ${script}\n`)
     setSetupStatus(this.db, workspaceId, 'running')
     const emit = (line: string, done = false) => {

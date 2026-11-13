@@ -39,9 +39,9 @@ describe('approvalRule', () => {
   })
 
   it('treats a symlinked path to the worktree as inside (macOS /var → /private/var)', () => {
-    const real = mkdtempSync(join(tmpdir(), 'fitrah-real-'))
+    const real = mkdtempSync(join(tmpdir(), 'nakoda-real-'))
     mkdirSync(join(real, 'wt'))
-    const link = join(mkdtempSync(join(tmpdir(), 'fitrah-link-')), 'l')
+    const link = join(mkdtempSync(join(tmpdir(), 'nakoda-link-')), 'l')
     symlinkSync(real, link)
     expect(isInside(join(link, 'wt'), join(real, 'wt', 'README.md'))).toBe(true)
     expect(isInside(join(real, 'wt'), join(link, 'wt', 'new', 'file.ts'))).toBe(true)
