@@ -169,6 +169,7 @@ export class HelixClient {
       kind: ticketKind(type),
       type,
       status: str(r.status) ?? '',
+      statusCategory: str(r.status_category),
       priority: str(r.priority),
       board: str(r.board_name),
       iteration: str(r.milestone_name),

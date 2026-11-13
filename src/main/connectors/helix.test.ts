@@ -133,8 +133,11 @@ describe('HelixClient', () => {
     const kids = await helix.children('T2-3252')
     expect(kids.map((k) => [k.key, k.type, k.kind, k.status])).toEqual([
       ['T2-3274', 'subtask', 'task', 'done'],
+      ['T2-3275', 'subtask', 'task', 'open'],
       ['T2-3391', 'defect', 'defect', 'in_progress'],
     ])
+    // Subtasks have their own statuses (open, not to_do); the shared category is kept for filtering.
+    expect(kids.map((k) => k.statusCategory)).toEqual(['done', 'todo', 'in_progress'])
     expect(kids[0]?.url).toBe('https://helix.test/tickets/T2-3274')
     await expect(helix.children('../x')).rejects.toMatchObject({ code: 'invalid_ticket_key' })
   })
@@ -145,10 +148,10 @@ describe('HelixClient', () => {
     expect(t).toMatchObject({ key: 'T2-3252', kind: 'task', iterationName: 'Iteration 14b', iteration: 'i-14b', board: 'TRIBE 2' })
     expect(t.prdLinks).toEqual(['https://docs.example.test/prd-1', 'https://docs.example.test/prd-2'])
     expect(t.figmaLinks).toEqual(['https://www.figma.com/design/abc/invoices'])
-    expect(t.children.map((c) => c.key)).toEqual(['T2-3274', 'T2-3391'])
+    expect(t.children.map((c) => c.key)).toEqual(['T2-3274', 'T2-3275', 'T2-3391'])
     expect(t.description).toBe(
       '## Objective\n\nLet finance manage invoices\n\n## Scope\n\nList\n\nDetail\n\n## Acceptance criteria\n\nTotals match\n\n' +
-        '## Subtasks (2)\n\n- [T2-3274](https://helix.test/tickets/T2-3274) · subtask · done — [FE] Invoice list\n- [T2-3391](https://helix.test/tickets/T2-3391) · defect · in_progress — Total ignores discount',
+        '## Subtasks (3)\n\n- [T2-3274](https://helix.test/tickets/T2-3274) · subtask · done — [FE] Invoice list\n- [T2-3275](https://helix.test/tickets/T2-3275) · subtask · open — [BE] Invoice export\n- [T2-3391](https://helix.test/tickets/T2-3391) · defect · in_progress — Total ignores discount',
     )
   })
 

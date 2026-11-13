@@ -41,8 +41,9 @@ export const STORY = {
     scope: doc('List', 'Detail'),
     acceptance_criteria: doc('Totals match'),
     children: [
-      { ticket_key: 'T2-3274', type: 'subtask', title: '[FE] Invoice list', status: 'done', archived: false },
-      { ticket_key: 'T2-3391', type: 'defect', title: 'Total ignores discount', status: 'in_progress', archived: false },
+      { ticket_key: 'T2-3274', type: 'subtask', title: '[FE] Invoice list', status: 'done', status_category: 'done', archived: false },
+      { ticket_key: 'T2-3275', type: 'subtask', title: '[BE] Invoice export', status: 'open', status_category: 'todo', archived: false },
+      { ticket_key: 'T2-3391', type: 'defect', title: 'Total ignores discount', status: 'in_progress', status_category: 'in_progress', archived: false },
       { ticket_key: 'T2-3000', type: 'subtask', title: 'Old, archived', status: 'done', archived: true },
     ],
     fields: [

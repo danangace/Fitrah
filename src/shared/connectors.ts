@@ -53,6 +53,8 @@ export const ExternalTicket = z.object({
   kind: TicketKind,
   type: z.string(),
   status: z.string(),
+  /** Helix's status_category: todo | in_progress | done. Subtasks and stories have different status sets, the category is shared. */
+  statusCategory: z.string().nullable().optional(),
   priority: z.string().nullable(),
   board: z.string().nullable(),
   iteration: z.string().nullable(),
@@ -84,5 +86,24 @@ export type Iteration = z.infer<typeof Iteration>
  * only offers these.
  */
 export const HELIX_STATUSES = ['to_do', 'in_progress', 'in_review', 'in_testing', 'ready_to_test', 'ready_to_staging', 'done'] as const
+
+/**
+ * Subtasks have their own, shorter workflow than stories and defects (live check 2026-11-13:
+ * subtasks are only open / in_progress / done; a to-do subtask is `open`, never `to_do`).
+ * The filter matches on Helix's status_category, so a story's defect children (which use the
+ * story statuses) land in the matching group too.
+ */
+export const HELIX_SUBTASK_STATUSES = [
+  { status: 'open', category: 'todo', label: 'Open' },
+  { status: 'in_progress', category: 'in_progress', label: 'In progress' },
+  { status: 'done', category: 'done', label: 'Done' },
+] as const
+
+/** A child ticket's status group (todo | in_progress | done); falls back to the status when Helix sends no category. */
+export function statusCategory(t: { status: string; statusCategory?: string | null }): string {
+  if (t.statusCategory) return t.statusCategory
+  if (t.status === 'open' || t.status === 'to_do') return 'todo'
+  return t.status === 'done' ? 'done' : 'in_progress'
+}
 
 export type ExternalQuery = { page?: number; boardId?: number; iterationId?: number; mine?: boolean; statuses?: string[] }

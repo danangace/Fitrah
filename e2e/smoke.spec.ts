@@ -420,17 +420,20 @@ test('Connect Helix in Settings, then read the External tab (read-only)', async 
   await expect(subtasks.getByText('T2-3274')).toBeVisible()
   await expect(subtasks.getByText('T2-3391')).toBeVisible()
   await expect(subtasks.getByText('Old, archived')).toHaveCount(0)
-  await expect(subtasks.getByRole('button', { name: 'Transfer' })).toHaveCount(2)
+  await expect(subtasks.getByRole('button', { name: 'Transfer' })).toHaveCount(3)
   await page.screenshot({ path: shot('external-tab'), animations: 'disabled' })
-  // Subtasks have their own status filter: a Done story can still have open subtasks.
-  await pick(page, page.getByLabel('Subtask status'), 'Subtasks: In progress')
+  // Subtasks have their own workflow (open / in progress / done), so their own filter: a Done
+  // story can still have open subtasks.
+  await pick(page, page.getByLabel('Subtask status'), 'Subtasks: Open')
   const filtered = page.getByTestId('external-item').filter({ hasText: 'Invoice Management - Phase 1' }).getByTestId('subtasks')
-  await expect(filtered.getByText('T2-3391')).toBeVisible()
+  await expect(filtered.getByText('T2-3275')).toBeVisible()
   await expect(filtered.getByText('T2-3274')).toHaveCount(0)
+  await expect(filtered.getByText('T2-3391')).toHaveCount(0)
+  await pick(page, page.getByLabel('Subtask status'), 'Subtasks: In progress')
+  await expect(filtered.getByText('T2-3391')).toBeVisible()
+  await expect(filtered.getByText('T2-3275')).toHaveCount(0)
   // The story itself (Done) stays in the list.
   await expect(page.getByTestId('external-item').filter({ hasText: 'Invoice Management - Phase 1' })).toBeVisible()
-  await pick(page, page.getByLabel('Subtask status'), 'Subtasks: To do')
-  await expect(filtered.getByText(/No subtasks with status To do \(2 in total\)/)).toBeVisible()
   await pick(page, page.getByLabel('Subtask status'), 'All subtask statuses')
 
   // Clean up so the empty-state test above stays true on a re-run.
@@ -584,7 +587,7 @@ test('Transfer a Helix defect and a story to the board; the defect gets the Defe
   await expect(story.getByText(/PRD|Figma|Iteration/)).toHaveCount(0)
   // Its subtasks came along, linked to Helix (the archived one did not).
   await story.click()
-  await expect(dialog.getByLabel('Description')).toHaveValue(/## Subtasks \(2\)[\s\S]*T2-3274[\s\S]*T2-3391/)
+  await expect(dialog.getByLabel('Description')).toHaveValue(/## Subtasks \(3\)[\s\S]*T2-3274[\s\S]*T2-3275[\s\S]*T2-3391/)
   await expect(dialog.getByLabel('Description')).not.toHaveValue(/T2-3000/)
   await page.keyboard.press('Escape')
 

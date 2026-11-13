@@ -1,6 +1,6 @@
 import { ChevronRight, ExternalLink, RefreshCw } from 'lucide-react'
 import { type ReactNode, useEffect, useState } from 'react'
-import { type Connector, type ExternalPage, type ExternalTicket, HELIX_STATUSES, type Iteration } from '../../../shared/connectors'
+import { type Connector, type ExternalPage, type ExternalTicket, HELIX_STATUSES, HELIX_SUBTASK_STATUSES, type Iteration, statusCategory } from '../../../shared/connectors'
 import { api } from '../../api/nakoda'
 import { cn } from '../../lib/cn'
 import { errorText } from '../../lib/errors'
@@ -55,8 +55,8 @@ function Row({ t, child, actions, toggle }: { t: ExternalTicket; child?: boolean
 
 /**
  * One ticket, and for a story / task its subtasks on demand. Helix search never returns subtasks,
- * so they are read from the parent when you open it. They have their own status filter
- * (a Done story can still have To do subtasks).
+ * so they are read from the parent when you open it. Subtasks have their own workflow
+ * (open / in progress / done), so they get their own filter, matched on Helix's status category.
  */
 function TicketItem({ ticket, connectorId, status, ...actions }: { ticket: ExternalTicket; connectorId: string; status: string | null } & RowActions) {
   const [open, setOpen] = useState(false)
@@ -67,7 +67,8 @@ function TicketItem({ ticket, connectorId, status, ...actions }: { ticket: Exter
     setOpen((o) => !o)
     if (children === null) api.ticketChildren(connectorId, ticket.key).then(setChildren, (e: unknown) => setError(errorText(e)))
   }
-  const shown = children?.filter((c) => !status || c.status === status) ?? []
+  const group = HELIX_SUBTASK_STATUSES.find((s) => s.status === status)
+  const shown = children?.filter((c) => !group || statusCategory(c) === group.category) ?? []
   return (
     <li data-testid="external-item">
       <Row
@@ -88,7 +89,7 @@ function TicketItem({ ticket, connectorId, status, ...actions }: { ticket: Exter
           {error && <p className="py-2 pl-10 text-xs text-red-300">{error}</p>}
           {!error && children === null && <p className="py-2 pl-10 text-xs text-muted-foreground">Loading subtasks…</p>}
           {children && shown.length === 0 && (
-            <p className="py-2 pl-10 text-xs text-muted-foreground">{children.length === 0 ? 'No subtasks.' : `No subtasks with status ${statusLabel(status ?? '')} (${children.length} in total).`}</p>
+            <p className="py-2 pl-10 text-xs text-muted-foreground">{children.length === 0 ? 'No subtasks.' : `No ${group?.label.toLowerCase() ?? ''} subtasks (${children.length} in total).`}</p>
           )}
           {shown.map((c) => (
             <Row key={c.key} t={c} child actions={actions} />
@@ -216,7 +217,7 @@ export function ExternalTasks() {
           <Select aria-label="Iteration" className="w-44" value={iterationId} onValueChange={filter(setIterationId)} options={[{ value: ALL, label: 'All iterations' }, ...iterations.map((i) => ({ value: String(i.id), label: i.name }))]} />
         )}
         <Select aria-label="Status" className="w-44" value={status} onValueChange={filter(setStatus)} options={[{ value: ALL, label: 'All statuses' }, ...HELIX_STATUSES.map((s) => ({ value: s, label: statusLabel(s) }))]} />
-        <Select aria-label="Subtask status" className="w-48" value={subStatus} onValueChange={setSubStatus} options={[{ value: ALL, label: 'All subtask statuses' }, ...HELIX_STATUSES.map((s) => ({ value: s, label: `Subtasks: ${statusLabel(s)}` }))]} />
+        <Select aria-label="Subtask status" className="w-48" value={subStatus} onValueChange={setSubStatus} options={[{ value: ALL, label: 'All subtask statuses' }, ...HELIX_SUBTASK_STATUSES.map((s) => ({ value: s.status, label: `Subtasks: ${s.label}` }))]} />
         <Button variant="ghost" aria-label="Refresh" title="Refresh" disabled={loading} onClick={() => setNonce((n) => n + 1)}>
           <RefreshCw className={cn('size-4', loading && 'animate-spin')} />
         </Button>

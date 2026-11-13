@@ -132,7 +132,7 @@ describe('connector routes', () => {
     const { call } = setup()
     const conn = await (await call('POST', '/api/connectors', { label: 'H', baseUrl: 'https://helix.test', token: TOKEN })).json()
     const kids = await (await call('GET', `/api/connectors/${conn.id}/tickets/T2-3252/children`)).json()
-    expect(kids.map((k: { key: string }) => k.key)).toEqual(['T2-3274', 'T2-3391'])
+    expect(kids.map((k: { key: string }) => k.key)).toEqual(['T2-3274', 'T2-3275', 'T2-3391'])
   })
 
   it('transfers a subtask with what it inherits from its parent story', async () => {
