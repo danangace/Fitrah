@@ -49,6 +49,22 @@ function service() {
 }
 
 describe('DocsService', () => {
+  it('leaves hidden folders out of the tree, but not out of the all-folders view', () => {
+    const db = openDb(':memory:')
+    saveSettings(db, { ...DEFAULT_SETTINGS, docsRoot: vault(), docsHidden: ['brainstorm'] })
+    const docs = new DocsService(db)
+    expect(docs.tree().map((n) => n.name)).toEqual(['frontend'])
+    expect(docs.tree(true).map((n) => n.name)).toEqual(['brainstorm', 'frontend'])
+    // Display only: a hidden note still opens and still resolves.
+    expect(docs.read('brainstorm/agent-orchestrator/README.md').path).toBe('brainstorm/agent-orchestrator/README.md')
+  })
+
+  it('drops a folder whose children are all hidden', () => {
+    const db = openDb(':memory:')
+    saveSettings(db, { ...DEFAULT_SETTINGS, docsRoot: vault(), docsHidden: ['frontend/modules'] })
+    expect(new DocsService(db).tree().map((n) => n.name)).toEqual(['brainstorm'])
+  })
+
   it('reads a note with frontmatter and resolved links', () => {
     const doc = service().read('brainstorm/agent-orchestrator/README.md')
     expect(doc.frontmatter).toEqual({ tags: ['brainstorm'] })

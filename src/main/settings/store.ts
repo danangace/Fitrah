@@ -7,6 +7,7 @@ import type { Db } from '../sqlite/db'
 
 export const DEFAULT_SETTINGS: Settings = {
   docsRoot: null,
+  docsHidden: [],
   docPaths: [
     { label: 'Module docs', template: 'frontend/modules/{iteration}/{module}' },
     { label: 'Open Questions', template: 'frontend/modules/{iteration}/{module}/Open Questions.md' },

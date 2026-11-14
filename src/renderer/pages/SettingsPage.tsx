@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { AccountSettings } from '../components/settings/AccountSettings'
 import { ConnectorSettings } from '../components/settings/ConnectorSettings'
+import { DocsSettings } from '../components/settings/DocsSettings'
 import { GeneralSettings } from '../components/settings/GeneralSettings'
 import { ModelSettings } from '../components/settings/ModelSettings'
 import { WorkflowSettings } from '../components/workflows/WorkflowSettings'
@@ -11,6 +12,7 @@ const RENDER: Record<SettingsSectionId, () => ReactNode> = {
   workflows: () => <WorkflowSettings />,
   accounts: () => <AccountSettings />,
   models: () => <ModelSettings />,
+  docs: () => <DocsSettings />,
   connectors: () => <ConnectorSettings />,
 }
 

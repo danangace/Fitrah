@@ -45,6 +45,8 @@ export type ChatDefaults = z.infer<typeof ChatDefaults>
 export const Settings = z.object({
   /** Markdown folder browsed read-only (e.g. the Obsidian vault). */
   docsRoot: nullableText,
+  /** Folders (relative to the docs root) that stay out of the Docs sidebar and folder suggestions. Hiding one hides everything inside it. */
+  docsHidden: z.array(z.string()).default([]),
   /** Your own list of doc locations; every chat is told where they are for its workspace. */
   docPaths: z.array(DocPath).max(30, 'At most 30 doc paths'),
   workspacesDir: z.string().min(1),

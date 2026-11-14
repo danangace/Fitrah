@@ -4,6 +4,7 @@ export const SETTINGS_SECTIONS = [
   { id: 'workflows', label: 'Workflows' },
   { id: 'accounts', label: 'Accounts' },
   { id: 'models', label: 'Models' },
+  { id: 'docs', label: 'Docs' },
   { id: 'connectors', label: 'Connectors' },
 ] as const
 

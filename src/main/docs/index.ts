@@ -41,6 +41,20 @@ export function buildTree(files: string[]): DocNodeT[] {
   return sort(root.children ?? [])
 }
 
+/** Drop the hidden folders (and everything in them); folders left empty by that go too. Display only: links to hidden notes still resolve. */
+export function hideFolders(nodes: DocNodeT[], hidden: readonly string[]): DocNodeT[] {
+  if (hidden.length === 0) return nodes
+  const off = new Set(hidden)
+  const walk = (list: DocNodeT[]): DocNodeT[] =>
+    list.flatMap((n) => {
+      if (!n.dir) return [n]
+      if (off.has(n.path)) return []
+      const children = walk(n.children ?? [])
+      return children.length > 0 ? [{ ...n, children }] : []
+    })
+  return walk(nodes)
+}
+
 /**
  * Obsidian-style link resolution: a path relative to the note, then from the root, then a
  * basename match anywhere (shortest path wins). `.md` is implied for wiki-links.
