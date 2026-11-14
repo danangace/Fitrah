@@ -1,21 +1,23 @@
-import { Plus } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import type { Connector, TestResult } from '../../../shared/connectors'
 import { api } from '../../api/nakoda'
 import { errorText } from '../../lib/errors'
 import { toast } from '../../store/toast'
 import { Button } from '../ui/Button'
-import { Card, Field, Input, Notice, TextArea } from '../ui/Field'
+import { Field, Input, Notice, TextArea } from '../ui/Field'
+import { Modal } from '../ui/Modal'
 import { Select } from '../ui/Select'
 import { useConfirm } from '../ui/confirm'
 import { formatMap, parseMap } from '../../lib/mapping-text'
+import { PLATFORMS, connectionState, platformById, type ConnectionState, type PlatformId } from '../../lib/connector-platforms'
+import { cn } from '../../lib/cn'
 
 const DEFAULT_URL = 'https://project.sid.id'
 
 type Source = 'paste' | 'env'
-type Draft = { id: string | null; label: string; baseUrl: string; source: Source; token: string; envName: string; severityMap: string; envMap: string }
+type Draft = { id: string | null; pendingKey: string | null; label: string; baseUrl: string; source: Source; token: string; envName: string; severityMap: string; envMap: string }
 
-const blank: Draft = { id: null, label: 'Helix', baseUrl: DEFAULT_URL, source: 'paste', token: '', envName: '', severityMap: '', envMap: '' }
+const blank: Draft = { id: null, pendingKey: null, label: 'Helix', baseUrl: DEFAULT_URL, source: 'paste', token: '', envName: '', severityMap: '', envMap: '' }
 
 function ConnectorForm({ draft, envNames, onChange, onSave, onCancel }: {
   draft: Draft
@@ -27,7 +29,7 @@ function ConnectorForm({ draft, envNames, onChange, onSave, onCancel }: {
   const editing = draft.id !== null
   const ready = draft.label.trim() && draft.baseUrl.trim() && (draft.source === 'env' ? draft.envName : editing || draft.token.trim())
   return (
-    <Card title={editing ? 'Edit Helix connection' : 'Add a Helix connection'}>
+    <div className="space-y-4">
       <Field label="Label">
         <Input value={draft.label} onChange={(e) => onChange({ ...draft, label: e.target.value })} />
       </Field>
@@ -77,7 +79,7 @@ function ConnectorForm({ draft, envNames, onChange, onSave, onCancel }: {
           Cancel
         </Button>
       </div>
-    </Card>
+    </div>
   )
 }
 
@@ -97,12 +99,60 @@ function TestReport({ result }: { result: TestResult }) {
   )
 }
 
-/** Task-source connections (Helix first; Jira, Trello and Lark come later). Tokens are saved on this computer only. */
+const STATUS: Record<ConnectionState, { label: string; dot: string }> = {
+  connected: { label: 'Connected', dot: 'bg-success' },
+  failed: { label: 'Connection failed', dot: 'bg-destructive' },
+  untested: { label: 'Not tested', dot: 'bg-warning' },
+  unconfigured: { label: 'Not configured', dot: 'bg-muted-foreground/50' },
+}
+
+function StatusBadge({ state }: { state: ConnectionState }) {
+  const { label, dot } = STATUS[state]
+  return (
+    <span role="status" data-state={state} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+      <span aria-hidden className={cn('size-2 rounded-full', dot, state === 'connected' && 'shadow-[0_0_6px] shadow-success/70')} />
+      {label}
+    </span>
+  )
+}
+
+function PlatformCard({ platformId, title, subtitle, state, actions, children }: {
+  platformId: PlatformId
+  title: string
+  subtitle: string
+  state: ConnectionState
+  actions: ReactNode
+  children?: ReactNode
+}) {
+  const platform = platformById(platformId)
+  return (
+    <section className="rounded-lg border border-border bg-card" aria-label={`${title} connector`}>
+      <div className="flex items-center gap-3 px-4 py-3">
+        <div aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-md bg-secondary text-sm font-semibold text-foreground">
+          {platform.name[0]}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-3">
+            <h2 className="truncate text-sm font-semibold text-foreground">{title}</h2>
+            <StatusBadge state={state} />
+          </div>
+          <p className="truncate text-xs text-muted-foreground">{subtitle}</p>
+        </div>
+        <div className="flex shrink-0 gap-1.5">{actions}</div>
+      </div>
+      {children && <div className="space-y-3 border-t border-border px-4 py-3">{children}</div>}
+    </section>
+  )
+}
+
+/** Task-source connections. Pick a platform to add a card; each card opens its own setup. Tokens are saved on this computer only. */
 export function ConnectorSettings() {
   const confirm = useConfirm()
   const [connectors, setConnectors] = useState<Connector[] | null>(null)
   const [envNames, setEnvNames] = useState<string[]>([])
   const [draft, setDraft] = useState<Draft | null>(null)
+  /** Cards the user added but has not configured yet. They only live on this screen. */
+  const [pending, setPending] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
   const [testing, setTesting] = useState<string | null>(null)
   const [results, setResults] = useState<Record<string, TestResult | string>>({})
@@ -112,6 +162,16 @@ export function ConnectorSettings() {
     void load()
     api.connectorEnvVars().then(setEnvNames, () => setEnvNames([]))
   }, [])
+
+  const addCard = (platformId: string) => {
+    if (platformId !== 'helix') return
+    setPending((p) => [...p, crypto.randomUUID()])
+  }
+
+  const closeForm = () => {
+    setDraft(null)
+    setError(null)
+  }
 
   const save = async () => {
     if (!draft) return
@@ -124,8 +184,8 @@ export function ConnectorSettings() {
     }
     try {
       const saved = draft.id ? await api.updateConnector(draft.id, input) : await api.createConnector(input)
-      setDraft(null)
-      setError(null)
+      if (draft.pendingKey) setPending((p) => p.filter((k) => k !== draft.pendingKey))
+      closeForm()
       toast.success(draft.id ? 'Connection saved' : 'Connection added')
       await load()
       void test(saved.id)
@@ -158,33 +218,59 @@ export function ConnectorSettings() {
   }
 
   const edit = (c: Connector) =>
-    setDraft({ id: c.id, label: c.label, baseUrl: c.baseUrl, source: c.tokenSource.kind === 'env' ? 'env' : 'paste', token: '', envName: c.tokenSource.kind === 'env' ? c.tokenSource.name : '', severityMap: formatMap(c.mappings.severity), envMap: formatMap(c.mappings.environment) })
+    setDraft({ id: c.id, pendingKey: null, label: c.label, baseUrl: c.baseUrl, source: c.tokenSource.kind === 'env' ? 'env' : 'paste', token: '', envName: c.tokenSource.kind === 'env' ? c.tokenSource.name : '', severityMap: formatMap(c.mappings.severity), envMap: formatMap(c.mappings.environment) })
+
+  const options = PLATFORMS.map((p) => ({
+    value: p.id,
+    disabled: !p.available,
+    label: (
+      <span className="flex w-full items-center justify-between gap-3">
+        {p.name}
+        {!p.available && <span className="text-xs text-muted-foreground">Soon</span>}
+      </span>
+    ),
+  }))
+  const empty = connectors?.length === 0 && pending.length === 0
 
   return (
     <section className="space-y-3">
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-sm text-muted-foreground">Connect outside task systems (Helix now; Jira, Trello and Lark later) to bring tickets into Nakoda. Nakoda only reads.</p>
+        <p className="text-sm text-muted-foreground">Connect outside task systems to bring tickets into Nakoda. Nakoda only reads.</p>
+        <div className="w-44 shrink-0">
+          <Select aria-label="Add connector" value="" onValueChange={addCard} options={options} placeholder="Add connector…" />
         </div>
-        {!draft && (
-          <Button onClick={() => setDraft({ ...blank })}>
-            <Plus className="size-4" /> Add Helix
-          </Button>
-        )}
       </div>
-      {error && <Notice tone="error">{error}</Notice>}
-      {draft && <ConnectorForm draft={draft} envNames={envNames} onChange={setDraft} onSave={() => void save()} onCancel={() => { setDraft(null); setError(null) }} />}
-      {connectors?.length === 0 && !draft && (
-        <div className="rounded-md border border-dashed border-border p-6 text-center text-sm text-muted-foreground">No connectors yet.</div>
-      )}
+      {error && !draft && <Notice tone="error">{error}</Notice>}
+      {empty && <div className="rounded-md border border-dashed border-border p-6 text-center text-sm text-muted-foreground">No connectors yet. Choose a platform above to add one.</div>}
+      {pending.map((key) => (
+        <PlatformCard
+          key={key}
+          platformId="helix"
+          title="Helix"
+          subtitle={platformById('helix').method}
+          state="unconfigured"
+          actions={
+            <>
+              <Button onClick={() => setDraft({ ...blank, pendingKey: key })}>Configure</Button>
+              <Button variant="ghost" onClick={() => setPending((p) => p.filter((k) => k !== key))}>
+                Remove
+              </Button>
+            </>
+          }
+        />
+      ))}
       {connectors?.map((c) => {
         const result = results[c.id]
+        const state = connectionState({ configured: true, lastCheckedAt: c.lastCheckedAt, testError: typeof result === 'string' })
         return (
-          <Card
+          <PlatformCard
             key={c.id}
+            platformId={c.kind}
             title={c.label.toLowerCase().includes('helix') ? c.label : `${c.label} · Helix`}
+            subtitle={c.baseUrl}
+            state={state}
             actions={
-              <div className="flex gap-1.5">
+              <>
                 <Button disabled={testing === c.id} onClick={() => void test(c.id)}>
                   {testing === c.id ? 'Testing…' : 'Test connection'}
                 </Button>
@@ -194,12 +280,10 @@ export function ConnectorSettings() {
                 <Button variant="ghost" onClick={() => void remove(c)}>
                   Remove
                 </Button>
-              </div>
+              </>
             }
           >
             <dl className="grid grid-cols-[8rem_1fr] gap-y-1 text-sm">
-              <dt className="text-muted-foreground">Address</dt>
-              <dd className="font-mono text-xs">{c.baseUrl}</dd>
               <dt className="text-muted-foreground">Token</dt>
               <dd className="font-mono text-xs">
                 {c.tokenSource.kind === 'env' ? `from ${c.tokenSource.name}` : 'saved in ~/.nakoda/secrets.json'}
@@ -209,9 +293,15 @@ export function ConnectorSettings() {
               <dd className="text-xs">{c.lastCheckedAt ? new Date(c.lastCheckedAt).toLocaleString() : 'never'}</dd>
             </dl>
             {typeof result === 'string' ? <Notice tone="error">{result}</Notice> : result && <TestReport result={result} />}
-          </Card>
+          </PlatformCard>
         )
       })}
+      {draft && (
+        <Modal title={draft.id ? 'Edit Helix connection' : 'Configure Helix'} onClose={closeForm} width="max-w-xl">
+          {error && <Notice tone="error">{error}</Notice>}
+          <ConnectorForm draft={draft} envNames={envNames} onChange={setDraft} onSave={() => void save()} onCancel={closeForm} />
+        </Modal>
+      )}
     </section>
   )
 }

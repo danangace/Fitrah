@@ -302,6 +302,17 @@ test('Settings lives in the sidebar: sections, Connectors, and Back to Nakoda', 
   await expect(page).toHaveURL(/\/settings\/connectors$/)
   await expect(page.getByRole('heading', { level: 1, name: 'Connectors', exact: true })).toBeVisible()
   await expect(page.getByText('No connectors yet')).toBeVisible()
+  // Platforms: only Helix can be chosen; picking it adds a card whose Configure opens the setup modal.
+  await page.getByRole('combobox', { name: 'Add connector' }).click()
+  for (const name of ['Jira', 'ClickUp', 'Lark']) await expect(page.getByRole('option', { name: new RegExp(name) })).toHaveAttribute('aria-disabled', 'true')
+  await page.getByRole('option', { name: 'Helix' }).click()
+  const card = page.getByRole('region', { name: 'Helix connector' })
+  await expect(card.getByRole('status')).toHaveText('Not configured')
+  await card.getByRole('button', { name: 'Configure' }).click()
+  await expect(page.getByRole('dialog', { name: 'Configure Helix' })).toBeVisible()
+  await page.getByRole('button', { name: 'Cancel' }).click()
+  await card.getByRole('button', { name: 'Remove' }).click()
+  await expect(page.getByText('No connectors yet')).toBeVisible()
   // The sidebar follows the page: Connectors is the current section, General is not.
   await expect(sections.getByRole('button', { name: 'Connectors', exact: true })).toHaveAttribute('aria-current', 'page')
   await expect(sections.getByRole('button', { name: 'General', exact: true })).not.toHaveAttribute('aria-current', 'page')

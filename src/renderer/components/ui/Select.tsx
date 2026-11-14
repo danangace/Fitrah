@@ -3,7 +3,7 @@ import { Check, ChevronsUpDown } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { cn } from '../../lib/cn'
 
-export type SelectOption = { value: string; label: ReactNode }
+export type SelectOption = { value: string; label: ReactNode; disabled?: boolean }
 
 /**
  * shadcn "base" select on Base UI, in this app's dark tokens. Replaces the native `<select>`:
@@ -60,7 +60,8 @@ export function Select({
                 <Primitive.Item
                   key={o.value}
                   value={o.value}
-                  className="grid cursor-default grid-cols-[1rem_1fr] items-center gap-2 rounded-md py-1.5 pr-3 pl-2 text-sm text-foreground outline-none select-none data-highlighted:bg-secondary"
+                  disabled={o.disabled}
+                  className="grid cursor-default grid-cols-[1rem_1fr] items-center gap-2 rounded-md py-1.5 pr-3 pl-2 text-sm text-foreground outline-none select-none data-disabled:opacity-50 data-highlighted:bg-secondary"
                 >
                   <Primitive.ItemIndicator className="col-start-1 text-foreground/80">
                     <Check className="size-3.5" />
